@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  appDir: "./src/interfaces/web/app",
+  /* config options here */
 };
 
 export default nextConfig;

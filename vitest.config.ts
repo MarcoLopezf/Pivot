@@ -4,7 +4,7 @@ import path from "path";
 export default defineConfig({
   test: {
     environment: "jsdom",
-    setupFiles: [],
+    setupFiles: ["./src/tests/setup.ts"],
     globals: true,
     coverage: {
       reporter: ["text", "json", "html"],

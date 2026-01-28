@@ -1,24 +1,36 @@
 import { genkit } from "genkit";
-import { googleAI } from "@genkit-ai/googleai";
+import { openAI } from "@genkit-ai/compat-oai/openai";
+// import { googleAI } from "@genkit-ai/google-genai";
 
 /**
  * Genkit Configuration
  *
- * Initializes Google Genkit with the Google AI plugin (Gemini models).
+ * Initializes Genkit with OpenAI plugin.
  * This is called once at application startup.
  */
 
 // Validate that API key is present
-if (!process.env.GOOGLE_AI_API_KEY) {
+if (!process.env.OPENAI_API_KEY) {
   throw new Error(
-    "GOOGLE_AI_API_KEY environment variable is required for Genkit AI features",
+    "OPENAI_API_KEY environment variable is required for Genkit AI features",
   );
 }
 
+// Google AI configuration (commented out, switch to this if using Gemini)
+// if (!process.env.GOOGLE_AI_API_KEY) {
+//   throw new Error(
+//     "GOOGLE_AI_API_KEY environment variable is required for Genkit AI features",
+//   );
+// }
+
 export const ai = genkit({
   plugins: [
-    googleAI({
-      apiKey: process.env.GOOGLE_AI_API_KEY,
+    openAI({
+      apiKey: process.env.OPENAI_API_KEY,
     }),
+    // Switch to Google AI by uncommenting below and commenting OpenAI above:
+    // googleAI({
+    //   apiKey: process.env.GOOGLE_AI_API_KEY,
+    // }),
   ],
 });

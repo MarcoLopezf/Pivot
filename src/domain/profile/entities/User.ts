@@ -33,6 +33,19 @@ export class User {
     return new User(id, email, name, UserRole.USER, now);
   }
 
+  public static reconstitute(
+    id: UserId,
+    email: Email,
+    name: string,
+    role: UserRole,
+    createdAt: Date,
+    updatedAt: Date,
+  ): User {
+    const user = new User(id, email, name, role, createdAt);
+    user._updatedAt = updatedAt;
+    return user;
+  }
+
   public get id(): UserId {
     return this._id;
   }

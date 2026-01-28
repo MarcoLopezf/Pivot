@@ -166,6 +166,8 @@
 
 **Examples:** feat(profile): add GitHub OAuth | fix(roadmap): correct skill ordering | test(learning): add SkillGapAnalyzer tests
 
+- **Never add `Co-Authored-By`** in commit messages
+
 ---
 
 ## 🔍 VERIFICATION & SCRIPTS

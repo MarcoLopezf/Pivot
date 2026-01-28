@@ -13,7 +13,10 @@ export class PrismaUserRepository implements IUserRepository {
     await this.db.user.upsert({
       where: { id: data.id },
       create: data,
-      update: { name: data.name },
+      update: {
+        name: data.name,
+        updatedAt: data.updatedAt,
+      },
     });
   }
 

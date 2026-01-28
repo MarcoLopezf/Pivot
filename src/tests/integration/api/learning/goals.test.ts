@@ -1,7 +1,5 @@
-import { describe, it, expect, beforeEach, afterAll } from "vitest";
-import { PrismaClient } from "@prisma/client";
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { describe, it, expect, beforeEach } from "vitest";
+import { prisma } from "@infrastructure/database/PrismaClient";
 import { POST } from "@/app/api/learning/goals/route";
 import { NextRequest } from "next/server";
 
@@ -10,21 +8,15 @@ const hasTestDb = !!process.env.DATABASE_URL;
 describe.skipIf(!hasTestDb)(
   "POST /api/learning/goals (integration) — requires DATABASE_URL",
   () => {
-    let db: PrismaClient;
-    let pool: Pool;
     let testUserId: string;
 
     beforeEach(async () => {
-      pool = new Pool({ connectionString: process.env.DATABASE_URL });
-      const adapter = new PrismaPg(pool);
-      db = new PrismaClient({ adapter });
-
       // Clean up test data
-      await db.careerGoal.deleteMany();
-      await db.user.deleteMany();
+      await prisma.careerGoal.deleteMany();
+      await prisma.user.deleteMany();
 
       // Create a test user
-      const user = await db.user.create({
+      const user = await prisma.user.create({
         data: {
           id: "test-user-goals",
           email: "goalstest@example.com",
@@ -33,11 +25,6 @@ describe.skipIf(!hasTestDb)(
         },
       });
       testUserId = user.id;
-    });
-
-    afterAll(async () => {
-      await db.$disconnect();
-      await pool.end();
     });
 
     it("should create a new career goal and return 201", async () => {

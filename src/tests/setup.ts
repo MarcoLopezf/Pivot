@@ -7,5 +7,10 @@
 import { config } from "dotenv";
 
 // Load environment variables from .env file
-// This ensures OPENAI_API_KEY and other env vars are available during tests
 config();
+
+// CRITICAL: Override DATABASE_URL to use test database
+// This ensures ALL Prisma instances (tests + API routes) use the Docker test DB
+if (process.env.DATABASE_URL_TEST) {
+  process.env.DATABASE_URL = process.env.DATABASE_URL_TEST;
+}

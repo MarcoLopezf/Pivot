@@ -1,5 +1,5 @@
 import { ai } from "../genkit.config";
-import { gemini20FlashExp } from "@genkit-ai/googleai";
+import { openAI } from "@genkit-ai/compat-oai/openai";
 import {
   IRoleRecommender,
   RoleRecommendation,
@@ -31,7 +31,7 @@ export class GenkitRoleRecommender implements IRoleRecommender {
       const prompt = this.buildPrompt(currentRole, skills);
 
       const { text } = await ai.generate({
-        model: gemini20FlashExp,
+        model: openAI.model("gpt-4o-mini"),
         prompt,
         config: {
           temperature: 0.7,

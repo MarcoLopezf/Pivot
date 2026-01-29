@@ -11,18 +11,22 @@ describe.skipIf(!hasTestDb)(
     let testUserId: string;
 
     beforeEach(async () => {
-      // Clean up test data
-      await prisma.careerGoal.deleteMany();
-      await prisma.user.deleteMany();
+      // Clean up only our own test records to avoid conflicts with parallel test files
+      await prisma.careerGoal.deleteMany({
+        where: { userId: "test-user-goals" },
+      });
+      await prisma.user.deleteMany({ where: { id: "test-user-goals" } });
 
       // Create a test user
-      const user = await prisma.user.create({
-        data: {
+      const user = await prisma.user.upsert({
+        where: { id: "test-user-goals" },
+        create: {
           id: "test-user-goals",
           email: "goalstest@example.com",
           name: "Goals Test User",
           role: "USER",
         },
+        update: {},
       });
       testUserId = user.id;
     });

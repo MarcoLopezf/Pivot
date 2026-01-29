@@ -14,7 +14,12 @@ describe.skipIf(!hasTestDb)(
 
     beforeEach(async () => {
       repository = new PrismaUserRepository(prisma);
-      await prisma.user.deleteMany();
+      // Clean up only our own test records to avoid conflicts with parallel test files
+      await prisma.user.deleteMany({
+        where: {
+          id: { in: ["test-id-001", "test-id-002", "non-existent-id"] },
+        },
+      });
     });
 
     it("should save a user and retrieve it by ID", async () => {

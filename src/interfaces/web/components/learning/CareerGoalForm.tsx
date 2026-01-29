@@ -165,12 +165,17 @@ export function CareerGoalForm({
   };
 
   /**
-   * Submit the career goal
+   * Submit the career goal and generate roadmap
    */
   const onSubmit = async (values: CareerGoalFormValues): Promise<void> => {
     setIsSubmitting(true);
 
     try {
+      // Show loading toast with AI generation message
+      const loadingToast = toast.loading("Saving your career goal...", {
+        description: "This will take a few seconds",
+      });
+
       const response = await fetch("/api/learning/goals", {
         method: "POST",
         headers: {
@@ -186,23 +191,42 @@ export function CareerGoalForm({
       const data: ApiSuccessResponse<unknown> | ApiErrorResponse =
         await response.json();
 
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+
       if (!response.ok || !data.success) {
         const errorData = data as ApiErrorResponse;
+
+        // Special handling for roadmap generation failure
+        if (errorData.error.code === "ROADMAP_GENERATION_FAILED") {
+          toast.warning("Goal saved, but roadmap generation failed", {
+            description:
+              "Your career goal was saved successfully, but we couldn't generate your roadmap. Please try again from the roadmap page.",
+            duration: 5000,
+          });
+          // Still redirect to roadmap page (will show empty state with retry)
+          setTimeout(() => {
+            router.push("/onboarding/roadmap");
+          }, 2000);
+          return;
+        }
+
         toast.error("Failed to save career goal", {
           description: errorData.error.message,
         });
         return;
       }
 
-      // Success
+      // Success - both goal and roadmap created
       toast.success("Career goal saved!", {
-        description: "Let's build your personalized roadmap",
+        description: "Your personalized roadmap has been generated with AI ✨",
+        duration: 3000,
       });
 
       // Redirect to roadmap page
       setTimeout(() => {
         router.push("/onboarding/roadmap");
-      }, 1000);
+      }, 1500);
     } catch (error) {
       console.error("Error submitting career goal:", error);
       toast.error("Something went wrong", {
@@ -326,7 +350,9 @@ export function CareerGoalForm({
             disabled={isSubmitting}
           >
             <Target className="h-4 w-4" />
-            {isSubmitting ? "Saving goal..." : "Continue to Roadmap"}
+            {isSubmitting
+              ? "Generating your personalized roadmap..."
+              : "Continue to Roadmap"}
           </Button>
         </form>
       </Form>

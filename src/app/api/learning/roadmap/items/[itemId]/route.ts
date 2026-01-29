@@ -28,9 +28,7 @@ interface ApiErrorResponse {
 const UpdateItemStatusSchema = z.object({
   roadmapId: z.string().min(1, "roadmapId cannot be empty"),
   status: z.enum(["pending", "in_progress", "completed"], {
-    errorMap: () => ({
-      message: "status must be one of: pending, in_progress, completed",
-    }),
+    message: "status must be one of: pending, in_progress, completed",
   }),
 });
 
@@ -72,8 +70,8 @@ export async function PATCH(
           success: false,
           error: {
             code: "VALIDATION_ERROR",
-            message: parseResult.error.errors
-              .map((e) => `${e.path.join(".")}: ${e.message}`)
+            message: parseResult.error.issues
+              .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
               .join(", "),
           },
         };

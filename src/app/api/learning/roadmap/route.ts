@@ -54,8 +54,8 @@ export async function GET(
         success: false,
         error: {
           code: "VALIDATION_ERROR",
-          message: parseResult.error.errors
-            .map((e) => `${e.path.join(".")}: ${e.message}`)
+          message: parseResult.error.issues
+            .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
             .join(", "),
         },
       };

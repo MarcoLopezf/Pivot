@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { saveOnboardingUserId } from "@interfaces/web/utils/onboardingStorage";
 
 /**
  * Zod schema matching CreateUserDTO
@@ -126,14 +127,17 @@ export function ProfileForm(): React.ReactElement {
 
       // Success case
       if (data.success) {
+        // Save userId to sessionStorage for onboarding flow
+        saveOnboardingUserId(data.data.id);
+
         toast.success("Profile created successfully!", {
           description: `Welcome, ${data.data.name}!`,
         });
 
-        // Redirect to dashboard or next step
+        // Redirect to next onboarding step (career goals)
         // Using a slight delay to ensure toast is visible
         setTimeout(() => {
-          router.push("/dashboard");
+          router.push("/onboarding/goals");
         }, 1000);
       }
     } catch (error) {

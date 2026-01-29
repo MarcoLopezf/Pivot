@@ -35,6 +35,7 @@ describe("GenerateUserRoadmap Use Case", () => {
       save: vi.fn(),
       findById: vi.fn(),
       findByGoalId: vi.fn(),
+      findLatestByUserId: vi.fn(),
     };
 
     mockFlow = {

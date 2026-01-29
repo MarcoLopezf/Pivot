@@ -6,6 +6,7 @@ import { IRoadmapRepository } from "@domain/learning/repositories/IRoadmapReposi
 import { Roadmap } from "@domain/learning/entities/Roadmap";
 import { RoadmapId } from "@domain/learning/value-objects/RoadmapId";
 import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
+import { UserId } from "@domain/profile/value-objects/UserId";
 import { RoadmapMapper } from "@infrastructure/database/mappers/RoadmapMapper";
 
 /**
@@ -71,5 +72,20 @@ export class PrismaRoadmapRepository implements IRoadmapRepository {
       orderBy: { createdAt: "desc" },
     });
     return prismaRoadmaps.map((r) => RoadmapMapper.toDomain(r));
+  }
+
+  async findLatestByUserId(userId: UserId): Promise<Roadmap | null> {
+    const prismaRoadmap = await this.db.roadmap.findFirst({
+      where: {
+        goal: {
+          userId: userId.value,
+        },
+      },
+      include: { items: { orderBy: { order: "asc" } } },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!prismaRoadmap) return null;
+    return RoadmapMapper.toDomain(prismaRoadmap);
   }
 }

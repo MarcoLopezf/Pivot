@@ -1,7 +1,51 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { prisma } from "@infrastructure/database/PrismaClient";
 import { POST } from "@/app/api/learning/goals/route";
 import { NextRequest } from "next/server";
+
+// Mock the AI flow to avoid requiring OpenAI API key in tests
+vi.mock("@infrastructure/ai/flows/generateRoadmapFlow", () => {
+  class MockGenkitRoadmapFlow {
+    async generate() {
+      return [
+        {
+          title: "Learn TypeScript Fundamentals",
+          description:
+            "Master TypeScript basics including types, interfaces, and generics to write type-safe code.",
+          order: 1,
+        },
+        {
+          title: "Build REST APIs with Node.js",
+          description:
+            "Create production-ready APIs with Express, authentication, and error handling.",
+          order: 2,
+        },
+        {
+          title: "Master Database Design",
+          description:
+            "Learn SQL, database normalization, and query optimization for scalable applications.",
+          order: 3,
+        },
+        {
+          title: "Study System Design Patterns",
+          description:
+            "Understand architectural patterns, caching, and distributed systems fundamentals.",
+          order: 4,
+        },
+        {
+          title: "Build Portfolio Projects",
+          description:
+            "Create full-stack projects demonstrating your skills to potential employers.",
+          order: 5,
+        },
+      ];
+    }
+  }
+
+  return {
+    GenkitRoadmapFlow: MockGenkitRoadmapFlow,
+  };
+});
 
 const hasTestDb = !!process.env.DATABASE_URL;
 
@@ -12,6 +56,13 @@ describe.skipIf(!hasTestDb)(
 
     beforeEach(async () => {
       // Clean up only our own test records to avoid conflicts with parallel test files
+      // Clean roadmaps first (FK constraint)
+      await prisma.roadmapItem.deleteMany({
+        where: { roadmap: { goal: { userId: "test-user-goals" } } },
+      });
+      await prisma.roadmap.deleteMany({
+        where: { goal: { userId: "test-user-goals" } },
+      });
       await prisma.careerGoal.deleteMany({
         where: { userId: "test-user-goals" },
       });
@@ -31,7 +82,7 @@ describe.skipIf(!hasTestDb)(
       testUserId = user.id;
     });
 
-    it("should create a new career goal and return 201", async () => {
+    it("should create a new career goal and automatically generate roadmap", async () => {
       const requestBody = {
         userId: testUserId,
         currentRole: "Junior Backend Developer",
@@ -54,18 +105,42 @@ describe.skipIf(!hasTestDb)(
 
       expect(response.status).toBe(201);
       expect(data).toHaveProperty("success", true);
-      expect(data.data).toHaveProperty("id");
-      expect(data.data).toHaveProperty("userId", testUserId);
-      expect(data.data).toHaveProperty(
+
+      // Verify goal was created
+      expect(data.data).toHaveProperty("goal");
+      expect(data.data.goal).toHaveProperty("id");
+      expect(data.data.goal).toHaveProperty("userId", testUserId);
+      expect(data.data.goal).toHaveProperty(
         "currentRole",
         "Junior Backend Developer",
       );
-      expect(data.data).toHaveProperty(
+      expect(data.data.goal).toHaveProperty(
         "targetRole",
         "Senior Backend Developer",
       );
-      expect(data.data).toHaveProperty("createdAt");
-      expect(data.data).toHaveProperty("updatedAt");
+      expect(data.data.goal).toHaveProperty("createdAt");
+      expect(data.data.goal).toHaveProperty("updatedAt");
+
+      // Verify roadmap was automatically generated
+      expect(data.data).toHaveProperty("roadmap");
+      expect(data.data.roadmap).toHaveProperty("id");
+      expect(data.data.roadmap).toHaveProperty("goalId", data.data.goal.id);
+      expect(data.data.roadmap).toHaveProperty(
+        "title",
+        "Roadmap to Senior Backend Developer",
+      );
+      expect(data.data.roadmap).toHaveProperty("progress", 0);
+      expect(data.data.roadmap).toHaveProperty("items");
+      expect(Array.isArray(data.data.roadmap.items)).toBe(true);
+      expect(data.data.roadmap.items.length).toBeGreaterThan(0);
+
+      // Verify roadmap items have correct structure
+      const firstItem = data.data.roadmap.items[0];
+      expect(firstItem).toHaveProperty("id");
+      expect(firstItem).toHaveProperty("title");
+      expect(firstItem).toHaveProperty("description");
+      expect(firstItem).toHaveProperty("order");
+      expect(firstItem).toHaveProperty("status", "pending");
     });
 
     it("should return 400 when targetRole is empty", async () => {

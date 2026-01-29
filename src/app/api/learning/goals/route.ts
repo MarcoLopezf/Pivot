@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { learningContainer } from "@infrastructure/di/LearningContainer";
 import { CareerGoalDTO } from "@application/dtos/learning/CareerGoalDTO";
+import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
 
 /**
  * API Response Format
@@ -19,6 +20,14 @@ interface ApiErrorResponse {
 }
 
 /**
+ * Success response with both goal and roadmap
+ */
+interface GoalWithRoadmapResponse {
+  goal: CareerGoalDTO;
+  roadmap: RoadmapDTO;
+}
+
+/**
  * Request body structure
  */
 interface CreateGoalRequest {
@@ -28,7 +37,7 @@ interface CreateGoalRequest {
 }
 
 /**
- * POST /api/learning/goals - Create a new career goal
+ * POST /api/learning/goals - Create a new career goal and generate roadmap
  *
  * Request body:
  * {
@@ -37,14 +46,20 @@ interface CreateGoalRequest {
  *   "currentRole": string
  * }
  *
+ * This endpoint:
+ * 1. Creates the career goal
+ * 2. Automatically generates a personalized learning roadmap with AI
+ *
  * Responses:
- * - 201: Career goal created successfully
+ * - 201: Career goal and roadmap created successfully
  * - 400: Invalid request body or validation error
- * - 500: Internal server error
+ * - 500: Internal server error (goal may be saved even if roadmap generation fails)
  */
 export async function POST(
   request: NextRequest,
-): Promise<NextResponse<ApiSuccessResponse<CareerGoalDTO> | ApiErrorResponse>> {
+): Promise<
+  NextResponse<ApiSuccessResponse<GoalWithRoadmapResponse> | ApiErrorResponse>
+> {
   try {
     // Parse request body
     let body: unknown;
@@ -74,20 +89,51 @@ export async function POST(
       return NextResponse.json(response, { status: 400 });
     }
 
-    // Get use case from DI container
+    // Get use cases from DI container
     const setCareerGoal = learningContainer.getSetCareerGoalUseCase();
+    const generateUserRoadmap =
+      learningContainer.getGenerateUserRoadmapUseCase();
 
-    // Execute use case
+    // Step 1: Create the career goal
     const careerGoalDTO: CareerGoalDTO = await setCareerGoal.execute({
       userId: body.userId,
       targetRole: body.targetRole,
       currentRole: body.currentRole,
     });
 
-    // Return success response
-    const response: ApiSuccessResponse<CareerGoalDTO> = {
+    // Step 2: Automatically generate roadmap with AI
+    let roadmapDTO: RoadmapDTO;
+    try {
+      roadmapDTO = await generateUserRoadmap.execute({
+        goalId: careerGoalDTO.id,
+        currentRole: body.currentRole,
+        targetRole: body.targetRole,
+      });
+    } catch (roadmapError) {
+      // Graceful degradation: Goal is saved, but roadmap generation failed
+      console.error(
+        "Failed to generate roadmap after creating goal:",
+        roadmapError,
+      );
+      const response: ApiErrorResponse = {
+        success: false,
+        error: {
+          code: "ROADMAP_GENERATION_FAILED",
+          message:
+            "Career goal saved, but roadmap generation failed. Please try regenerating later.",
+        },
+      };
+      // Return 500 but goal is already saved in DB
+      return NextResponse.json(response, { status: 500 });
+    }
+
+    // Return success response with both goal and roadmap
+    const response: ApiSuccessResponse<GoalWithRoadmapResponse> = {
       success: true,
-      data: careerGoalDTO,
+      data: {
+        goal: careerGoalDTO,
+        roadmap: roadmapDTO,
+      },
     };
 
     return NextResponse.json(response, { status: 201 });

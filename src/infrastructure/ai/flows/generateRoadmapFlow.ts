@@ -38,10 +38,21 @@ export class GenkitRoadmapFlow implements IGenerateRoadmapFlow {
         },
       });
 
-      const response: RoadmapGenerationResponse = JSON.parse(text);
+      const cleaned = this.stripMarkdownCodeBlock(text);
+
+      let response: RoadmapGenerationResponse;
+      try {
+        response = JSON.parse(cleaned);
+      } catch {
+        throw new Error(
+          `AI_RESPONSE_FORMAT_ERROR: Failed to parse AI response as JSON. Raw output: ${text}`,
+        );
+      }
 
       if (!response.items || response.items.length === 0) {
-        throw new Error("No roadmap items received from AI model");
+        throw new Error(
+          "AI_RESPONSE_FORMAT_ERROR: No roadmap items received from AI model",
+        );
       }
 
       return response.items.map((item) => ({
@@ -51,8 +62,18 @@ export class GenkitRoadmapFlow implements IGenerateRoadmapFlow {
       }));
     } catch (error) {
       console.error("Error generating roadmap:", error);
-      throw new Error("Failed to generate learning roadmap");
+      throw error;
     }
+  }
+
+  private stripMarkdownCodeBlock(raw: string): string {
+    const trimmed = raw.trim();
+    const codeBlockRegex = /^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/;
+    const match = codeBlockRegex.exec(trimmed);
+    if (match) {
+      return match[1].trim();
+    }
+    return trimmed;
   }
 
   private buildPrompt(currentRole: string, targetRole: string): string {

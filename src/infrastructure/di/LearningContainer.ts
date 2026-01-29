@@ -1,8 +1,11 @@
 import { prisma } from "@infrastructure/database/PrismaClient";
 import { PrismaCareerGoalRepository } from "@infrastructure/database/repositories/PrismaCareerGoalRepository";
+import { PrismaRoadmapRepository } from "@infrastructure/database/repositories/PrismaRoadmapRepository";
 import { GenkitRoleRecommender } from "@infrastructure/ai/flows/suggestRolesFlow";
+import { GenkitRoadmapFlow } from "@infrastructure/ai/flows/generateRoadmapFlow";
 import { SetCareerGoal } from "@application/use-cases/learning/SetCareerGoal";
 import { SuggestCareerRoles } from "@application/use-cases/learning/SuggestCareerRoles";
+import { GenerateUserRoadmap } from "@application/use-cases/learning/GenerateUserRoadmap";
 
 /**
  * LearningContainer - Dependency Injection Container for Learning bounded context
@@ -17,12 +20,16 @@ import { SuggestCareerRoles } from "@application/use-cases/learning/SuggestCaree
 
 class LearningContainer {
   private careerGoalRepository: PrismaCareerGoalRepository;
+  private roadmapRepository: PrismaRoadmapRepository;
   private roleRecommender: GenkitRoleRecommender;
+  private roadmapFlow: GenkitRoadmapFlow;
 
   constructor() {
     // Initialize infrastructure dependencies
     this.careerGoalRepository = new PrismaCareerGoalRepository(prisma);
+    this.roadmapRepository = new PrismaRoadmapRepository(prisma);
     this.roleRecommender = new GenkitRoleRecommender();
+    this.roadmapFlow = new GenkitRoadmapFlow();
   }
 
   /**
@@ -37,6 +44,13 @@ class LearningContainer {
    */
   getSuggestCareerRolesUseCase(): SuggestCareerRoles {
     return new SuggestCareerRoles(this.roleRecommender);
+  }
+
+  /**
+   * Returns an initialized GenerateUserRoadmap use case with all dependencies injected
+   */
+  getGenerateUserRoadmapUseCase(): GenerateUserRoadmap {
+    return new GenerateUserRoadmap(this.roadmapRepository, this.roadmapFlow);
   }
 }
 

@@ -9,8 +9,12 @@ describe.skipIf(!hasTestDb)(
   "POST /api/profile (integration) — requires DATABASE_URL",
   () => {
     beforeEach(async () => {
-      // Clean up test data before each test
-      await prisma.user.deleteMany();
+      // Clean up only our own test records to avoid conflicts with parallel test files
+      await prisma.user.deleteMany({
+        where: {
+          email: { in: ["john.doe@example.com", "duplicate@example.com"] },
+        },
+      });
     });
 
     it("should create a new user and return 201", async () => {

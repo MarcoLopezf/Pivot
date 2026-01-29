@@ -166,5 +166,59 @@ describe.skipIf(!hasTestDb)(
       expect(found!.items[0].status).toBe("completed");
       expect(found!.progress).toBe(50);
     });
+
+    it("should return null when no roadmap exists for user", async () => {
+      const nonExistentUserId = "test-user-nonexistent-999";
+      const found = await repository.findLatestByUserId(
+        // @ts-expect-error - testing with direct string, normally would use UserId.create
+        { value: nonExistentUserId },
+      );
+
+      expect(found).toBeNull();
+    });
+
+    it("should find the most recent roadmap for a user", async () => {
+      const roadmap1 = Roadmap.create(
+        RoadmapId.create("roadmap-int-004"),
+        CareerGoalId.create(testGoalId),
+        "First Roadmap",
+      );
+      roadmap1.addItem(
+        RoadmapItem.create(
+          RoadmapItemId.create("item-int-007"),
+          "Item 1",
+          "desc",
+          1,
+        ),
+      );
+      await repository.save(roadmap1);
+
+      // Add a small delay to ensure different timestamp
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      const roadmap2 = Roadmap.create(
+        RoadmapId.create("roadmap-int-005"),
+        CareerGoalId.create(testGoalId),
+        "Second Roadmap (Latest)",
+      );
+      roadmap2.addItem(
+        RoadmapItem.create(
+          RoadmapItemId.create("item-int-008"),
+          "Item 2",
+          "desc",
+          1,
+        ),
+      );
+      await repository.save(roadmap2);
+
+      const found = await repository.findLatestByUserId(
+        // @ts-expect-error - testing with direct string, normally would use UserId.create
+        { value: testUserId },
+      );
+
+      expect(found).not.toBeNull();
+      expect(found!.title).toBe("Second Roadmap (Latest)");
+      expect(found!.id.value).toBe("roadmap-int-005");
+    });
   },
 );

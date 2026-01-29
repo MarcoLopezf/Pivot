@@ -1,6 +1,7 @@
 import { Roadmap } from "@domain/learning/entities/Roadmap";
 import { RoadmapId } from "@domain/learning/value-objects/RoadmapId";
 import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
+import { UserId } from "@domain/profile/value-objects/UserId";
 
 /**
  * IRoadmapRepository
@@ -24,4 +25,9 @@ export interface IRoadmapRepository {
    * Find all roadmaps for a specific career goal
    */
   findByGoalId(goalId: CareerGoalId): Promise<Roadmap[]>;
+
+  /**
+   * Find the most recent roadmap for a user (via their career goal)
+   */
+  findLatestByUserId(userId: UserId): Promise<Roadmap | null>;
 }

@@ -6,6 +6,8 @@ import { GenkitRoadmapFlow } from "@infrastructure/ai/flows/generateRoadmapFlow"
 import { SetCareerGoal } from "@application/use-cases/learning/SetCareerGoal";
 import { SuggestCareerRoles } from "@application/use-cases/learning/SuggestCareerRoles";
 import { GenerateUserRoadmap } from "@application/use-cases/learning/GenerateUserRoadmap";
+import { GetUserRoadmap } from "@application/use-cases/learning/GetUserRoadmap";
+import { UpdateRoadmapItemStatus } from "@application/use-cases/learning/UpdateRoadmapItemStatus";
 
 /**
  * LearningContainer - Dependency Injection Container for Learning bounded context
@@ -51,6 +53,20 @@ class LearningContainer {
    */
   getGenerateUserRoadmapUseCase(): GenerateUserRoadmap {
     return new GenerateUserRoadmap(this.roadmapRepository, this.roadmapFlow);
+  }
+
+  /**
+   * Returns an initialized GetUserRoadmap use case with all dependencies injected
+   */
+  getGetUserRoadmapUseCase(): GetUserRoadmap {
+    return new GetUserRoadmap(this.roadmapRepository);
+  }
+
+  /**
+   * Returns an initialized UpdateRoadmapItemStatus use case with all dependencies injected
+   */
+  getUpdateRoadmapItemStatusUseCase(): UpdateRoadmapItemStatus {
+    return new UpdateRoadmapItemStatus(this.roadmapRepository);
   }
 }
 

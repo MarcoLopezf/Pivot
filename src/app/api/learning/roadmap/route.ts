@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { learningContainer } from "@infrastructure/di/LearningContainer";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
+import { createLogger } from "@infrastructure/logging/logger";
+
+const logger = createLogger("GET /api/learning/roadmap");
 
 /**
  * API Response Format
@@ -19,6 +23,13 @@ interface ApiErrorResponse {
 }
 
 /**
+ * Zod schema for query parameters validation
+ */
+const QueryParamsSchema = z.object({
+  userId: z.string().min(1, "userId cannot be empty"),
+});
+
+/**
  * GET /api/learning/roadmap - Retrieve user's latest roadmap
  *
  * Query parameters:
@@ -34,19 +45,24 @@ export async function GET(
   request: NextRequest,
 ): Promise<NextResponse<ApiSuccessResponse<RoadmapDTO> | ApiErrorResponse>> {
   try {
-    // Extract userId from query params
-    const userId = request.nextUrl.searchParams.get("userId");
+    // Parse and validate query parameters with Zod
+    const queryParams = Object.fromEntries(request.nextUrl.searchParams);
+    const parseResult = QueryParamsSchema.safeParse(queryParams);
 
-    if (!userId || userId.trim().length === 0) {
+    if (!parseResult.success) {
       const response: ApiErrorResponse = {
         success: false,
         error: {
-          code: "MISSING_USER_ID",
-          message: "Query parameter 'userId' is required",
+          code: "VALIDATION_ERROR",
+          message: parseResult.error.errors
+            .map((e) => `${e.path.join(".")}: ${e.message}`)
+            .join(", "),
         },
       };
       return NextResponse.json(response, { status: 400 });
     }
+
+    const { userId } = parseResult.data;
 
     // Get use case from DI container
     const getUserRoadmap = learningContainer.getGetUserRoadmapUseCase();
@@ -91,7 +107,9 @@ export async function GET(
     }
 
     // Handle unexpected errors
-    console.error("Unexpected error in GET /api/learning/roadmap:", error);
+    logger.error("Unexpected error while fetching roadmap", error, {
+      searchParams: Object.fromEntries(request.nextUrl.searchParams),
+    });
     const response: ApiErrorResponse = {
       success: false,
       error: {

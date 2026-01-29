@@ -1,9 +1,14 @@
+/**
+ * Strict literal union type for roadmap item status
+ */
+export type RoadmapItemStatus = "pending" | "in_progress" | "completed";
+
 export interface RoadmapItemDTO {
   id: string;
   title: string;
   description: string;
   order: number;
-  status: string;
+  status: RoadmapItemStatus;
 }
 
 export interface RoadmapDTO {

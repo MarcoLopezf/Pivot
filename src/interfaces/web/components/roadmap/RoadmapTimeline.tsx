@@ -1,7 +1,10 @@
 "use client";
 
 import React from "react";
-import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
+import {
+  RoadmapDTO,
+  RoadmapItemStatus,
+} from "@application/dtos/learning/RoadmapDTO";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -10,10 +13,7 @@ import { CheckCircle2, Clock, Circle } from "lucide-react";
 
 export interface RoadmapTimelineProps {
   roadmap: RoadmapDTO;
-  onItemStatusChange: (
-    itemId: string,
-    newStatus: "pending" | "in_progress" | "completed",
-  ) => void;
+  onItemStatusChange: (itemId: string, newStatus: RoadmapItemStatus) => void;
 }
 
 /**
@@ -30,7 +30,7 @@ export function RoadmapTimeline({
   roadmap,
   onItemStatusChange,
 }: RoadmapTimelineProps): React.ReactNode {
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: RoadmapItemStatus) => {
     switch (status) {
       case "completed":
         return <CheckCircle2 className="h-3 w-3 text-green-600" />;
@@ -38,12 +38,10 @@ export function RoadmapTimeline({
         return <Clock className="h-3 w-3 text-blue-600 animate-spin" />;
       case "pending":
         return <Circle className="h-3 w-3 text-gray-400" />;
-      default:
-        return <Circle className="h-3 w-3 text-gray-400" />;
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: RoadmapItemStatus) => {
     switch (status) {
       case "completed":
         return (
@@ -63,14 +61,12 @@ export function RoadmapTimeline({
             Pending
           </Badge>
         );
-      default:
-        return null;
     }
   };
 
   const getNextStatus = (
-    currentStatus: "pending" | "in_progress" | "completed",
-  ): "pending" | "in_progress" | "completed" => {
+    currentStatus: RoadmapItemStatus,
+  ): RoadmapItemStatus => {
     switch (currentStatus) {
       case "pending":
         return "in_progress";
@@ -78,15 +74,14 @@ export function RoadmapTimeline({
         return "completed";
       case "completed":
         return "in_progress";
-      default:
-        return "pending";
     }
   };
 
-  const handleItemClick = (itemId: string, currentStatus: string) => {
-    const nextStatus = getNextStatus(
-      currentStatus as "pending" | "in_progress" | "completed",
-    );
+  const handleItemClick = (
+    itemId: string,
+    currentStatus: RoadmapItemStatus,
+  ) => {
+    const nextStatus = getNextStatus(currentStatus);
     onItemStatusChange(itemId, nextStatus);
   };
 

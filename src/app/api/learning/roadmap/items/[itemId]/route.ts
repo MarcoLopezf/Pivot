@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { learningContainer } from "@infrastructure/di/LearningContainer";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
+import { createLogger } from "@infrastructure/logging/logger";
+
+const logger = createLogger("PATCH /api/learning/roadmap/items/[itemId]");
 
 /**
  * API Response Format
@@ -19,31 +23,18 @@ interface ApiErrorResponse {
 }
 
 /**
- * Request body structure
+ * Zod schema for request body validation
  */
-interface UpdateItemStatusRequest {
-  roadmapId: string;
-  status: "pending" | "in_progress" | "completed";
-}
+const UpdateItemStatusSchema = z.object({
+  roadmapId: z.string().min(1, "roadmapId cannot be empty"),
+  status: z.enum(["pending", "in_progress", "completed"], {
+    errorMap: () => ({
+      message: "status must be one of: pending, in_progress, completed",
+    }),
+  }),
+});
 
-/**
- * Type guard to validate UpdateItemStatusRequest structure
- */
-function isValidUpdateItemStatusRequest(
-  body: unknown,
-): body is UpdateItemStatusRequest {
-  return (
-    typeof body === "object" &&
-    body !== null &&
-    "roadmapId" in body &&
-    typeof (body as Record<string, unknown>).roadmapId === "string" &&
-    "status" in body &&
-    typeof (body as Record<string, unknown>).status === "string" &&
-    ["pending", "in_progress", "completed"].includes(
-      (body as Record<string, unknown>).status as string,
-    )
-  );
-}
+type UpdateItemStatusRequest = z.infer<typeof UpdateItemStatusSchema>;
 
 /**
  * PATCH /api/learning/roadmap/items/[itemId] - Update roadmap item status
@@ -70,29 +61,32 @@ export async function PATCH(
   try {
     const { itemId } = await params;
 
-    // Parse request body
-    let body: unknown;
+    // Parse and validate request body with Zod
+    let body: UpdateItemStatusRequest;
     try {
-      body = await request.json();
-    } catch {
+      const rawBody = await request.json();
+      const parseResult = UpdateItemStatusSchema.safeParse(rawBody);
+
+      if (!parseResult.success) {
+        const response: ApiErrorResponse = {
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: parseResult.error.errors
+              .map((e) => `${e.path.join(".")}: ${e.message}`)
+              .join(", "),
+          },
+        };
+        return NextResponse.json(response, { status: 400 });
+      }
+
+      body = parseResult.data;
+    } catch (error) {
       const response: ApiErrorResponse = {
         success: false,
         error: {
           code: "INVALID_JSON",
           message: "Request body must be valid JSON",
-        },
-      };
-      return NextResponse.json(response, { status: 400 });
-    }
-
-    // Validate request body structure
-    if (!isValidUpdateItemStatusRequest(body)) {
-      const response: ApiErrorResponse = {
-        success: false,
-        error: {
-          code: "INVALID_REQUEST_BODY",
-          message:
-            "Request body must include 'roadmapId' and valid 'status' fields",
         },
       };
       return NextResponse.json(response, { status: 400 });
@@ -151,10 +145,9 @@ export async function PATCH(
     }
 
     // Handle unexpected errors
-    console.error(
-      "Unexpected error in PATCH /api/learning/roadmap/items/[itemId]:",
-      error,
-    );
+    logger.error("Unexpected error while updating roadmap item status", error, {
+      itemId: await params.then((p) => p.itemId),
+    });
     const response: ApiErrorResponse = {
       success: false,
       error: {

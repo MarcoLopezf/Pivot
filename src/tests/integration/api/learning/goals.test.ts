@@ -1,7 +1,49 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { prisma } from "@infrastructure/database/PrismaClient";
 import { POST } from "@/app/api/learning/goals/route";
 import { NextRequest } from "next/server";
+
+// Mock the AI flow to avoid requiring OpenAI API key in tests
+vi.mock("@infrastructure/ai/flows/generateRoadmapFlow", () => {
+  return {
+    GenkitRoadmapFlow: vi.fn().mockImplementation(() => {
+      return {
+        generate: vi.fn().mockResolvedValue([
+          {
+            title: "Learn TypeScript Fundamentals",
+            description:
+              "Master TypeScript basics including types, interfaces, and generics to write type-safe code.",
+            order: 1,
+          },
+          {
+            title: "Build REST APIs with Node.js",
+            description:
+              "Create production-ready APIs with Express, authentication, and error handling.",
+            order: 2,
+          },
+          {
+            title: "Master Database Design",
+            description:
+              "Learn SQL, database normalization, and query optimization for scalable applications.",
+            order: 3,
+          },
+          {
+            title: "Study System Design Patterns",
+            description:
+              "Understand architectural patterns, caching, and distributed systems fundamentals.",
+            order: 4,
+          },
+          {
+            title: "Build Portfolio Projects",
+            description:
+              "Create full-stack projects demonstrating your skills to potential employers.",
+            order: 5,
+          },
+        ]),
+      };
+    }),
+  };
+});
 
 const hasTestDb = !!process.env.DATABASE_URL;
 

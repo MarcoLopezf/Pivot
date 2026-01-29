@@ -39,7 +39,8 @@ describe.skipIf(!hasTestDb)(
 
       expect(response.status).toBe(400);
       expect(data.success).toBe(false);
-      expect(data.error.code).toBe("INVALID_REQUEST_BODY");
+      expect(data.error.code).toBe("VALIDATION_ERROR");
+      expect(data.error.message).toContain("roadmapId");
     });
 
     it("should return 400 when request body is missing status", async () => {
@@ -59,7 +60,8 @@ describe.skipIf(!hasTestDb)(
 
       expect(response.status).toBe(400);
       expect(data.success).toBe(false);
-      expect(data.error.code).toBe("INVALID_REQUEST_BODY");
+      expect(data.error.code).toBe("VALIDATION_ERROR");
+      expect(data.error.message).toContain("status");
     });
 
     it("should return 400 when status is invalid", async () => {

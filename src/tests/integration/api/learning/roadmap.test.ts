@@ -32,7 +32,8 @@ describe.skipIf(!hasTestDb)(
 
       expect(response.status).toBe(400);
       expect(data.success).toBe(false);
-      expect(data.error.code).toBe("MISSING_USER_ID");
+      expect(data.error.code).toBe("VALIDATION_ERROR");
+      expect(data.error.message).toContain("userId");
     });
 
     it("should return 404 when no roadmap exists for user", async () => {

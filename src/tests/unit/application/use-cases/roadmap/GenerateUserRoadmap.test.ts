@@ -22,18 +22,27 @@ describe("GenerateUserRoadmap Use Case", () => {
       description: "Master advanced generic patterns for type-safe APIs",
       order: 1,
       status: "pending",
+      type: "theory",
+      topic: "typescript",
+      difficulty: "intermediate",
     },
     {
       title: "Study System Design",
       description: "Learn distributed systems fundamentals",
       order: 2,
       status: "pending",
+      type: "theory",
+      topic: "system-design",
+      difficulty: "advanced",
     },
     {
       title: "Build a Portfolio Project",
       description: "Create a full-stack application showcasing skills",
       order: 3,
       status: "pending",
+      type: "project",
+      topic: "full-stack",
+      difficulty: "advanced",
     },
   ];
 
@@ -333,19 +342,28 @@ describe("GenerateUserRoadmap Use Case", () => {
           title: "React Basics",
           description: "Learn React fundamentals",
           order: 1,
-          status: "completed", // User already knows this
+          status: "completed",
+          type: "theory",
+          topic: "react",
+          difficulty: "beginner",
         },
         {
           title: "Advanced React Patterns",
           description: "Master advanced patterns",
           order: 2,
-          status: "in_progress", // User has some exposure
+          status: "in_progress",
+          type: "theory",
+          topic: "react",
+          difficulty: "advanced",
         },
         {
           title: "GraphQL",
           description: "Learn GraphQL",
           order: 3,
-          status: "pending", // User needs to learn
+          status: "pending",
+          type: "theory",
+          topic: "graphql",
+          difficulty: "intermediate",
         },
       ];
 

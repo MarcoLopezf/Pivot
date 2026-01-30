@@ -6,6 +6,7 @@ import { Roadmap } from "@domain/learning/entities/Roadmap";
 import {
   RoadmapItem,
   RoadmapItemStatus,
+  RoadmapItemType,
 } from "@domain/learning/entities/RoadmapItem";
 import { RoadmapId } from "@domain/learning/value-objects/RoadmapId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
@@ -25,11 +26,16 @@ const STATUS_TO_PRISMA: Record<RoadmapItemStatus, string> = {
   completed: "COMPLETED",
 };
 
-/**
- * RoadmapMapper
- *
- * Maps between Prisma models and domain entities for Roadmap aggregate.
- */
+const TYPE_TO_DOMAIN: Record<string, RoadmapItemType> = {
+  THEORY: "theory",
+  PROJECT: "project",
+};
+
+const TYPE_TO_PRISMA: Record<RoadmapItemType, string> = {
+  theory: "THEORY",
+  project: "PROJECT",
+};
+
 export class RoadmapMapper {
   static toDomain(prismaRoadmap: PrismaRoadmapWithItems): Roadmap {
     const items = prismaRoadmap.items
@@ -41,6 +47,10 @@ export class RoadmapMapper {
           item.description,
           item.order,
           STATUS_TO_DOMAIN[item.status] ?? "pending",
+          TYPE_TO_DOMAIN[item.type] ?? "theory",
+          item.topic,
+          item.difficulty,
+          item.submissionUrl,
         ),
       );
 
@@ -66,6 +76,10 @@ export class RoadmapMapper {
       description: string;
       order: number;
       status: string;
+      type: string;
+      topic: string;
+      difficulty: string;
+      submissionUrl: string | null;
     }>;
   } {
     return {
@@ -80,6 +94,10 @@ export class RoadmapMapper {
         description: item.description,
         order: item.order,
         status: STATUS_TO_PRISMA[item.status],
+        type: TYPE_TO_PRISMA[item.type],
+        topic: item.topic,
+        difficulty: item.difficulty,
+        submissionUrl: item.submissionUrl,
       })),
     };
   }

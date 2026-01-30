@@ -102,7 +102,10 @@ export class GenerateUserRoadmap {
         generated.title,
         generated.description,
         generated.order,
-        generated.status, // Use status from AI
+        generated.status,
+        generated.type,
+        generated.topic,
+        generated.difficulty,
       );
       roadmap.addItem(item);
     }
@@ -120,6 +123,10 @@ export class GenerateUserRoadmap {
         description: item.description,
         order: item.order,
         status: item.status,
+        type: item.type,
+        topic: item.topic,
+        difficulty: item.difficulty,
+        submissionUrl: item.submissionUrl,
       })),
       createdAt: roadmap.createdAt,
       updatedAt: roadmap.updatedAt,

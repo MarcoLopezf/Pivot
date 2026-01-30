@@ -1,4 +1,5 @@
 import type { RoadmapItemStatus } from "@domain/learning/entities/RoadmapItem";
+import type { RoadmapItemType } from "@domain/learning/entities/RoadmapItem";
 
 /**
  * Raw roadmap item data returned by the AI flow
@@ -14,6 +15,20 @@ export interface GeneratedRoadmapItem {
    * - 'pending': User needs to learn this
    */
   status: RoadmapItemStatus;
+  /**
+   * Type of the roadmap item
+   * - 'theory': Knowledge-based, validated via quiz
+   * - 'project': Hands-on, validated via URL submission
+   */
+  type: RoadmapItemType;
+  /**
+   * Topic tag used for question pool matching
+   */
+  topic: string;
+  /**
+   * Difficulty level for the item
+   */
+  difficulty: string;
 }
 
 /**

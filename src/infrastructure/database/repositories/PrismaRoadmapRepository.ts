@@ -1,6 +1,7 @@
 import {
   type PrismaClient,
   type RoadmapItemStatus as PrismaRoadmapItemStatus,
+  type RoadmapItemType as PrismaRoadmapItemType,
 } from "@prisma/client";
 import { IRoadmapRepository } from "@domain/learning/repositories/IRoadmapRepository";
 import { Roadmap } from "@domain/learning/entities/Roadmap";
@@ -51,6 +52,10 @@ export class PrismaRoadmapRepository implements IRoadmapRepository {
               description: item.description,
               order: item.order,
               status: item.status as PrismaRoadmapItemStatus,
+              type: item.type as PrismaRoadmapItemType,
+              topic: item.topic,
+              difficulty: item.difficulty,
+              submissionUrl: item.submissionUrl,
             })),
           });
         }

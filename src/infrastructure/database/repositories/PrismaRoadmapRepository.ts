@@ -21,39 +21,45 @@ export class PrismaRoadmapRepository implements IRoadmapRepository {
   async save(roadmap: Roadmap): Promise<void> {
     const data = RoadmapMapper.toPersistence(roadmap);
 
-    await this.db.$transaction(async (tx) => {
-      await tx.roadmap.upsert({
-        where: { id: data.id },
-        create: {
-          id: data.id,
-          goalId: data.goalId,
-          title: data.title,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-        },
-        update: {
-          title: data.title,
-          updatedAt: data.updatedAt,
-        },
-      });
-
-      await tx.roadmapItem.deleteMany({
-        where: { roadmapId: data.id },
-      });
-
-      if (data.items.length > 0) {
-        await tx.roadmapItem.createMany({
-          data: data.items.map((item) => ({
-            id: item.id,
-            roadmapId: data.id,
-            title: item.title,
-            description: item.description,
-            order: item.order,
-            status: item.status as PrismaRoadmapItemStatus,
-          })),
+    await this.db.$transaction(
+      async (tx) => {
+        await tx.roadmap.upsert({
+          where: { id: data.id },
+          create: {
+            id: data.id,
+            goalId: data.goalId,
+            title: data.title,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+          },
+          update: {
+            title: data.title,
+            updatedAt: data.updatedAt,
+          },
         });
-      }
-    });
+
+        await tx.roadmapItem.deleteMany({
+          where: { roadmapId: data.id },
+        });
+
+        if (data.items.length > 0) {
+          await tx.roadmapItem.createMany({
+            data: data.items.map((item) => ({
+              id: item.id,
+              roadmapId: data.id,
+              title: item.title,
+              description: item.description,
+              order: item.order,
+              status: item.status as PrismaRoadmapItemStatus,
+            })),
+          });
+        }
+      },
+      {
+        maxWait: 10000, // 10 segundos para esperar que la transacción comience
+        timeout: 30000, // 30 segundos para completar la transacción
+      },
+    );
   }
 
   async findById(id: RoadmapId): Promise<Roadmap | null> {

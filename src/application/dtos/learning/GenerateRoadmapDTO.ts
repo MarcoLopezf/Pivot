@@ -20,4 +20,10 @@ export interface GenerateRoadmapDTO {
    * Will be parsed to extract relevant skills and experience
    */
   cvFile?: Buffer;
+
+  /**
+   * Optional GitHub username for analyzing public repositories
+   * The service will fetch recent repos and extract technical context
+   */
+  githubUsername?: string;
 }

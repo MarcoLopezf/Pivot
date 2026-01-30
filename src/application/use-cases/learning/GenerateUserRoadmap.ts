@@ -8,13 +8,14 @@ import { RoadmapId } from "@domain/learning/value-objects/RoadmapId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
 import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
 import { PdfService } from "@infrastructure/services/PdfService";
+import { GitHubService } from "@infrastructure/services/GitHubService";
 import { randomUUID } from "crypto";
 
 /**
  * GenerateUserRoadmap Use Case
  *
  * Orchestrates the generation of a personalized learning roadmap.
- * Enhanced with user context analysis (CV + experience summary) for intelligent
+ * Enhanced with user context analysis (CV + experience summary + GitHub) for intelligent
  * initial status assignment (completed/in_progress/pending).
  *
  * Calls the AI flow to generate items, then persists the Roadmap aggregate.
@@ -24,6 +25,7 @@ export class GenerateUserRoadmap {
     private readonly roadmapRepository: IRoadmapRepository,
     private readonly generateRoadmapFlow: IGenerateRoadmapFlow,
     private readonly pdfService: PdfService,
+    private readonly gitHubService: GitHubService,
   ) {}
 
   async execute(dto: GenerateRoadmapDTO): Promise<RoadmapDTO> {
@@ -33,10 +35,10 @@ export class GenerateUserRoadmap {
     const title = `Roadmap to ${dto.targetRole}`;
     const roadmap = Roadmap.create(roadmapId, goalId, title);
 
-    // Build user context from experience summary and CV
+    // Build user context from experience summary, CV, and GitHub
     let userContext: string | undefined;
 
-    if (dto.experienceSummary || dto.cvFile) {
+    if (dto.experienceSummary || dto.cvFile || dto.githubUsername) {
       const contextParts: string[] = [];
 
       // Add manual experience summary
@@ -59,8 +61,30 @@ export class GenerateUserRoadmap {
         }
       }
 
+      // Analyze GitHub profile
+      if (dto.githubUsername) {
+        try {
+          const githubContext = await this.gitHubService.analyzeProfile(
+            dto.githubUsername,
+          );
+          if (githubContext.trim()) {
+            contextParts.push(githubContext.trim());
+          }
+        } catch (error) {
+          // Log but don't fail - continue without GitHub context
+          console.error("Failed to analyze GitHub profile:", error);
+        }
+      }
+
       userContext =
         contextParts.length > 0 ? contextParts.join("\n\n") : undefined;
+
+      // Log the generated context for verification
+      if (userContext) {
+        console.log("=== AI Context for Roadmap Generation ===");
+        console.log(userContext);
+        console.log("=========================================");
+      }
     }
 
     // Generate roadmap items with user context

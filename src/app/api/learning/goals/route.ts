@@ -94,12 +94,18 @@ export async function POST(
 
     // Extract optional fields
     const experienceSummary = formData.get("experienceSummary");
+    const githubUsername = formData.get("githubUsername");
     const cvFile = formData.get("cvFile");
 
     // Validate types
     const experienceSummaryStr =
       experienceSummary && typeof experienceSummary === "string"
         ? experienceSummary.trim()
+        : undefined;
+
+    const githubUsernameStr =
+      githubUsername && typeof githubUsername === "string"
+        ? githubUsername.trim()
         : undefined;
 
     // Convert File to Buffer if present
@@ -140,6 +146,7 @@ export async function POST(
         currentRole,
         targetRole,
         experienceSummary: experienceSummaryStr,
+        githubUsername: githubUsernameStr,
         cvFile: cvBuffer,
       });
     } catch (roadmapError) {

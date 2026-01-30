@@ -14,6 +14,9 @@ interface RoadmapGenerationResponse {
     description: string;
     order: number;
     status: "pending" | "in_progress" | "completed";
+    type: "theory" | "project";
+    topic: string;
+    difficulty: "beginner" | "intermediate" | "advanced";
   }>;
 }
 
@@ -62,6 +65,9 @@ export class GenkitRoadmapFlow implements IGenerateRoadmapFlow {
         description: item.description,
         order: item.order,
         status: item.status,
+        type: item.type,
+        topic: item.topic,
+        difficulty: item.difficulty,
       }));
     } catch (error) {
       console.error("Error generating roadmap:", error);
@@ -117,6 +123,14 @@ Create 5-8 sequential learning milestones that form a clear path from current sk
 - Achievable within 2-4 weeks each
 - **Status assigned based on user's existing knowledge**
 
+**ITEM CLASSIFICATION RULES:**
+- "type": Classify each item as either:
+  * "theory": Knowledge-based learning (concepts, patterns, fundamentals) — validated later via quiz
+  * "project": Hands-on practice (build something, implement a feature) — validated later via URL submission
+  * A good roadmap should have a MIX of both types (roughly 80% theory, 20% project)
+- "topic": A short, lowercase, kebab-case tag that describes the core subject (e.g., "typescript-generics", "react-hooks", "system-design", "docker-basics"). This tag is used to match quiz questions later.
+- "difficulty": One of "beginner", "intermediate", or "advanced" based on the complexity of the milestone.
+
 Return ONLY a JSON object with this exact structure (no markdown, no code blocks):
 {
   "items": [
@@ -124,12 +138,15 @@ Return ONLY a JSON object with this exact structure (no markdown, no code blocks
       "title": "Clear, concise milestone title",
       "description": "2-3 sentence description tailored to user's specific gaps. If they know basics, focus on advanced concepts.",
       "order": 1,
-      "status": "pending"
+      "status": "pending",
+      "type": "theory",
+      "topic": "topic-tag",
+      "difficulty": "beginner"
     }
   ]
 }
 
 Order items sequentially (1, 2, 3, ...) from foundational to advanced.
-REMEMBER: Use the user context to intelligently set status values.`;
+REMEMBER: Use the user context to intelligently set status values. Ensure a healthy mix of theory and project items.`;
   }
 }

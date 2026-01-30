@@ -79,6 +79,10 @@ export class GetUserDashboard {
           description: nextItem.description,
           order: nextItem.order,
           status: nextItem.status,
+          type: nextItem.type,
+          topic: nextItem.topic,
+          difficulty: nextItem.difficulty,
+          submissionUrl: nextItem.submissionUrl,
         };
       }
     }

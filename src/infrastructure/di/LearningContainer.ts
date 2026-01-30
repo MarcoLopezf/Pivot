@@ -4,6 +4,7 @@ import { PrismaRoadmapRepository } from "@infrastructure/database/repositories/P
 import { GenkitRoleRecommender } from "@infrastructure/ai/flows/suggestRolesFlow";
 import { GenkitRoadmapFlow } from "@infrastructure/ai/flows/generateRoadmapFlow";
 import { PdfService } from "@infrastructure/services/PdfService";
+import { GitHubService } from "@infrastructure/services/GitHubService";
 import { SetCareerGoal } from "@application/use-cases/learning/SetCareerGoal";
 import { SuggestCareerRoles } from "@application/use-cases/learning/SuggestCareerRoles";
 import { GenerateUserRoadmap } from "@application/use-cases/learning/GenerateUserRoadmap";
@@ -27,6 +28,7 @@ class LearningContainer {
   private roleRecommender: GenkitRoleRecommender;
   private roadmapFlow: GenkitRoadmapFlow;
   private pdfService: PdfService;
+  private gitHubService: GitHubService;
 
   constructor() {
     // Initialize infrastructure dependencies
@@ -35,6 +37,7 @@ class LearningContainer {
     this.roleRecommender = new GenkitRoleRecommender();
     this.roadmapFlow = new GenkitRoadmapFlow();
     this.pdfService = new PdfService();
+    this.gitHubService = new GitHubService();
   }
 
   /**
@@ -59,6 +62,7 @@ class LearningContainer {
       this.roadmapRepository,
       this.roadmapFlow,
       this.pdfService,
+      this.gitHubService,
     );
   }
 

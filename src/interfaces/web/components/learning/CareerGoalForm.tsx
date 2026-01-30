@@ -42,6 +42,7 @@ const careerGoalFormSchema = z.object({
     .min(1, "Target role is required")
     .min(2, "Target role must be at least 2 characters"),
   experienceSummary: z.string().optional(),
+  githubUsername: z.string().optional(),
   cvFile: z
     .instanceof(File)
     .refine(
@@ -111,6 +112,7 @@ export function CareerGoalForm({
       currentRole: "",
       targetRole: "",
       experienceSummary: "",
+      githubUsername: "",
     },
   });
 
@@ -199,6 +201,10 @@ export function CareerGoalForm({
 
       if (values.experienceSummary) {
         formData.append("experienceSummary", values.experienceSummary);
+      }
+
+      if (values.githubUsername) {
+        formData.append("githubUsername", values.githubUsername);
       }
 
       if (values.cvFile) {
@@ -397,6 +403,29 @@ export function CareerGoalForm({
                   <FormDescription className="text-xs">
                     Describe your technical background, key skills, and relevant
                     projects
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="githubUsername"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>GitHub Username</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., octocat"
+                      disabled={isSubmitting}
+                      className="bg-white text-gray-900 placeholder:text-gray-500"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    AI will analyze your public repositories to understand your
+                    technical stack
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

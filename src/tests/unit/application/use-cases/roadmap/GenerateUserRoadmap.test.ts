@@ -7,11 +7,13 @@ import {
 } from "@domain/learning/services/IGenerateRoadmapFlow";
 import { Roadmap } from "@domain/learning/entities/Roadmap";
 import { PdfService } from "@infrastructure/services/PdfService";
+import { GitHubService } from "@infrastructure/services/GitHubService";
 
 describe("GenerateUserRoadmap Use Case", () => {
   let mockRepository: IRoadmapRepository;
   let mockFlow: IGenerateRoadmapFlow;
   let mockPdfService: PdfService;
+  let mockGitHubService: GitHubService;
   let useCase: GenerateUserRoadmap;
 
   const staticItems: GeneratedRoadmapItem[] = [
@@ -51,7 +53,16 @@ describe("GenerateUserRoadmap Use Case", () => {
       extractText: vi.fn(),
     } as unknown as PdfService;
 
-    useCase = new GenerateUserRoadmap(mockRepository, mockFlow, mockPdfService);
+    mockGitHubService = {
+      analyzeProfile: vi.fn().mockResolvedValue(""),
+    } as unknown as GitHubService;
+
+    useCase = new GenerateUserRoadmap(
+      mockRepository,
+      mockFlow,
+      mockPdfService,
+      mockGitHubService,
+    );
   });
 
   describe("execute", () => {
@@ -352,6 +363,113 @@ describe("GenerateUserRoadmap Use Case", () => {
       expect(result.items[0].status).toBe("completed");
       expect(result.items[1].status).toBe("in_progress");
       expect(result.items[2].status).toBe("pending");
+    });
+  });
+
+  describe("User Context - GitHub Username", () => {
+    it("should analyze GitHub profile and pass as user context", async () => {
+      const mockGitHubContext = `GITHUB CONTEXT:
+- pivot (TypeScript): AI-powered learning platform. Topics: nextjs, ai. Updated: 2026-01-30.
+- react-app (JavaScript): React application. Updated: 2026-01-25.`;
+
+      vi.mocked(mockGitHubService.analyzeProfile).mockResolvedValue(
+        mockGitHubContext,
+      );
+
+      const dto = {
+        goalId: "goal-001",
+        currentRole: "Junior Developer",
+        targetRole: "Senior Developer",
+        githubUsername: "testuser",
+      };
+
+      await useCase.execute(dto);
+
+      expect(mockGitHubService.analyzeProfile).toHaveBeenCalledWith("testuser");
+      expect(mockFlow.generate).toHaveBeenCalledWith(
+        "Junior Developer",
+        "Senior Developer",
+        expect.stringContaining("GITHUB CONTEXT"),
+      );
+      expect(mockFlow.generate).toHaveBeenCalledWith(
+        "Junior Developer",
+        "Senior Developer",
+        expect.stringContaining("pivot (TypeScript)"),
+      );
+    });
+
+    it("should combine experience summary, CV, and GitHub context", async () => {
+      const mockCvBuffer = Buffer.from("mock cv");
+      const mockCvText = "Senior Developer at Tech Company";
+      const mockGitHubContext =
+        "GITHUB CONTEXT:\n- my-repo (Go): Microservices. Updated: 2026-01-20.";
+
+      vi.mocked(mockPdfService.extractText).mockResolvedValue(mockCvText);
+      vi.mocked(mockGitHubService.analyzeProfile).mockResolvedValue(
+        mockGitHubContext,
+      );
+
+      const dto = {
+        goalId: "goal-001",
+        currentRole: "Junior Developer",
+        targetRole: "Senior Developer",
+        experienceSummary: "Expert in Node.js",
+        cvFile: mockCvBuffer,
+        githubUsername: "testuser",
+      };
+
+      await useCase.execute(dto);
+
+      const callArg = vi.mocked(mockFlow.generate).mock.calls[0][2];
+      expect(callArg).toContain("EXPERIENCE SUMMARY");
+      expect(callArg).toContain("Expert in Node.js");
+      expect(callArg).toContain("CV CONTENT");
+      expect(callArg).toContain("Senior Developer at Tech Company");
+      expect(callArg).toContain("GITHUB CONTEXT");
+      expect(callArg).toContain("my-repo (Go)");
+    });
+
+    it("should handle GitHub analysis failure gracefully", async () => {
+      vi.mocked(mockGitHubService.analyzeProfile).mockRejectedValue(
+        new Error("Network error"),
+      );
+
+      const dto = {
+        goalId: "goal-001",
+        currentRole: "Junior Developer",
+        targetRole: "Senior Developer",
+        githubUsername: "testuser",
+      };
+
+      // Should not throw - continues without GitHub context
+      await expect(useCase.execute(dto)).resolves.toBeDefined();
+
+      // Verify it still called the AI flow (without GitHub context)
+      expect(mockFlow.generate).toHaveBeenCalledWith(
+        "Junior Developer",
+        "Senior Developer",
+        undefined,
+      );
+    });
+
+    it("should ignore empty GitHub context", async () => {
+      vi.mocked(mockGitHubService.analyzeProfile).mockResolvedValue("   \n   ");
+
+      const dto = {
+        goalId: "goal-001",
+        currentRole: "Junior Developer",
+        targetRole: "Senior Developer",
+        githubUsername: "testuser",
+      };
+
+      await useCase.execute(dto);
+
+      // Should not include GitHub context since it's only whitespace
+      expect(mockFlow.generate).toHaveBeenCalledWith(
+        "Junior Developer",
+        "Senior Developer",
+        undefined,
+      );
     });
   });
 });

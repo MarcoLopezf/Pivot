@@ -6,10 +6,12 @@ import {
   GeneratedRoadmapItem,
 } from "@domain/learning/services/IGenerateRoadmapFlow";
 import { Roadmap } from "@domain/learning/entities/Roadmap";
+import { PdfService } from "@infrastructure/services/PdfService";
 
 describe("GenerateUserRoadmap Use Case", () => {
   let mockRepository: IRoadmapRepository;
   let mockFlow: IGenerateRoadmapFlow;
+  let mockPdfService: PdfService;
   let useCase: GenerateUserRoadmap;
 
   const staticItems: GeneratedRoadmapItem[] = [
@@ -17,16 +19,19 @@ describe("GenerateUserRoadmap Use Case", () => {
       title: "Learn TypeScript Generics",
       description: "Master advanced generic patterns for type-safe APIs",
       order: 1,
+      status: "pending",
     },
     {
       title: "Study System Design",
       description: "Learn distributed systems fundamentals",
       order: 2,
+      status: "pending",
     },
     {
       title: "Build a Portfolio Project",
       description: "Create a full-stack application showcasing skills",
       order: 3,
+      status: "pending",
     },
   ];
 
@@ -42,7 +47,11 @@ describe("GenerateUserRoadmap Use Case", () => {
       generate: vi.fn().mockResolvedValue(staticItems),
     };
 
-    useCase = new GenerateUserRoadmap(mockRepository, mockFlow);
+    mockPdfService = {
+      extractText: vi.fn(),
+    } as unknown as PdfService;
+
+    useCase = new GenerateUserRoadmap(mockRepository, mockFlow, mockPdfService);
   });
 
   describe("execute", () => {
@@ -59,6 +68,7 @@ describe("GenerateUserRoadmap Use Case", () => {
       expect(mockFlow.generate).toHaveBeenCalledWith(
         "Junior Developer",
         "Senior Developer",
+        undefined, // No user context
       );
     });
 
@@ -174,6 +184,174 @@ describe("GenerateUserRoadmap Use Case", () => {
 
       expect(mockFlow.generate).not.toHaveBeenCalled();
       expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("User Context - Experience Summary", () => {
+    it("should pass experience summary as user context to AI flow", async () => {
+      const dto = {
+        goalId: "goal-001",
+        currentRole: "Junior Developer",
+        targetRole: "Senior Developer",
+        experienceSummary:
+          "I have 3 years of experience with React and TypeScript",
+      };
+
+      await useCase.execute(dto);
+
+      expect(mockFlow.generate).toHaveBeenCalledWith(
+        "Junior Developer",
+        "Senior Developer",
+        expect.stringContaining("EXPERIENCE SUMMARY"),
+      );
+      expect(mockFlow.generate).toHaveBeenCalledWith(
+        "Junior Developer",
+        "Senior Developer",
+        expect.stringContaining(
+          "I have 3 years of experience with React and TypeScript",
+        ),
+      );
+    });
+  });
+
+  describe("User Context - CV Upload", () => {
+    it("should extract text from CV and pass as user context", async () => {
+      const mockCvBuffer = Buffer.from("mock cv");
+      const mockCvText =
+        "John Doe\nSoftware Engineer\n5 years experience with Node.js";
+
+      vi.mocked(mockPdfService.extractText).mockResolvedValue(mockCvText);
+
+      const dto = {
+        goalId: "goal-001",
+        currentRole: "Junior Developer",
+        targetRole: "Senior Developer",
+        cvFile: mockCvBuffer,
+      };
+
+      await useCase.execute(dto);
+
+      expect(mockPdfService.extractText).toHaveBeenCalledWith(mockCvBuffer);
+      expect(mockFlow.generate).toHaveBeenCalledWith(
+        "Junior Developer",
+        "Senior Developer",
+        expect.stringContaining("CV CONTENT"),
+      );
+      expect(mockFlow.generate).toHaveBeenCalledWith(
+        "Junior Developer",
+        "Senior Developer",
+        expect.stringContaining("5 years experience with Node.js"),
+      );
+    });
+
+    it("should combine experience summary and CV text", async () => {
+      const mockCvBuffer = Buffer.from("mock cv");
+      const mockCvText = "Work Experience:\n- React Developer at Company X";
+
+      vi.mocked(mockPdfService.extractText).mockResolvedValue(mockCvText);
+
+      const dto = {
+        goalId: "goal-001",
+        currentRole: "Junior Developer",
+        targetRole: "Senior Developer",
+        experienceSummary: "Expert in TypeScript",
+        cvFile: mockCvBuffer,
+      };
+
+      await useCase.execute(dto);
+
+      const callArg = vi.mocked(mockFlow.generate).mock.calls[0][2];
+      expect(callArg).toContain("EXPERIENCE SUMMARY");
+      expect(callArg).toContain("Expert in TypeScript");
+      expect(callArg).toContain("CV CONTENT");
+      expect(callArg).toContain("React Developer");
+    });
+
+    it("should handle CV extraction failure gracefully", async () => {
+      const mockCvBuffer = Buffer.from("corrupted cv");
+
+      vi.mocked(mockPdfService.extractText).mockRejectedValue(
+        new Error("Failed to extract text from PDF: Invalid structure"),
+      );
+
+      const dto = {
+        goalId: "goal-001",
+        currentRole: "Junior Developer",
+        targetRole: "Senior Developer",
+        cvFile: mockCvBuffer,
+      };
+
+      // Should not throw - continues without CV context
+      await expect(useCase.execute(dto)).resolves.toBeDefined();
+
+      // Verify it still called the AI flow (without CV context)
+      expect(mockFlow.generate).toHaveBeenCalledWith(
+        "Junior Developer",
+        "Senior Developer",
+        undefined,
+      );
+    });
+
+    it("should ignore empty CV text", async () => {
+      const mockCvBuffer = Buffer.from("mock cv");
+
+      vi.mocked(mockPdfService.extractText).mockResolvedValue("   \n\n   ");
+
+      const dto = {
+        goalId: "goal-001",
+        currentRole: "Junior Developer",
+        targetRole: "Senior Developer",
+        cvFile: mockCvBuffer,
+      };
+
+      await useCase.execute(dto);
+
+      // Should not include CV context since it's only whitespace
+      expect(mockFlow.generate).toHaveBeenCalledWith(
+        "Junior Developer",
+        "Senior Developer",
+        undefined,
+      );
+    });
+  });
+
+  describe("AI-Determined Status", () => {
+    it("should use AI-determined status for roadmap items", async () => {
+      const itemsWithStatus: GeneratedRoadmapItem[] = [
+        {
+          title: "React Basics",
+          description: "Learn React fundamentals",
+          order: 1,
+          status: "completed", // User already knows this
+        },
+        {
+          title: "Advanced React Patterns",
+          description: "Master advanced patterns",
+          order: 2,
+          status: "in_progress", // User has some exposure
+        },
+        {
+          title: "GraphQL",
+          description: "Learn GraphQL",
+          order: 3,
+          status: "pending", // User needs to learn
+        },
+      ];
+
+      vi.mocked(mockFlow.generate).mockResolvedValue(itemsWithStatus);
+
+      const dto = {
+        goalId: "goal-001",
+        currentRole: "Junior Developer",
+        targetRole: "Senior Developer",
+        experienceSummary: "I have worked with React for 2 years",
+      };
+
+      const result = await useCase.execute(dto);
+
+      expect(result.items[0].status).toBe("completed");
+      expect(result.items[1].status).toBe("in_progress");
+      expect(result.items[2].status).toBe("pending");
     });
   });
 });

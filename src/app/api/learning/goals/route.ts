@@ -28,27 +28,19 @@ interface GoalWithRoadmapResponse {
 }
 
 /**
- * Request body structure
- */
-interface CreateGoalRequest {
-  userId: string;
-  targetRole: string;
-  currentRole: string;
-}
-
-/**
- * POST /api/learning/goals - Create a new career goal and generate roadmap
+ * POST /api/learning/goals - Create a new career goal and generate personalized roadmap
  *
- * Request body:
- * {
- *   "userId": string,
- *   "targetRole": string,
- *   "currentRole": string
- * }
+ * Request body (multipart/form-data):
+ * - userId: string (required)
+ * - targetRole: string (required)
+ * - currentRole: string (required)
+ * - experienceSummary: string (optional) - Manual experience description
+ * - cvFile: File (optional) - PDF CV file for text extraction
  *
  * This endpoint:
  * 1. Creates the career goal
  * 2. Automatically generates a personalized learning roadmap with AI
+ * 3. Uses user context (experience + CV) for intelligent status assignment
  *
  * Responses:
  * - 201: Career goal and roadmap created successfully
@@ -61,32 +53,71 @@ export async function POST(
   NextResponse<ApiSuccessResponse<GoalWithRoadmapResponse> | ApiErrorResponse>
 > {
   try {
-    // Parse request body
-    let body: unknown;
+    // Parse FormData
+    let formData: FormData;
     try {
-      body = await request.json();
+      formData = await request.formData();
     } catch {
       const response: ApiErrorResponse = {
         success: false,
         error: {
-          code: "INVALID_JSON",
-          message: "Request body must be valid JSON",
+          code: "INVALID_FORM_DATA",
+          message: "Request body must be valid multipart/form-data",
         },
       };
       return NextResponse.json(response, { status: 400 });
     }
 
-    // Validate request body structure
-    if (!isValidCreateGoalRequest(body)) {
+    // Extract and validate required fields
+    const userId = formData.get("userId");
+    const targetRole = formData.get("targetRole");
+    const currentRole = formData.get("currentRole");
+
+    if (
+      !userId ||
+      !targetRole ||
+      !currentRole ||
+      typeof userId !== "string" ||
+      typeof targetRole !== "string" ||
+      typeof currentRole !== "string"
+    ) {
       const response: ApiErrorResponse = {
         success: false,
         error: {
           code: "INVALID_REQUEST_BODY",
           message:
-            "Request body must include 'userId', 'targetRole', and 'currentRole' fields",
+            "Request must include 'userId', 'targetRole', and 'currentRole' fields",
         },
       };
       return NextResponse.json(response, { status: 400 });
+    }
+
+    // Extract optional fields
+    const experienceSummary = formData.get("experienceSummary");
+    const cvFile = formData.get("cvFile");
+
+    // Validate types
+    const experienceSummaryStr =
+      experienceSummary && typeof experienceSummary === "string"
+        ? experienceSummary.trim()
+        : undefined;
+
+    // Convert File to Buffer if present
+    let cvBuffer: Buffer | undefined;
+    if (cvFile instanceof File) {
+      if (cvFile.type !== "application/pdf") {
+        const response: ApiErrorResponse = {
+          success: false,
+          error: {
+            code: "INVALID_FILE_TYPE",
+            message: "CV file must be a PDF",
+          },
+        };
+        return NextResponse.json(response, { status: 400 });
+      }
+
+      const arrayBuffer = await cvFile.arrayBuffer();
+      cvBuffer = Buffer.from(arrayBuffer);
     }
 
     // Get use cases from DI container
@@ -96,18 +127,20 @@ export async function POST(
 
     // Step 1: Create the career goal
     const careerGoalDTO: CareerGoalDTO = await setCareerGoal.execute({
-      userId: body.userId,
-      targetRole: body.targetRole,
-      currentRole: body.currentRole,
+      userId,
+      targetRole,
+      currentRole,
     });
 
-    // Step 2: Automatically generate roadmap with AI
+    // Step 2: Automatically generate personalized roadmap with AI
     let roadmapDTO: RoadmapDTO;
     try {
       roadmapDTO = await generateUserRoadmap.execute({
         goalId: careerGoalDTO.id,
-        currentRole: body.currentRole,
-        targetRole: body.targetRole,
+        currentRole,
+        targetRole,
+        experienceSummary: experienceSummaryStr,
+        cvFile: cvBuffer,
       });
     } catch (roadmapError) {
       // Graceful degradation: Goal is saved, but roadmap generation failed
@@ -165,20 +198,4 @@ export async function POST(
     };
     return NextResponse.json(response, { status: 500 });
   }
-}
-
-/**
- * Type guard to validate CreateGoalRequest structure
- */
-function isValidCreateGoalRequest(body: unknown): body is CreateGoalRequest {
-  return (
-    typeof body === "object" &&
-    body !== null &&
-    "userId" in body &&
-    typeof (body as Record<string, unknown>).userId === "string" &&
-    "targetRole" in body &&
-    typeof (body as Record<string, unknown>).targetRole === "string" &&
-    "currentRole" in body &&
-    typeof (body as Record<string, unknown>).currentRole === "string"
-  );
 }

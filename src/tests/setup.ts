@@ -5,6 +5,7 @@
  */
 
 import { config } from "dotenv";
+import { vi } from "vitest";
 
 // Load environment variables from .env file
 config();
@@ -14,3 +15,13 @@ config();
 if (process.env.DATABASE_URL_TEST) {
   process.env.DATABASE_URL = process.env.DATABASE_URL_TEST;
 }
+
+// Mock pdf-parse globally to avoid DOMMatrix errors in test environment
+vi.mock("pdf-parse", () => ({
+  PDFParse: vi.fn().mockImplementation(() => ({
+    getText: vi.fn().mockResolvedValue({
+      text: "Mocked PDF text content",
+      pages: [],
+    }),
+  })),
+}));

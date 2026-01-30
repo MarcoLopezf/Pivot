@@ -3,6 +3,7 @@ import { PrismaCareerGoalRepository } from "@infrastructure/database/repositorie
 import { PrismaRoadmapRepository } from "@infrastructure/database/repositories/PrismaRoadmapRepository";
 import { GenkitRoleRecommender } from "@infrastructure/ai/flows/suggestRolesFlow";
 import { GenkitRoadmapFlow } from "@infrastructure/ai/flows/generateRoadmapFlow";
+import { PdfService } from "@infrastructure/services/PdfService";
 import { SetCareerGoal } from "@application/use-cases/learning/SetCareerGoal";
 import { SuggestCareerRoles } from "@application/use-cases/learning/SuggestCareerRoles";
 import { GenerateUserRoadmap } from "@application/use-cases/learning/GenerateUserRoadmap";
@@ -25,6 +26,7 @@ class LearningContainer {
   private roadmapRepository: PrismaRoadmapRepository;
   private roleRecommender: GenkitRoleRecommender;
   private roadmapFlow: GenkitRoadmapFlow;
+  private pdfService: PdfService;
 
   constructor() {
     // Initialize infrastructure dependencies
@@ -32,6 +34,7 @@ class LearningContainer {
     this.roadmapRepository = new PrismaRoadmapRepository(prisma);
     this.roleRecommender = new GenkitRoleRecommender();
     this.roadmapFlow = new GenkitRoadmapFlow();
+    this.pdfService = new PdfService();
   }
 
   /**
@@ -52,7 +55,11 @@ class LearningContainer {
    * Returns an initialized GenerateUserRoadmap use case with all dependencies injected
    */
   getGenerateUserRoadmapUseCase(): GenerateUserRoadmap {
-    return new GenerateUserRoadmap(this.roadmapRepository, this.roadmapFlow);
+    return new GenerateUserRoadmap(
+      this.roadmapRepository,
+      this.roadmapFlow,
+      this.pdfService,
+    );
   }
 
   /**

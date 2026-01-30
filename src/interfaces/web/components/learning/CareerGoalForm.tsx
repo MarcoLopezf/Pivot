@@ -16,8 +16,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -28,7 +30,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
- * Zod schema for career goal form
+ * Zod schema for career goal form with optional personalization fields
  */
 const careerGoalFormSchema = z.object({
   currentRole: z
@@ -39,6 +41,18 @@ const careerGoalFormSchema = z.object({
     .string()
     .min(1, "Target role is required")
     .min(2, "Target role must be at least 2 characters"),
+  experienceSummary: z.string().optional(),
+  cvFile: z
+    .instanceof(File)
+    .refine(
+      (file) => !file || file.type === "application/pdf",
+      "CV must be a PDF file",
+    )
+    .refine(
+      (file) => !file || file.size <= 5 * 1024 * 1024,
+      "CV file must be less than 5MB",
+    )
+    .optional(),
 });
 
 type CareerGoalFormValues = z.infer<typeof careerGoalFormSchema>;
@@ -96,6 +110,7 @@ export function CareerGoalForm({
     defaultValues: {
       currentRole: "",
       targetRole: "",
+      experienceSummary: "",
     },
   });
 
@@ -165,27 +180,34 @@ export function CareerGoalForm({
   };
 
   /**
-   * Submit the career goal and generate roadmap
+   * Submit the career goal and generate personalized roadmap
    */
   const onSubmit = async (values: CareerGoalFormValues): Promise<void> => {
     setIsSubmitting(true);
 
     try {
       // Show loading toast with AI generation message
-      const loadingToast = toast.loading("Saving your career goal...", {
-        description: "This will take a few seconds",
+      const loadingToast = toast.loading("Analyzing your experience...", {
+        description: "Generating your personalized roadmap with AI",
       });
+
+      // Build FormData for multipart/form-data submission
+      const formData = new FormData();
+      formData.append("userId", userId);
+      formData.append("currentRole", values.currentRole);
+      formData.append("targetRole", values.targetRole);
+
+      if (values.experienceSummary) {
+        formData.append("experienceSummary", values.experienceSummary);
+      }
+
+      if (values.cvFile) {
+        formData.append("cvFile", values.cvFile);
+      }
 
       const response = await fetch("/api/learning/goals", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-          currentRole: values.currentRole,
-          targetRole: values.targetRole,
-        }),
+        body: formData, // No Content-Type header - browser sets it with boundary
       });
 
       const data: ApiSuccessResponse<unknown> | ApiErrorResponse =
@@ -343,6 +365,74 @@ export function CareerGoalForm({
               </FormItem>
             )}
           />
+
+          {/* Personalization Section */}
+          <div className="space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-blue-600" />
+              <h3 className="font-semibold text-blue-900">
+                Personalize Your Roadmap (Optional)
+              </h3>
+            </div>
+            <p className="text-sm text-blue-700">
+              Help our AI understand your experience to create a more accurate
+              roadmap. Items you already know will be marked as completed!
+            </p>
+
+            <FormField
+              control={form.control}
+              name="experienceSummary"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Experience Summary</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="e.g., 3 years with React and TypeScript, built full-stack apps with Node.js..."
+                      disabled={isSubmitting}
+                      rows={4}
+                      className="resize-none bg-white text-gray-900 placeholder:text-gray-500"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    Describe your technical background, key skills, and relevant
+                    projects
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="cvFile"
+              render={({ field: { onChange, ...fieldProps } }) => (
+                <FormItem>
+                  <FormLabel>Upload CV (PDF, max 5MB)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept=".pdf"
+                      disabled={isSubmitting}
+                      className="cursor-pointer file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground hover:file:bg-primary/90"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        onChange(file);
+                      }}
+                      ref={fieldProps.ref}
+                      name={fieldProps.name}
+                      onBlur={fieldProps.onBlur}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    Our AI will analyze your CV to identify your skills and
+                    customize your learning path
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <Button
             type="submit"

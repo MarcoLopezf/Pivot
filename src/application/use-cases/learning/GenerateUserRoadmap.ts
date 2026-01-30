@@ -7,18 +7,23 @@ import { RoadmapItem } from "@domain/learning/entities/RoadmapItem";
 import { RoadmapId } from "@domain/learning/value-objects/RoadmapId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
 import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
+import { PdfService } from "@infrastructure/services/PdfService";
 import { randomUUID } from "crypto";
 
 /**
  * GenerateUserRoadmap Use Case
  *
  * Orchestrates the generation of a personalized learning roadmap.
+ * Enhanced with user context analysis (CV + experience summary) for intelligent
+ * initial status assignment (completed/in_progress/pending).
+ *
  * Calls the AI flow to generate items, then persists the Roadmap aggregate.
  */
 export class GenerateUserRoadmap {
   constructor(
     private readonly roadmapRepository: IRoadmapRepository,
     private readonly generateRoadmapFlow: IGenerateRoadmapFlow,
+    private readonly pdfService: PdfService,
   ) {}
 
   async execute(dto: GenerateRoadmapDTO): Promise<RoadmapDTO> {
@@ -28,18 +33,52 @@ export class GenerateUserRoadmap {
     const title = `Roadmap to ${dto.targetRole}`;
     const roadmap = Roadmap.create(roadmapId, goalId, title);
 
+    // Build user context from experience summary and CV
+    let userContext: string | undefined;
+
+    if (dto.experienceSummary || dto.cvFile) {
+      const contextParts: string[] = [];
+
+      // Add manual experience summary
+      if (dto.experienceSummary) {
+        contextParts.push(
+          `EXPERIENCE SUMMARY:\n${dto.experienceSummary.trim()}`,
+        );
+      }
+
+      // Extract and add CV text
+      if (dto.cvFile) {
+        try {
+          const cvText = await this.pdfService.extractText(dto.cvFile);
+          if (cvText.trim()) {
+            contextParts.push(`CV CONTENT:\n${cvText.trim()}`);
+          }
+        } catch (error) {
+          // Log but don't fail - continue without CV context
+          console.error("Failed to extract CV text:", error);
+        }
+      }
+
+      userContext =
+        contextParts.length > 0 ? contextParts.join("\n\n") : undefined;
+    }
+
+    // Generate roadmap items with user context
     const generatedItems = await this.generateRoadmapFlow.generate(
       dto.currentRole,
       dto.targetRole,
+      userContext,
     );
 
+    // Create roadmap items with AI-determined status
     for (const generated of generatedItems) {
       const itemId = RoadmapItemId.create(randomUUID());
-      const item = RoadmapItem.create(
+      const item = RoadmapItem.reconstitute(
         itemId,
         generated.title,
         generated.description,
         generated.order,
+        generated.status, // Use status from AI
       );
       roadmap.addItem(item);
     }

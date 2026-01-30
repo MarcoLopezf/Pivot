@@ -13,6 +13,7 @@ interface RoadmapGenerationResponse {
     title: string;
     description: string;
     order: number;
+    status: "pending" | "in_progress" | "completed";
   }>;
 }
 
@@ -26,9 +27,10 @@ export class GenkitRoadmapFlow implements IGenerateRoadmapFlow {
   async generate(
     currentRole: string,
     targetRole: string,
+    userContext?: string,
   ): Promise<GeneratedRoadmapItem[]> {
     try {
-      const prompt = this.buildPrompt(currentRole, targetRole);
+      const prompt = this.buildPrompt(currentRole, targetRole, userContext);
 
       const { text } = await ai.generate({
         model: openAI.model("gpt-4o-mini"),
@@ -59,6 +61,7 @@ export class GenkitRoadmapFlow implements IGenerateRoadmapFlow {
         title: item.title,
         description: item.description,
         order: item.order,
+        status: item.status,
       }));
     } catch (error) {
       console.error("Error generating roadmap:", error);
@@ -76,25 +79,57 @@ export class GenkitRoadmapFlow implements IGenerateRoadmapFlow {
     return trimmed;
   }
 
-  private buildPrompt(currentRole: string, targetRole: string): string {
-    return `You are a career development expert specializing in tech career transitions. Generate a structured learning roadmap for someone transitioning from "${currentRole}" to "${targetRole}".
+  private buildPrompt(
+    currentRole: string,
+    targetRole: string,
+    userContext?: string,
+  ): string {
+    let contextSection = "";
+    console.log("userContext", userContext);
+    if (userContext) {
+      contextSection = `
+
+IMPORTANT - USER CONTEXT:
+The user has provided the following information about their experience and background:
+
+${userContext}
+
+**CRITICAL INSTRUCTIONS FOR STATUS ASSIGNMENT:**
+- Analyze the user context carefully to understand what skills/topics they already know
+- Set "status" for each roadmap item based on their experience:
+  * "completed": User demonstrates clear experience with this topic (e.g., "I use React daily", "3 years with TypeScript")
+  * "in_progress": User has some exposure or basic knowledge (e.g., "learning React", "familiar with the basics")
+  * "pending": No evidence of knowledge/experience with this topic - they need to learn it from scratch
+
+- Tailor each item's description to fill THEIR SPECIFIC GAPS
+- If they already know something, acknowledge it in the description and focus on advanced aspects`;
+    } else {
+      contextSection = `
+
+NOTE: No user context provided. Set all items to "status": "pending" by default.`;
+    }
+
+    return `You are an expert career mentor specializing in personalized tech career transitions. Generate a structured learning roadmap for someone transitioning from "${currentRole}" to "${targetRole}".${contextSection}
 
 Create 5-8 sequential learning milestones that form a clear path from current skills to the target role. Each milestone should be:
 - Actionable and specific (not vague like "learn more")
 - Building on the previous milestone
 - Achievable within 2-4 weeks each
+- **Status assigned based on user's existing knowledge**
 
 Return ONLY a JSON object with this exact structure (no markdown, no code blocks):
 {
   "items": [
     {
       "title": "Clear, concise milestone title",
-      "description": "2-3 sentence description of what to learn and why it matters for the transition",
-      "order": 1
+      "description": "2-3 sentence description tailored to user's specific gaps. If they know basics, focus on advanced concepts.",
+      "order": 1,
+      "status": "pending"
     }
   ]
 }
 
-Order items sequentially (1, 2, 3, ...) from foundational to advanced.`;
+Order items sequentially (1, 2, 3, ...) from foundational to advanced.
+REMEMBER: Use the user context to intelligently set status values.`;
   }
 }

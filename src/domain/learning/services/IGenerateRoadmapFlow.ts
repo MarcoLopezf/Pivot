@@ -1,3 +1,5 @@
+import type { RoadmapItemStatus } from "@domain/learning/entities/RoadmapItem";
+
 /**
  * Raw roadmap item data returned by the AI flow
  */
@@ -5,6 +7,13 @@ export interface GeneratedRoadmapItem {
   title: string;
   description: string;
   order: number;
+  /**
+   * Initial status set by AI based on user's experience
+   * - 'completed': User already has this skill
+   * - 'in_progress': User has some exposure
+   * - 'pending': User needs to learn this
+   */
+  status: RoadmapItemStatus;
 }
 
 /**
@@ -20,10 +29,12 @@ export interface IGenerateRoadmapFlow {
    *
    * @param currentRole - The user's current job role
    * @param targetRole - The role the user wants to transition to
-   * @returns Promise with array of generated roadmap items
+   * @param userContext - Optional context about user's experience (from CV or manual input)
+   * @returns Promise with array of generated roadmap items with intelligent status
    */
   generate(
     currentRole: string,
     targetRole: string,
+    userContext?: string,
   ): Promise<GeneratedRoadmapItem[]>;
 }

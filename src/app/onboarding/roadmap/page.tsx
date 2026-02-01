@@ -47,6 +47,12 @@ export default function OnboardingRoadmapPage(): React.ReactElement {
     userId || "",
   );
 
+  // Handle quiz navigation
+  const handleTakeQuiz = (itemId: string) => {
+    if (!roadmap) return;
+    router.push(`/quiz/${roadmap.id}/${itemId}`);
+  };
+
   // Checking auth state
   if (isCheckingAuth) {
     return (
@@ -184,6 +190,7 @@ export default function OnboardingRoadmapPage(): React.ReactElement {
           <RoadmapTimeline
             roadmap={roadmap}
             onItemStatusChange={toggleItemStatus}
+            onTakeQuiz={handleTakeQuiz}
           />
 
           {/* Continue Button */}

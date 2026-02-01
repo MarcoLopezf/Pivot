@@ -79,7 +79,7 @@ export async function PATCH(
       }
 
       body = parseResult.data;
-    } catch (error) {
+    } catch {
       const response: ApiErrorResponse = {
         success: false,
         error: {

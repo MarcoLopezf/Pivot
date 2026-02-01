@@ -9,11 +9,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, Circle } from "lucide-react";
+import { CheckCircle2, Clock, Circle, BookOpen } from "lucide-react";
 
 export interface RoadmapTimelineProps {
   roadmap: RoadmapDTO;
   onItemStatusChange: (itemId: string, newStatus: RoadmapItemStatus) => void;
+  onTakeQuiz?: (itemId: string) => void;
 }
 
 /**
@@ -29,6 +30,7 @@ export interface RoadmapTimelineProps {
 export function RoadmapTimeline({
   roadmap,
   onItemStatusChange,
+  onTakeQuiz,
 }: RoadmapTimelineProps): React.ReactNode {
   const getStatusIcon = (status: RoadmapItemStatus) => {
     switch (status) {
@@ -143,19 +145,38 @@ export function RoadmapTimeline({
                     Step {index + 1} of {roadmap.items.length}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleItemClick(item.id, item.status);
-                  }}
-                  className="ml-2"
-                >
-                  {item.status === "pending" && "Start"}
-                  {item.status === "in_progress" && "Mark Complete"}
-                  {item.status === "completed" && "Undo"}
-                </Button>
+                <div className="flex gap-2">
+                  {/* Take Quiz Button - Only for THEORY items not completed */}
+                  {item.type === "theory" &&
+                    item.status !== "completed" &&
+                    onTakeQuiz && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onTakeQuiz(item.id);
+                        }}
+                        className="ml-2"
+                      >
+                        <BookOpen className="h-4 w-4 mr-1" />
+                        Take Quiz
+                      </Button>
+                    )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleItemClick(item.id, item.status);
+                    }}
+                    className="ml-2"
+                  >
+                    {item.status === "pending" && "Start"}
+                    {item.status === "in_progress" && "Mark Complete"}
+                    {item.status === "completed" && "Undo"}
+                  </Button>
+                </div>
               </div>
 
               {/* Description */}

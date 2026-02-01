@@ -21,46 +21,51 @@ export class PrismaQuestionRepository implements IQuestionRepository {
   }
 
   async saveMany(questions: Question[]): Promise<void> {
-    await this.db.$transaction(async (tx) => {
-      for (const question of questions) {
-        const data = QuestionMapper.toPersistence(question);
+    await this.db.$transaction(
+      async (tx) => {
+        for (const question of questions) {
+          const data = QuestionMapper.toPersistence(question);
 
-        await tx.question.upsert({
-          where: { id: data.id },
-          create: {
-            id: data.id,
-            text: data.text,
-            tags: data.tags,
-            difficulty: data.difficulty,
-            usageCount: data.usageCount,
-            createdAt: data.createdAt,
-            updatedAt: data.updatedAt,
-          },
-          update: {
-            text: data.text,
-            tags: data.tags,
-            difficulty: data.difficulty,
-            usageCount: data.usageCount,
-            updatedAt: data.updatedAt,
-          },
-        });
-
-        await tx.questionOption.deleteMany({
-          where: { questionId: data.id },
-        });
-
-        if (data.options.length > 0) {
-          await tx.questionOption.createMany({
-            data: data.options.map((opt) => ({
-              id: opt.id,
-              questionId: data.id,
-              text: opt.text,
-              isCorrect: opt.isCorrect,
-            })),
+          await tx.question.upsert({
+            where: { id: data.id },
+            create: {
+              id: data.id,
+              text: data.text,
+              tags: data.tags,
+              difficulty: data.difficulty,
+              usageCount: data.usageCount,
+              createdAt: data.createdAt,
+              updatedAt: data.updatedAt,
+            },
+            update: {
+              text: data.text,
+              tags: data.tags,
+              difficulty: data.difficulty,
+              usageCount: data.usageCount,
+              updatedAt: data.updatedAt,
+            },
           });
+
+          await tx.questionOption.deleteMany({
+            where: { questionId: data.id },
+          });
+
+          if (data.options.length > 0) {
+            await tx.questionOption.createMany({
+              data: data.options.map((opt) => ({
+                id: opt.id,
+                questionId: data.id,
+                text: opt.text,
+                isCorrect: opt.isCorrect,
+              })),
+            });
+          }
         }
-      }
-    });
+      },
+      {
+        timeout: 30000, // 30 seconds timeout for AI generation + DB operations
+      },
+    );
   }
 
   async findById(id: QuestionId): Promise<Question | null> {

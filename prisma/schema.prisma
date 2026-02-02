@@ -12,14 +12,15 @@ enum UserRole {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  name         String
-  role         UserRole      @default(USER)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  careerGoals  CareerGoal[]
-  quizAttempts QuizAttempt[]
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  name               String
+  role               UserRole            @default(USER)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  careerGoals        CareerGoal[]
+  quizAttempts       QuizAttempt[]
+  projectSubmissions ProjectSubmission[]
 }
 
 model CareerGoal {
@@ -72,8 +73,9 @@ model RoadmapItem {
   difficulty    String            @default("beginner")
   submissionUrl String?
 
-  roadmap      Roadmap       @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
-  quizAttempts QuizAttempt[]
+  roadmap            Roadmap             @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  quizAttempts       QuizAttempt[]
+  projectSubmissions ProjectSubmission[]
 
   @@index([roadmapId])
 }
@@ -138,4 +140,30 @@ model LearningResource {
   updatedAt    DateTime     @updatedAt
 
   @@index([tags])
+}
+
+enum ProjectSubmissionStatus {
+  PENDING
+  ANALYZING
+  COMPLETED
+  FAILED
+}
+
+model ProjectSubmission {
+  id            String                  @id @default(uuid())
+  repoUrl       String
+  score         Float?
+  feedback      String?
+  status        ProjectSubmissionStatus @default(PENDING)
+  roadmapItemId String
+  userId        String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmapItem RoadmapItem @relation(fields: [roadmapItemId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([roadmapItemId])
 }

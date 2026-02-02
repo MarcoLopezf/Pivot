@@ -7,13 +7,19 @@
 import { config } from "dotenv";
 import { vi } from "vitest";
 
-// Load environment variables from .env file
+// CRITICAL: Set DATABASE_URL to test database BEFORE loading .env
+// This must happen before any Prisma Client is initialized
+process.env.DATABASE_URL =
+  "postgresql://postgres:postgres@localhost:5432/pivot_test?schema=public";
+
+// Load environment variables from .env file (will not override DATABASE_URL)
 config();
 
-// CRITICAL: Override DATABASE_URL to use test database
-// This ensures ALL Prisma instances (tests + API routes) use the Docker test DB
-if (process.env.DATABASE_URL_TEST) {
-  process.env.DATABASE_URL = process.env.DATABASE_URL_TEST;
+// Verify test database is being used
+if (!process.env.DATABASE_URL.includes("pivot_test")) {
+  throw new Error(
+    "Tests must use test database! DATABASE_URL does not point to pivot_test",
+  );
 }
 
 // Mock pdf-parse globally to avoid DOMMatrix errors in test environment

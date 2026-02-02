@@ -61,7 +61,7 @@ export class YouTubeService {
       // Build search query from tags
       const query = tags.join(" ");
 
-      // Call YouTube API
+      // Call YouTube API (with 10s timeout)
       const response = await axios.get<YouTubeSearchResponse>(this.baseUrl, {
         params: {
           key: this.apiKey,
@@ -72,6 +72,7 @@ export class YouTubeService {
           videoDefinition: "any",
           safeSearch: "strict",
         },
+        timeout: 10000, // 10 seconds
       });
 
       // Map YouTube response to LearningResource

@@ -97,30 +97,28 @@
 - **Application layer:** 80%+
 - **Overall minimum:** 70%
 
- ### Test Maintenance Protocol                                                 
-                                                                        
-  **CRITICAL RULE:** When modifying code, ALWAYS check if tests need updates.   
-                                                                             
-  #### Trigger Events (Check Tests):                                            
-  - ✅ **Change constants/configuration** (e.g., `maxResults: 10 → 4`)          
-  - ✅ **Modify function signatures** (add/remove parameters)                   
-  - ✅ **Change return types or data structures**                               
-  - ✅ **Refactor business logic** (even if behavior is "the same")             
-  - ✅ **Update validation rules** (Zod schemas, guards)                        
-  - ✅ **Change error messages or codes**                                       
-                                                                            
-  #### Action Steps:                                                            
-  1. **Before modifying code:** Note which tests cover the area                 
-  2. **After modifying code:**                                                  
-     - Search for test files related to the modified file                       
-     - Run tests: `pnpm test --run [test-file-path]`                            
-     - Update test assertions to match new behavior/values                      
-     - Verify all related tests still pass                                      
-  3. **If test fails after change:** This is GOOD - update the test expectations
-                                                                                
-  **Remember:** Tests are documentation. If the code changes, the tests must    
-  reflect it.
-
+### Test Maintenance Protocol                                                                                                     
+**CRITICAL RULE:** When modifying code, ALWAYS check if tests need updates.   
+                                                
+#### Trigger Events (Check Tests):                                            
+- ✅ **Change constants/configuration** (e.g., `maxResults: 10 → 4`)          
+- ✅ **Modify function signatures** (add/remove parameters)                   
+- ✅ **Change return types or data structures**                               
+- ✅ **Refactor business logic** (even if behavior is "the same")             
+- ✅ **Update validation rules** (Zod schemas, guards)                        
+- ✅ **Change error messages or codes**                                       
+                                                                    
+#### Action Steps:                                                            
+1. **Before modifying code:** Note which tests cover the area                 
+2. **After modifying code:**                                                  
+- Search for test files related to the modified file                       
+- Run tests: `pnpm test --run [test-file-path]`                            
+- Update test assertions to match new behavior/values                      
+- Verify all related tests still pass                                      
+3. **If test fails after change:** This is GOOD - update the test expectations
+                                        
+**Remember:** Tests are documentation. If the code changes, the tests must    
+reflect it.`
 ---
 
 ## 📝 NAMING CONVENTIONS

@@ -48,11 +48,12 @@ export function useItemResources(itemId: string, topic: string) {
    * Fetch resources from API
    *
    * Only fetches once per item (prevents duplicate API calls).
+   * Prevents race conditions by checking both hasFetched and isLoading.
    * Can be triggered manually by user action.
    */
   const fetchResources = useCallback(async (): Promise<void> => {
-    // Guard: Already fetched
-    if (hasFetched) {
+    // Guard: Already fetched or currently loading (prevents race conditions)
+    if (hasFetched || isLoading) {
       return;
     }
 
@@ -88,7 +89,7 @@ export function useItemResources(itemId: string, topic: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [itemId, topic, hasFetched]);
+  }, [itemId, topic, hasFetched, isLoading]);
 
   return {
     resources,

@@ -12,6 +12,7 @@ import { LearningResource } from "@domain/learning/repositories/IResourceReposit
 
 /**
  * YouTube API Search Response Structure
+ * Note: search.list only returns 'id' and 'snippet' parts
  */
 interface YouTubeSearchResponse {
   items: Array<{
@@ -26,9 +27,6 @@ interface YouTubeSearchResponse {
           url: string;
         };
       };
-    };
-    contentDetails?: {
-      duration: string; // ISO 8601 format: PT10M5S
     };
   }>;
 }
@@ -87,6 +85,7 @@ export class YouTubeService {
 
   /**
    * Map YouTube API response to LearningResource objects
+   * Note: Duration is not available from search.list endpoint
    */
   private mapYouTubeResponse(
     response: YouTubeSearchResponse,
@@ -101,39 +100,8 @@ export class YouTubeService {
       url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
       thumbnailUrl: item.snippet.thumbnails.high.url,
       channelName: item.snippet.channelTitle,
-      duration: item.contentDetails
-        ? this.parseISO8601Duration(item.contentDetails.duration)
-        : undefined,
       type: "video" as const,
       tags,
     }));
-  }
-
-  /**
-   * Parse ISO 8601 duration to human-readable format
-   *
-   * Examples:
-   * - PT10M5S -> 10:05
-   * - PT1H5M30S -> 1:05:30
-   * - PT45S -> 0:45
-   */
-  private parseISO8601Duration(duration: string): string {
-    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-
-    if (!match) {
-      return "0:00";
-    }
-
-    const hours = parseInt(match[1] || "0", 10);
-    const minutes = parseInt(match[2] || "0", 10);
-    const seconds = parseInt(match[3] || "0", 10);
-
-    const pad = (num: number): string => num.toString().padStart(2, "0");
-
-    if (hours > 0) {
-      return `${hours}:${pad(minutes)}:${pad(seconds)}`;
-    } else {
-      return `${minutes}:${pad(seconds)}`;
-    }
   }
 }

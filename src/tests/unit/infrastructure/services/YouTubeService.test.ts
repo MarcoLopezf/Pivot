@@ -13,6 +13,7 @@ import { YouTubeService } from "@infrastructure/services/YouTubeService";
 vi.mock("axios");
 
 // YouTube API response type (simplified)
+// Note: search.list only returns 'id' and 'snippet' parts
 interface YouTubeSearchResponse {
   items: Array<{
     id: {
@@ -26,9 +27,6 @@ interface YouTubeSearchResponse {
           url: string;
         };
       };
-    };
-    contentDetails?: {
-      duration: string; // ISO 8601 format: PT10M5S
     };
   }>;
 }
@@ -61,9 +59,6 @@ describe("YouTubeService", () => {
                 },
               },
             },
-            contentDetails: {
-              duration: "PT10M5S", // 10 minutes 5 seconds
-            },
           },
           {
             id: { videoId: "video456" },
@@ -75,9 +70,6 @@ describe("YouTubeService", () => {
                   url: "https://i.ytimg.com/vi/video456/maxresdefault.jpg",
                 },
               },
-            },
-            contentDetails: {
-              duration: "PT25M30S", // 25 minutes 30 seconds
             },
           },
         ],
@@ -97,7 +89,6 @@ describe("YouTubeService", () => {
       expect(results[0].thumbnailUrl).toBe(
         "https://i.ytimg.com/vi/video123/maxresdefault.jpg",
       );
-      expect(results[0].duration).toBe("10:05");
       expect(results[0].tags).toEqual(["react", "hooks"]);
       expect(results[0].type).toBe("video");
 
@@ -105,7 +96,6 @@ describe("YouTubeService", () => {
       expect(results[1].title).toBe("TypeScript Advanced Patterns");
       expect(results[1].channelName).toBe("Net Ninja");
       expect(results[1].url).toBe("https://www.youtube.com/watch?v=video456");
-      expect(results[1].duration).toBe("25:30");
     });
 
     it("should return empty array on API error (403 Quota Exceeded)", async () => {
@@ -154,34 +144,6 @@ describe("YouTubeService", () => {
       expect(axios.get).not.toHaveBeenCalled();
     });
 
-    it("should handle videos without contentDetails (duration)", async () => {
-      const mockResponse: YouTubeSearchResponse = {
-        items: [
-          {
-            id: { videoId: "video789" },
-            snippet: {
-              title: "Short Video",
-              channelTitle: "Channel",
-              thumbnails: {
-                high: {
-                  url: "https://i.ytimg.com/vi/video789/maxresdefault.jpg",
-                },
-              },
-            },
-            // No contentDetails
-          },
-        ],
-      };
-
-      vi.mocked(axios.get).mockResolvedValue({ data: mockResponse });
-
-      const service = new YouTubeService();
-      const results = await service.searchVideos(["test"]);
-
-      expect(results).toHaveLength(1);
-      expect(results[0].duration).toBeUndefined();
-    });
-
     it("should build correct search query from tags", async () => {
       const mockResponse: YouTubeSearchResponse = { items: [] };
       vi.mocked(axios.get).mockResolvedValue({ data: mockResponse });
@@ -214,43 +176,6 @@ describe("YouTubeService", () => {
       const results = await service.searchVideos(["react"]);
 
       expect(results).toEqual([]);
-    });
-
-    it("should parse ISO 8601 duration correctly", async () => {
-      const mockResponse: YouTubeSearchResponse = {
-        items: [
-          {
-            id: { videoId: "v1" },
-            snippet: {
-              title: "1 hour video",
-              channelTitle: "Channel",
-              thumbnails: { high: { url: "url" } },
-            },
-            contentDetails: {
-              duration: "PT1H5M30S", // 1 hour, 5 minutes, 30 seconds
-            },
-          },
-          {
-            id: { videoId: "v2" },
-            snippet: {
-              title: "Short video",
-              channelTitle: "Channel",
-              thumbnails: { high: { url: "url" } },
-            },
-            contentDetails: {
-              duration: "PT45S", // 45 seconds
-            },
-          },
-        ],
-      };
-
-      vi.mocked(axios.get).mockResolvedValue({ data: mockResponse });
-
-      const service = new YouTubeService();
-      const results = await service.searchVideos(["test"]);
-
-      expect(results[0].duration).toBe("1:05:30");
-      expect(results[1].duration).toBe("0:45");
     });
   });
 });

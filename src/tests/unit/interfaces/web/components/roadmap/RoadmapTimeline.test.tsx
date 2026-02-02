@@ -172,4 +172,62 @@ describe("RoadmapTimeline Component", () => {
     const progressBar = screen.getByRole("progressbar");
     expect(progressBar).toBeDefined();
   });
+
+  it("should NOT trigger status change when clicking 'Learning Resources' toggle button", async () => {
+    const onItemStatusChange = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <RoadmapTimeline
+        roadmap={mockRoadmap}
+        onItemStatusChange={onItemStatusChange}
+      />,
+    );
+
+    // Find and click "Learning Resources" toggle button
+    const expandButtons = screen.getAllByText(/learning resources/i);
+    await user.click(expandButtons[0]);
+
+    // Status change should NOT be called (event should be stopped by toggle button)
+    expect(onItemStatusChange).not.toHaveBeenCalled();
+  });
+
+  it("should NOT trigger status change when clicking action buttons inside item card", async () => {
+    const onItemStatusChange = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <RoadmapTimeline
+        roadmap={mockRoadmap}
+        onItemStatusChange={onItemStatusChange}
+      />,
+    );
+
+    // Find and click the "Start" button (for pending item)
+    const startButton = screen.getByText("Start");
+    await user.click(startButton);
+
+    // Status change SHOULD be called once (this button explicitly changes status)
+    expect(onItemStatusChange).toHaveBeenCalledTimes(1);
+
+    // Reset mock
+    onItemStatusChange.mockClear();
+
+    // Now click the "Take Quiz" button
+    const onTakeQuiz = vi.fn();
+    render(
+      <RoadmapTimeline
+        roadmap={mockRoadmap}
+        onItemStatusChange={onItemStatusChange}
+        onTakeQuiz={onTakeQuiz}
+      />,
+    );
+
+    const takeQuizButton = screen.getAllByText(/take quiz/i)[0];
+    await user.click(takeQuizButton);
+
+    // Status change should NOT be called (only quiz handler should be called)
+    expect(onItemStatusChange).not.toHaveBeenCalled();
+    expect(onTakeQuiz).toHaveBeenCalledTimes(1);
+  });
 });

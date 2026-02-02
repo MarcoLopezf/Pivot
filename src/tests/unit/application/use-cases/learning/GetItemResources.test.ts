@@ -101,6 +101,7 @@ describe("GetItemResources Use Case", () => {
 
     it("should normalize topic tags before querying DB", async () => {
       vi.mocked(mockRepository.findByTags).mockResolvedValue([]);
+      vi.mocked(mockYouTubeService.searchVideos).mockResolvedValue([]);
 
       await useCase.execute("item-001", "ReactJS Basics Tutorial");
 
@@ -225,15 +226,15 @@ describe("GetItemResources Use Case", () => {
       expect(mockYouTubeService.searchVideos).not.toHaveBeenCalled();
     });
 
-    it("should handle repository error gracefully", async () => {
+    it("should propagate repository errors to caller", async () => {
       vi.mocked(mockRepository.findByTags).mockRejectedValue(
         new Error("DB connection error"),
       );
 
-      // Should not crash, return empty
-      const result = await useCase.execute("item-008", "React");
-
-      expect(result).toEqual([]);
+      // Should throw error (caller handles error response)
+      await expect(useCase.execute("item-008", "React")).rejects.toThrow(
+        "DB connection error",
+      );
     });
 
     it("should not save to DB if API returns empty results", async () => {

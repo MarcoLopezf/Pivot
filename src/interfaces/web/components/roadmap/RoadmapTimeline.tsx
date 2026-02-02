@@ -242,7 +242,10 @@ function RoadmapItem({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={fetchResources}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fetchResources();
+                    }}
                     className="mt-2"
                   >
                     Try Again
@@ -252,7 +255,10 @@ function RoadmapItem({
 
               {/* Resources Grid */}
               {!isLoading && !error && resources.length > 0 && (
-                <div className="grid gap-4 md:grid-cols-2">
+                <div
+                  className="grid gap-4 md:grid-cols-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {resources.map((resource) => (
                     <VideoCard
                       key={resource.id || resource.url}

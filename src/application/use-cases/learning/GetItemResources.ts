@@ -13,12 +13,12 @@ import { TagNormalizer } from "@domain/shared/services/TagNormalizer";
  * 1. **Try DB first** (cache hit) - Return existing resources if available
  * 2. **Fall back to API** (cache miss) - Fetch from YouTube if DB is empty
  * 3. **Save API results** - Store in DB for future requests (warm cache)
- * 4. **Fail gracefully** - Return empty array on errors (never crash)
+ * 4. **Error handling** - Throws exceptions for DB/API errors (caller handles error responses)
  *
  * Benefits:
  * - Reduces YouTube API quota usage (expensive)
  * - Fast response for cached items
- * - Always returns data (DB or API)
+ * - Clear distinction between "no resources" vs "error occurred"
  *
  * Example:
  * ```
@@ -40,42 +40,36 @@ export class GetItemResources {
    * @param itemId - Roadmap item ID (for logging/future features)
    * @param topic - The topic to search for (e.g., "React Hooks", "TypeScript Generics")
    * @returns Array of learning resources (videos)
+   * @throws Error if database or YouTube API fails
    */
   async execute(itemId: string, topic: string): Promise<LearningResource[]> {
-    try {
-      // Step 1: Normalize topic into tags using TagNormalizer
-      const normalizedTags = this.normalizeTopic(topic);
+    // Step 1: Normalize topic into tags using TagNormalizer
+    const normalizedTags = this.normalizeTopic(topic);
 
-      // Guard: No valid tags after normalization
-      if (normalizedTags.length === 0) {
-        return [];
-      }
-
-      // Step 2: Try DB first (cache hit)
-      const dbResources =
-        await this.resourceRepository.findByTags(normalizedTags);
-
-      if (dbResources.length > 0) {
-        // Cache hit! Return DB resources
-        return dbResources;
-      }
-
-      // Step 3: Cache miss - Fetch from YouTube API
-      const apiResources =
-        await this.youtubeService.searchVideos(normalizedTags);
-
-      // Step 4: Save API results to DB (if any)
-      if (apiResources.length > 0) {
-        await this.resourceRepository.saveMany(apiResources);
-      }
-
-      // Step 5: Return API resources (or empty array if API failed)
-      return apiResources;
-    } catch (error) {
-      // Fail gracefully - log error and return empty
-      console.error("[GetItemResources] Error:", error);
+    // Guard: No valid tags after normalization
+    if (normalizedTags.length === 0) {
       return [];
     }
+
+    // Step 2: Try DB first (cache hit)
+    const dbResources =
+      await this.resourceRepository.findByTags(normalizedTags);
+
+    if (dbResources.length > 0) {
+      // Cache hit! Return DB resources
+      return dbResources;
+    }
+
+    // Step 3: Cache miss - Fetch from YouTube API
+    const apiResources = await this.youtubeService.searchVideos(normalizedTags);
+
+    // Step 4: Save API results to DB (if any)
+    if (apiResources.length > 0) {
+      await this.resourceRepository.saveMany(apiResources);
+    }
+
+    // Step 5: Return API resources (or empty array if none found)
+    return apiResources;
   }
 
   /**

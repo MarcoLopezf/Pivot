@@ -1,15 +1,18 @@
 import { prisma } from "@infrastructure/database/PrismaClient";
 import { PrismaCareerGoalRepository } from "@infrastructure/database/repositories/PrismaCareerGoalRepository";
 import { PrismaRoadmapRepository } from "@infrastructure/database/repositories/PrismaRoadmapRepository";
+import { PrismaResourceRepository } from "@infrastructure/database/repositories/PrismaResourceRepository";
 import { GenkitRoleRecommender } from "@infrastructure/ai/flows/suggestRolesFlow";
 import { GenkitRoadmapFlow } from "@infrastructure/ai/flows/generateRoadmapFlow";
 import { PdfService } from "@infrastructure/services/PdfService";
 import { GitHubService } from "@infrastructure/services/GitHubService";
+import { YouTubeService } from "@infrastructure/services/YouTubeService";
 import { SetCareerGoal } from "@application/use-cases/learning/SetCareerGoal";
 import { SuggestCareerRoles } from "@application/use-cases/learning/SuggestCareerRoles";
 import { GenerateUserRoadmap } from "@application/use-cases/learning/GenerateUserRoadmap";
 import { GetUserRoadmap } from "@application/use-cases/learning/GetUserRoadmap";
 import { UpdateRoadmapItemStatus } from "@application/use-cases/learning/UpdateRoadmapItemStatus";
+import { GetItemResources } from "@application/use-cases/learning/GetItemResources";
 
 /**
  * LearningContainer - Dependency Injection Container for Learning bounded context
@@ -25,19 +28,23 @@ import { UpdateRoadmapItemStatus } from "@application/use-cases/learning/UpdateR
 class LearningContainer {
   private careerGoalRepository: PrismaCareerGoalRepository;
   private roadmapRepository: PrismaRoadmapRepository;
+  private resourceRepository: PrismaResourceRepository;
   private roleRecommender: GenkitRoleRecommender;
   private roadmapFlow: GenkitRoadmapFlow;
   private pdfService: PdfService;
   private gitHubService: GitHubService;
+  private youtubeService: YouTubeService;
 
   constructor() {
     // Initialize infrastructure dependencies
     this.careerGoalRepository = new PrismaCareerGoalRepository(prisma);
     this.roadmapRepository = new PrismaRoadmapRepository(prisma);
+    this.resourceRepository = new PrismaResourceRepository(prisma);
     this.roleRecommender = new GenkitRoleRecommender();
     this.roadmapFlow = new GenkitRoadmapFlow();
     this.pdfService = new PdfService();
     this.gitHubService = new GitHubService();
+    this.youtubeService = new YouTubeService();
   }
 
   /**
@@ -78,6 +85,13 @@ class LearningContainer {
    */
   getUpdateRoadmapItemStatusUseCase(): UpdateRoadmapItemStatus {
     return new UpdateRoadmapItemStatus(this.roadmapRepository);
+  }
+
+  /**
+   * Returns an initialized GetItemResources use case with all dependencies injected
+   */
+  getGetItemResourcesUseCase(): GetItemResources {
+    return new GetItemResources(this.resourceRepository, this.youtubeService);
   }
 }
 

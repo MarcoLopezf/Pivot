@@ -114,3 +114,28 @@ model QuizAttempt {
   @@index([userId])
   @@index([roadmapItemId])
 }
+
+enum ResourceType {
+  VIDEO
+  ARTICLE
+  COURSE
+}
+
+model LearningResource {
+  id           String       @id @default(uuid())
+  title        String
+  url          String       @unique
+  thumbnailUrl String?
+  channelName  String?
+  duration     String?      // e.g., "10:05"
+
+  type         ResourceType @default(VIDEO)
+  tags         String[]     // Normalized tags e.g. ["react", "hooks"]
+
+  votes        Int          @default(0)
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([tags])
+}

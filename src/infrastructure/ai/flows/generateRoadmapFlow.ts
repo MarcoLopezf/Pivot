@@ -128,7 +128,13 @@ Create 5-8 sequential learning milestones that form a clear path from current sk
   * "theory": Knowledge-based learning (concepts, patterns, fundamentals) — validated later via quiz
   * "project": Hands-on practice (build something, implement a feature) — validated later via URL submission
   * A good roadmap should have a MIX of both types (roughly 80% theory, 20% project)
-- "topic": A short, lowercase, kebab-case tag that describes the core subject (e.g., "typescript-generics", "react-hooks", "system-design", "docker-basics"). This tag is used to match quiz questions later.
+- "topic": **CRITICAL - ATOMIC TAG RULES:**
+  * Use strictly atomic, single-concept tags (e.g., "react", "typescript", "docker")
+  * NO difficulty words (never: "react-basics", "advanced-typescript", "intro-to-python")
+  * NO compound tags (never: "react-hooks-basics", "nodejs-tutorial")
+  * Use canonical names: "react" (not "reactjs"), "node" (not "nodejs"), "postgres" (not "postgresql")
+  * Examples of GOOD tags: "react", "typescript", "hooks", "docker", "graphql", "testing"
+  * Examples of BAD tags: "react-basics", "reactjs", "intro-to-react", "advanced-hooks"
 - "difficulty": One of "beginner", "intermediate", or "advanced" based on the complexity of the milestone.
 
 Return ONLY a JSON object with this exact structure (no markdown, no code blocks):

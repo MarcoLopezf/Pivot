@@ -7,6 +7,7 @@ import { RoadmapItem } from "@domain/learning/entities/RoadmapItem";
 import { RoadmapId } from "@domain/learning/value-objects/RoadmapId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
 import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
+import { TagNormalizer } from "@domain/shared/services/TagNormalizer";
 import { PdfService } from "@infrastructure/services/PdfService";
 import { GitHubService } from "@infrastructure/services/GitHubService";
 import { randomUUID } from "crypto";
@@ -94,9 +95,11 @@ export class GenerateUserRoadmap {
       userContext,
     );
 
-    // Create roadmap items with AI-determined status
+    // Create roadmap items with AI-determined status and normalized topics
     for (const generated of generatedItems) {
       const itemId = RoadmapItemId.create(randomUUID());
+      // Normalize the topic tag to ensure atomic, canonical form
+      const normalizedTopic = TagNormalizer.normalize(generated.topic);
       const item = RoadmapItem.reconstitute(
         itemId,
         generated.title,
@@ -104,7 +107,7 @@ export class GenerateUserRoadmap {
         generated.order,
         generated.status,
         generated.type,
-        generated.topic,
+        normalizedTopic || generated.topic, // Fallback to original if normalization fails
         generated.difficulty,
       );
       roadmap.addItem(item);

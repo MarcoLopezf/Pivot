@@ -95,7 +95,7 @@ describe("RoadmapTimeline Component", () => {
     expect(badges.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("should call onItemStatusChange when item card is clicked", async () => {
+  it("should call onItemStatusChange when status button is clicked", async () => {
     const onItemStatusChange = vi.fn();
     const user = userEvent.setup();
 
@@ -106,17 +106,13 @@ describe("RoadmapTimeline Component", () => {
       />,
     );
 
-    // Find and click a card - any click handler should work
-    const itemElement = screen.getByText("Learn Node.js");
-    const itemCard = itemElement.closest("div[class*='ml-16']");
-    if (itemCard) {
-      await user.click(itemCard);
-      expect(onItemStatusChange).toHaveBeenCalled();
-    } else {
-      // Fallback: just click the element directly
-      await user.click(itemElement);
-      expect(onItemStatusChange).toHaveBeenCalled();
-    }
+    // Find and click the "Start" button (for pending item - "Learn Node.js")
+    const startButton = screen.getByText("Start");
+    await user.click(startButton);
+
+    // Status change SHOULD be called when clicking the status button
+    expect(onItemStatusChange).toHaveBeenCalledTimes(1);
+    expect(onItemStatusChange).toHaveBeenCalledWith("item-003", "in_progress");
   });
 
   it("should display step counter for each item", () => {
@@ -194,12 +190,15 @@ describe("RoadmapTimeline Component", () => {
 
   it("should NOT trigger status change when clicking action buttons inside item card", async () => {
     const onItemStatusChange = vi.fn();
+    const onTakeQuiz = vi.fn();
     const user = userEvent.setup();
 
-    render(
+    // First render: test the "Start" button
+    const { unmount } = render(
       <RoadmapTimeline
         roadmap={mockRoadmap}
         onItemStatusChange={onItemStatusChange}
+        onTakeQuiz={onTakeQuiz}
       />,
     );
 
@@ -210,11 +209,14 @@ describe("RoadmapTimeline Component", () => {
     // Status change SHOULD be called once (this button explicitly changes status)
     expect(onItemStatusChange).toHaveBeenCalledTimes(1);
 
-    // Reset mock
-    onItemStatusChange.mockClear();
+    // Clean up first render
+    unmount();
 
-    // Now click the "Take Quiz" button
-    const onTakeQuiz = vi.fn();
+    // Reset mocks for second test
+    onItemStatusChange.mockClear();
+    onTakeQuiz.mockClear();
+
+    // Second render: test the "Take Quiz" button
     render(
       <RoadmapTimeline
         roadmap={mockRoadmap}
@@ -223,8 +225,16 @@ describe("RoadmapTimeline Component", () => {
       />,
     );
 
-    const takeQuizButton = screen.getAllByText(/take quiz/i)[0];
-    await user.click(takeQuizButton);
+    // Find the "Take Quiz" button from the IN_PROGRESS item (not disabled)
+    // The completed item has a disabled Take Quiz button
+    const takeQuizButtons = screen.getAllByText(/take quiz/i);
+    const activeQuizButton = takeQuizButtons.find(
+      (btn) => !btn.closest("button")?.hasAttribute("disabled"),
+    );
+
+    if (activeQuizButton) {
+      await user.click(activeQuizButton);
+    }
 
     // Status change should NOT be called (only quiz handler should be called)
     expect(onItemStatusChange).not.toHaveBeenCalled();

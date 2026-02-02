@@ -7,6 +7,7 @@ import { QuestionId } from "@domain/assessment/value-objects/QuestionId";
 import { QuestionOptionId } from "@domain/assessment/value-objects/QuestionOptionId";
 import { Question } from "@domain/assessment/entities/Question";
 import { QuestionOption } from "@domain/assessment/entities/QuestionOption";
+import { TagNormalizer } from "@domain/shared/services/TagNormalizer";
 import { QuizDTO } from "@application/dtos/assessment/QuizDTO";
 import { randomUUID } from "crypto";
 
@@ -49,8 +50,11 @@ export class GenerateQuiz {
       );
     }
 
-    // 2. Search for existing questions in the pool
-    const tags = item.topic ? [item.topic] : [];
+    // 2. Search for existing questions in the pool (with normalized tags)
+    const normalizedTopic = item.topic
+      ? TagNormalizer.normalize(item.topic)
+      : "";
+    const tags = normalizedTopic ? [normalizedTopic] : [];
     const existingQuestions = await this.questionRepository.findByTags(
       tags,
       item.difficulty,
@@ -122,7 +126,7 @@ export class GenerateQuiz {
       const question = Question.create(
         questionId,
         qData.text,
-        [topic], // Use topic as tag
+        [TagNormalizer.normalize(topic) || topic], // Use normalized topic as tag
         difficulty,
         options,
       );

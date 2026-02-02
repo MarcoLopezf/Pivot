@@ -97,6 +97,8 @@ export class GenkitQuestionsFlow implements IGenerateQuestionsFlow {
   ): string {
     return `You are an expert educational content creator specializing in technical assessments. Generate ${count} high-quality multiple-choice quiz questions for the topic "${topic}" at "${difficulty}" difficulty level.
 
+Note: The topic "${topic}" is an atomic, canonical tag (e.g., "react", "typescript", "docker"). Focus on the core concepts of this technology.
+
 **CRITICAL REQUIREMENTS:**
 - Each question must test practical understanding, not just memorization
 - Questions should be clear, unambiguous, and technically accurate

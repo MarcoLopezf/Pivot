@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { assessmentContainer } from "@infrastructure/di/AssessmentContainer";
 import { QuizDTO } from "@application/dtos/assessment/QuizDTO";
+import { QuizResultDTO } from "@application/dtos/assessment/SubmitQuizDTO";
 import { createLogger } from "@infrastructure/logging/logger";
 
 const logger = createLogger("GET /api/learning/roadmap/items/[itemId]/quiz");
+const postLogger = createLogger(
+  "POST /api/learning/roadmap/items/[itemId]/quiz",
+);
 
 interface ApiSuccessResponse<T> {
   success: true;
@@ -21,6 +25,18 @@ interface ApiErrorResponse {
 
 const QueryParamsSchema = z.object({
   roadmapId: z.string().min(1, "roadmapId is required"),
+});
+
+const SubmitQuizBodySchema = z.object({
+  roadmapId: z.string().min(1, "roadmapId is required"),
+  answers: z
+    .array(
+      z.object({
+        questionId: z.string().min(1, "questionId is required"),
+        selectedOptionId: z.string().min(1, "selectedOptionId is required"),
+      }),
+    )
+    .min(1, "At least one answer is required"),
 });
 
 /**
@@ -128,6 +144,117 @@ export async function GET(
       error: {
         code: "INTERNAL_SERVER_ERROR",
         message: "An unexpected error occurred while generating the quiz",
+      },
+    };
+    return NextResponse.json(response, { status: 500 });
+  }
+}
+
+/**
+ * POST /api/learning/roadmap/items/[itemId]/quiz
+ *
+ * Submits quiz answers for grading.
+ * If the user passes (≥70%), the roadmap item is marked as completed.
+ *
+ * Route parameters:
+ * - itemId (required): ID of the roadmap item
+ *
+ * Body:
+ * - userId (required): ID of the user submitting the quiz
+ * - roadmapId (required): ID of the roadmap containing the item
+ * - answers (required): Array of { questionId, selectedOptionId }
+ *
+ * Responses:
+ * - 200: Quiz graded successfully
+ * - 400: Validation error
+ * - 404: Questions not found
+ * - 500: Internal server error
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ itemId: string }> },
+): Promise<NextResponse<ApiSuccessResponse<QuizResultDTO> | ApiErrorResponse>> {
+  try {
+    // Await params (Next.js 15 requirement)
+    const { itemId } = await params;
+
+    // Parse and validate request body
+    const body: unknown = await request.json();
+    const parseResult = SubmitQuizBodySchema.safeParse(body);
+
+    if (!parseResult.success) {
+      const response: ApiErrorResponse = {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: parseResult.error.issues
+            .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+            .join(", "),
+        },
+      };
+      return NextResponse.json(response, { status: 400 });
+    }
+
+    const { roadmapId, answers } = parseResult.data;
+
+    // Get use case from DI container
+    const submitQuiz = assessmentContainer.getSubmitQuizUseCase();
+
+    // Execute use case
+    const result = await submitQuiz.execute({
+      roadmapId,
+      roadmapItemId: itemId,
+      answers,
+    });
+
+    // Return success response
+    const response: ApiSuccessResponse<QuizResultDTO> = {
+      success: true,
+      data: result,
+    };
+
+    return NextResponse.json(response, { status: 200 });
+  } catch (error) {
+    // Handle known errors
+    if (error instanceof Error) {
+      // Validation errors from use case
+      if (error.message.startsWith("VALIDATION_ERROR:")) {
+        const response: ApiErrorResponse = {
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: error.message.replace("VALIDATION_ERROR: ", ""),
+          },
+        };
+        return NextResponse.json(response, { status: 400 });
+      }
+
+      // Not found errors
+      if (
+        error.message.includes("not found") ||
+        error.message.includes("Invalid")
+      ) {
+        const response: ApiErrorResponse = {
+          success: false,
+          error: {
+            code: "NOT_FOUND",
+            message: error.message,
+          },
+        };
+        return NextResponse.json(response, { status: 404 });
+      }
+    }
+
+    // Handle unexpected errors
+    postLogger.error("Unexpected error while submitting quiz", error, {
+      itemId: (await params).itemId,
+    });
+
+    const response: ApiErrorResponse = {
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "An unexpected error occurred while grading the quiz",
       },
     };
     return NextResponse.json(response, { status: 500 });

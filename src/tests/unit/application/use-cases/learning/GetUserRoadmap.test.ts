@@ -17,6 +17,7 @@ describe("GetUserRoadmap Use Case", () => {
       findById: vi.fn(),
       findByGoalId: vi.fn(),
       findLatestByUserId: vi.fn(),
+      findOwnerUserId: vi.fn(),
     };
     useCase = new GetUserRoadmap(mockRepository);
   });

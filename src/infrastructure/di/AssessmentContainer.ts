@@ -1,8 +1,10 @@
 import { prisma } from "@infrastructure/database/PrismaClient";
 import { PrismaQuestionRepository } from "@infrastructure/database/repositories/PrismaQuestionRepository";
 import { PrismaRoadmapRepository } from "@infrastructure/database/repositories/PrismaRoadmapRepository";
+import { PrismaQuizAttemptRepository } from "@infrastructure/database/repositories/PrismaQuizAttemptRepository";
 import { GenkitQuestionsFlow } from "@infrastructure/ai/flows/generateQuestionsFlow";
 import { GenerateQuiz } from "@application/use-cases/assessment/GenerateQuiz";
+import { SubmitQuiz } from "@application/use-cases/assessment/SubmitQuiz";
 
 /**
  * AssessmentContainer - Dependency Injection Container for Assessment bounded context
@@ -12,11 +14,13 @@ import { GenerateQuiz } from "@application/use-cases/assessment/GenerateQuiz";
 class AssessmentContainer {
   private questionRepository: PrismaQuestionRepository;
   private roadmapRepository: PrismaRoadmapRepository;
+  private quizAttemptRepository: PrismaQuizAttemptRepository;
   private questionsFlow: GenkitQuestionsFlow;
 
   constructor() {
     this.questionRepository = new PrismaQuestionRepository(prisma);
     this.roadmapRepository = new PrismaRoadmapRepository(prisma);
+    this.quizAttemptRepository = new PrismaQuizAttemptRepository(prisma);
     this.questionsFlow = new GenkitQuestionsFlow();
   }
 
@@ -25,6 +29,14 @@ class AssessmentContainer {
       this.roadmapRepository,
       this.questionRepository,
       this.questionsFlow,
+    );
+  }
+
+  getSubmitQuizUseCase(): SubmitQuiz {
+    return new SubmitQuiz(
+      this.questionRepository,
+      this.quizAttemptRepository,
+      this.roadmapRepository,
     );
   }
 }

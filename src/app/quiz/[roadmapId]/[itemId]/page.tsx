@@ -13,8 +13,16 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Trophy,
+  XCircle,
+  RotateCcw,
+} from "lucide-react";
 import type { QuizDTO } from "@application/dtos/assessment/QuizDTO";
+import type { QuizResultDTO } from "@application/dtos/assessment/SubmitQuizDTO";
 
 /**
  * Quiz Page
@@ -23,7 +31,7 @@ import type { QuizDTO } from "@application/dtos/assessment/QuizDTO";
  * - Fetches quiz questions from the API
  * - Shows multiple-choice questions with 4 options each
  * - Allows user to select answers
- * - Submit functionality (TODO: Day 17 - Quiz Validation)
+ * - Submits answers and displays results
  */
 export default function QuizPage(): React.ReactElement {
   const router = useRouter();
@@ -38,6 +46,9 @@ export default function QuizPage(): React.ReactElement {
     Record<string, string>
   >({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [quizResult, setQuizResult] = React.useState<QuizResultDTO | null>(
+    null,
+  );
 
   // Fetch quiz on mount
   React.useEffect(() => {
@@ -79,15 +90,61 @@ export default function QuizPage(): React.ReactElement {
     }));
   };
 
-  // Handle quiz submission (TODO: Implement in Day 17)
+  // Handle quiz submission
   const handleSubmit = async () => {
+    if (!quiz) return;
+
     setIsSubmitting(true);
-    // TODO: Call API to validate answers and record quiz attempt
-    // For now, just show an alert
-    alert(
-      `Quiz submission coming soon!\n\nSelected answers: ${Object.keys(selectedAnswers).length}/${quiz?.questions.length || 0}`,
-    );
-    setIsSubmitting(false);
+    setError(null);
+
+    try {
+      // Transform selectedAnswers to the API format
+      const answers = Object.entries(selectedAnswers).map(
+        ([questionId, selectedOptionId]) => ({
+          questionId,
+          selectedOptionId,
+        }),
+      );
+
+      const response = await fetch(
+        `/api/learning/roadmap/items/${itemId}/quiz`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            roadmapId,
+            answers,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error?.message || "Failed to submit quiz answers",
+        );
+      }
+
+      const data = await response.json();
+      setQuizResult(data.data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle retry quiz
+  const handleRetry = () => {
+    setQuizResult(null);
+    setSelectedAnswers({});
+    setError(null);
+    // Reload quiz questions
+    window.location.reload();
   };
 
   // Check if all questions are answered
@@ -121,7 +178,7 @@ export default function QuizPage(): React.ReactElement {
   }
 
   // Error state
-  if (error) {
+  if (error && !quizResult) {
     return (
       <div className="container mx-auto p-8 max-w-4xl">
         <Card className="border-red-200 bg-red-50">
@@ -170,6 +227,107 @@ export default function QuizPage(): React.ReactElement {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Go Back
             </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Quiz Result state
+  if (quizResult) {
+    return (
+      <div className="container mx-auto p-8 max-w-4xl">
+        <Card
+          className={
+            quizResult.passed
+              ? "border-green-200 bg-gradient-to-br from-green-50 to-emerald-50"
+              : "border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50"
+          }
+        >
+          <CardHeader className="text-center pb-2">
+            <div className="flex justify-center mb-4">
+              {quizResult.passed ? (
+                <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
+                  <Trophy className="h-10 w-10 text-green-600" />
+                </div>
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center">
+                  <XCircle className="h-10 w-10 text-orange-600" />
+                </div>
+              )}
+            </div>
+            <CardTitle
+              className={`text-3xl font-bold ${quizResult.passed ? "text-green-900" : "text-orange-900"}`}
+            >
+              {quizResult.passed ? "Congratulations!" : "Keep Learning!"}
+            </CardTitle>
+            <CardDescription
+              className={`text-lg ${quizResult.passed ? "text-green-700" : "text-orange-700"}`}
+            >
+              {quizResult.passed
+                ? "You passed the quiz!"
+                : "You didn't pass this time, but you can try again."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Score Display */}
+            <div className="flex justify-center">
+              <div
+                className={`text-center p-6 rounded-xl ${quizResult.passed ? "bg-green-100" : "bg-orange-100"}`}
+              >
+                <div
+                  className={`text-5xl font-bold ${quizResult.passed ? "text-green-700" : "text-orange-700"}`}
+                >
+                  {quizResult.score}%
+                </div>
+                <div
+                  className={`text-sm mt-1 ${quizResult.passed ? "text-green-600" : "text-orange-600"}`}
+                >
+                  {quizResult.correctCount} of {quizResult.totalCount} correct
+                </div>
+              </div>
+            </div>
+
+            {/* Feedback Message */}
+            <div
+              className={`p-4 rounded-lg text-center ${quizResult.passed ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-800"}`}
+            >
+              <p className="font-medium">{quizResult.feedback}</p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
+              {quizResult.passed ? (
+                <Button
+                  onClick={() => router.back()}
+                  size="lg"
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Continue Learning
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleRetry}
+                    size="lg"
+                    className="bg-orange-600 hover:bg-orange-700"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Try Again
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.back()}
+                    size="lg"
+                    className="border-orange-300 text-orange-900 hover:bg-orange-100"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Roadmap
+                  </Button>
+                </>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

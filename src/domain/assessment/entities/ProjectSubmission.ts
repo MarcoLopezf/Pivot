@@ -2,11 +2,12 @@ import { ProjectSubmissionId } from "@domain/assessment/value-objects/ProjectSub
 import { UserId } from "@domain/profile/value-objects/UserId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
 
-export type ProjectSubmissionStatus =
-  | "pending"
-  | "analyzing"
-  | "completed"
-  | "failed";
+export enum ProjectSubmissionStatus {
+  Pending = "pending",
+  Analyzing = "analyzing",
+  Completed = "completed",
+  Failed = "failed",
+}
 
 export class ProjectSubmission {
   private readonly _id: ProjectSubmissionId;
@@ -62,7 +63,7 @@ export class ProjectSubmission {
       repoUrl.trim(),
       null, // score initially null
       null, // feedback initially null
-      "pending", // initial status
+      ProjectSubmissionStatus.Pending, // initial status
       now,
       now,
     );
@@ -99,12 +100,12 @@ export class ProjectSubmission {
    * Mark submission as analyzing (when GitHub fetch starts)
    */
   public markAsAnalyzing(): void {
-    if (this._status !== "pending") {
+    if (this._status !== ProjectSubmissionStatus.Pending) {
       throw new Error(
         "Cannot mark as analyzing: submission is not in pending state",
       );
     }
-    this._status = "analyzing";
+    this._status = ProjectSubmissionStatus.Analyzing;
     this._updatedAt = new Date();
   }
 
@@ -112,7 +113,7 @@ export class ProjectSubmission {
    * Complete analysis with results
    */
   public completeAnalysis(score: number, feedback: string): void {
-    if (this._status !== "analyzing") {
+    if (this._status !== ProjectSubmissionStatus.Analyzing) {
       throw new Error(
         "Cannot complete analysis: submission is not in analyzing state",
       );
@@ -126,7 +127,7 @@ export class ProjectSubmission {
 
     this._score = score;
     this._feedback = feedback.trim();
-    this._status = "completed";
+    this._status = ProjectSubmissionStatus.Completed;
     this._updatedAt = new Date();
   }
 
@@ -139,7 +140,7 @@ export class ProjectSubmission {
     }
 
     this._feedback = feedback.trim();
-    this._status = "failed";
+    this._status = ProjectSubmissionStatus.Failed;
     this._updatedAt = new Date();
   }
 

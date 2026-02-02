@@ -3,7 +3,7 @@ import { ProjectSubmission } from "@domain/assessment/entities/ProjectSubmission
 import { ProjectSubmissionId } from "@domain/assessment/value-objects/ProjectSubmissionId";
 import { UserId } from "@domain/profile/value-objects/UserId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
-import type { ProjectSubmissionStatus } from "@domain/assessment/entities/ProjectSubmission";
+import { ProjectSubmissionStatus } from "@domain/assessment/entities/ProjectSubmission";
 
 /**
  * Maps Prisma status to domain status
@@ -12,12 +12,12 @@ function mapPrismaStatusToDomain(
   prismaStatus: string,
 ): ProjectSubmissionStatus {
   const statusMap: Record<string, ProjectSubmissionStatus> = {
-    PENDING: "pending",
-    ANALYZING: "analyzing",
-    COMPLETED: "completed",
-    FAILED: "failed",
+    PENDING: ProjectSubmissionStatus.Pending,
+    ANALYZING: ProjectSubmissionStatus.Analyzing,
+    COMPLETED: ProjectSubmissionStatus.Completed,
+    FAILED: ProjectSubmissionStatus.Failed,
   };
-  return statusMap[prismaStatus] || "pending";
+  return statusMap[prismaStatus] || ProjectSubmissionStatus.Pending;
 }
 
 /**
@@ -27,10 +27,10 @@ function mapDomainStatusToPrisma(
   domainStatus: ProjectSubmissionStatus,
 ): string {
   const statusMap: Record<ProjectSubmissionStatus, string> = {
-    pending: "PENDING",
-    analyzing: "ANALYZING",
-    completed: "COMPLETED",
-    failed: "FAILED",
+    [ProjectSubmissionStatus.Pending]: "PENDING",
+    [ProjectSubmissionStatus.Analyzing]: "ANALYZING",
+    [ProjectSubmissionStatus.Completed]: "COMPLETED",
+    [ProjectSubmissionStatus.Failed]: "FAILED",
   };
   return statusMap[domainStatus];
 }

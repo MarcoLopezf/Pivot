@@ -173,7 +173,7 @@ describe("RoadmapTimeline Component", () => {
     expect(progressBar).toBeDefined();
   });
 
-  it("should NOT trigger status change when clicking 'Learning Resources' toggle button", async () => {
+  it("should NOT trigger status change when clicking 'Resources' tab button", async () => {
     const onItemStatusChange = vi.fn();
     const user = userEvent.setup();
 
@@ -184,11 +184,11 @@ describe("RoadmapTimeline Component", () => {
       />,
     );
 
-    // Find and click "Learning Resources" toggle button
-    const expandButtons = screen.getAllByText(/learning resources/i);
-    await user.click(expandButtons[0]);
+    // Find and click "Resources" tab button
+    const resourcesTab = screen.getAllByText(/^Resources$/i)[0];
+    await user.click(resourcesTab);
 
-    // Status change should NOT be called (event should be stopped by toggle button)
+    // Status change should NOT be called (event should be stopped by tab click)
     expect(onItemStatusChange).not.toHaveBeenCalled();
   });
 

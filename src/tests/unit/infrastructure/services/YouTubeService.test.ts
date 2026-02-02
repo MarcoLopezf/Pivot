@@ -196,7 +196,7 @@ describe("YouTubeService", () => {
             q: "react hooks tutorial",
             part: "snippet",
             type: "video",
-            maxResults: 10,
+            maxResults: 4,
           }),
         }),
       );

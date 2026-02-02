@@ -99,4 +99,18 @@ export class PrismaRoadmapRepository implements IRoadmapRepository {
     if (!prismaRoadmap) return null;
     return RoadmapMapper.toDomain(prismaRoadmap);
   }
+
+  /**
+   * Find the owner user ID for a roadmap
+   * Navigates: Roadmap -> CareerGoal -> User
+   */
+  async findOwnerUserId(roadmapId: RoadmapId): Promise<UserId | null> {
+    const roadmap = await this.db.roadmap.findUnique({
+      where: { id: roadmapId.value },
+      include: { goal: { select: { userId: true } } },
+    });
+
+    if (!roadmap) return null;
+    return UserId.create(roadmap.goal.userId);
+  }
 }

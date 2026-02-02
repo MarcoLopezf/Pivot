@@ -30,4 +30,9 @@ export interface IRoadmapRepository {
    * Find the most recent roadmap for a user (via their career goal)
    */
   findLatestByUserId(userId: UserId): Promise<Roadmap | null>;
+
+  /**
+   * Find the owner user ID for a roadmap
+   */
+  findOwnerUserId(roadmapId: RoadmapId): Promise<UserId | null>;
 }

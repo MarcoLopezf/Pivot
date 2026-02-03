@@ -1,131 +1,124 @@
+import { z } from "zod";
 import { ai } from "../genkit.config";
-import { openAI } from "@genkit-ai/compat-oai/openai";
 import { tavily } from "@tavily/core";
-import {
-  MarketResearchSchema,
-  type MarketResearch,
-} from "../schemas/marketSchema";
+import { MarketResearchSchema } from "../schemas/marketSchema";
+import type { MarketResearch } from "../schemas/marketSchema";
+
+// Define input schema
+const InputSchema = z.object({
+  role: z.string(),
+  region: z.string(),
+});
+
+type FlowInput = z.infer<typeof InputSchema>;
+
+// Internal flow definition
+const internalFlow = ai.defineFlow(
+  {
+    name: "analyzeMarketFlow",
+    inputSchema: InputSchema as never,
+    outputSchema: MarketResearchSchema as never,
+  },
+  async (input) => {
+    const { role, region } = input as FlowInput;
+    const apiKey = process.env.TAVILY_API_KEY;
+    if (!apiKey) throw new Error("TAVILY_API_KEY is missing");
+
+    const tvly = tavily({ apiKey });
+
+    // 1. Strategic Query: We explicitly ask for the progression (Junior vs Senior)
+    const query = `
+      Tech Salary Report 2024-2025: Pay scale progression for '${role}' in '${region}'.
+      Find hourly rates (USD) for:
+      1. Junior / Entry-level (0-2 years)
+      2. Mid-level / SSr (2-5 years)
+      3. Senior (5+ years)
+      Also include market demand and top required skills.
+      Context: ${region} market, LATAM remote rates if applicable.
+    `;
+
+    // 2. Execute Search
+    let searchContext = "";
+    try {
+      const searchResult = await tvly.search(query, {
+        searchDepth: "advanced",
+        maxResults: 7,
+        includeAnswer: true,
+      });
+      searchContext = JSON.stringify(searchResult);
+    } catch (error) {
+      console.error("Tavily search failed:", error);
+      searchContext =
+        "Search unavailable. Estimate based on global standards for " + region;
+    }
+
+    // 3. AI Extraction - Using text output and JSON parsing
+    const { text } = await ai.generate({
+      model: "openai/gpt-4o-mini",
+      prompt: `You are a Specialized Tech Recruiter.
+        
+**CONTEXT:**
+${searchContext}
+
+**MISSION:**
+Extract the **Career Salary Ladder** for '${role}' in '${region}'.
+
+**OUTPUT FORMAT (JSON):**
+{
+  "role": "${role}",
+  "region": "${region}",
+  "salary_ladder": {
+    "junior": { "min": <number>, "max": <number>, "median": <number>, "currency": "USD" },
+    "mid": { "min": <number>, "max": <number>, "median": <number>, "currency": "USD" },
+    "senior": { "min": <number>, "max": <number>, "median": <number>, "currency": "USD" }
+  },
+  "demand": {
+    "verdict": "<High|Medium|Low>",
+    "score": <0-100>,
+    "trend": "<Growing|Stable|Declining>"
+  },
+  "top_skills": [
+    { "name": "<skill>", "relevance": <0-100> }
+  ],
+  "analysis": {
+    "summary": "<2-3 sentence market summary>",
+    "key_growth_factor": "<main driver of growth>"
+  }
+}
+
+**REQUIREMENTS:**
+1. All salary values are HOURLY RATES in USD (integers).
+2. If explicit data is missing, infer logically (Junior is typically 40-50% of Senior).
+3. Return ONLY valid JSON, no additional text.
+
+JSON:`,
+    });
+
+    // Parse and validate with Zod
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("Failed to extract JSON from AI response");
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    const validated = MarketResearchSchema.parse(parsed);
+
+    return validated;
+  },
+);
 
 /**
  * analyzeMarketFlow
  *
- * Direct Retrieval (RAG) pattern for market analysis.
- * Calls Tavily search first, then uses AI to synthesize the data.
- * Implements a Cascade strategy for regional fallbacks.
+ * Public wrapper with proper typing for external callers.
+ * Fetches Career Ladder salary data (Junior/Mid/Senior) via RAG pattern.
  */
-export async function analyzeMarketFlow(input: {
-  role: string;
-  region: string;
-}): Promise<MarketResearch> {
-  const { role, region } = input;
-
-  // 1. Initialize Tavily
-  const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
-
-  // 2. Smart Cascade Query
-  const query = `
-    Market research: Salary range (hourly/monthly), demand trends, and critical skills for '${role}' in:
-    1. ${region} (Primary focus)
-    2. LATAM / South America (Secondary focus)
-    3. Global / US remote rates (Fallback)
-    Data for years 2024 and 2025.
-  `;
-
-  // 3. Execute Search (Direct Call)
-  let searchContext = "";
-  try {
-    const searchResult = await tvly.search(query, {
-      searchDepth: "advanced",
-      maxResults: 7,
-      includeAnswer: true,
-    });
-    searchContext = JSON.stringify(searchResult);
-  } catch (error) {
-    console.error("Tavily search failed:", error);
-    searchContext =
-      "Search unavailable. Proceed with general market knowledge.";
-  }
-
-  // 4. AI Analysis with Priority Protocol
-  const { text } = await ai.generate({
-    model: openAI.model("gpt-4o-mini"),
-    prompt: `
-      You are an expert Tech Recruitment Analyst.
-      
-      **CONTEXT FROM MARKET SEARCH:**
-      ${searchContext}
-
-      **TASK:**
-      Analyze the market for the role '${role}' targeting the region: '${region}'.
-      
-      **DATA PRIORITY PROTOCOL (CASCADE):**
-      1. **Tier 1 (Target):** Look for specific numbers for '${region}'. If found, use them accurately.
-      2. **Tier 2 (Regional Fallback):** If exact data for '${region}' is missing, use data for 'LATAM' or neighboring countries.
-      3. **Tier 3 (Global Fallback):** If neither are found, use Global/US remote rates but apply a logical adjustment (e.g., -40% for cost of living) to make it realistic for '${region}'.
-      
-      **OUTPUT REQUIREMENTS:**
-      - **Salary:** Must be in the currency most common for tech contracts in that region (usually USD for Remote/LATAM).
-      - **Demand:** Infer the trend based on the "recency" and volume of job mentions in the context.
-      - **Skills:** Focus on technical hard skills mentioned.
-      
-      Return ONLY a JSON object with this exact structure (no markdown, no code blocks):
-      {
-        "salary": {
-          "currency": "USD",
-          "hourly": { "min": number, "median": number, "max": number },
-          "annual": { "min": number, "median": number, "max": number }
-        },
-        "demand": {
-          "score": number (0-100),
-          "verdict": "Low" | "Moderate" | "High" | "Very High",
-          "trend": "Declining" | "Stable" | "Growing" | "Exploding"
-        },
-        "top_skills": [
-          { "name": string, "category": "Language" | "Framework" | "Database" | "Cloud" | "Tooling" | "Concept", "relevance": number (0-100) }
-        ],
-        "analysis": {
-          "summary": string,
-          "key_growth_factor": string,
-          "barrier_to_entry": "Low" | "Medium" | "High"
-        }
-      }
-    `,
-    config: {
-      temperature: 0.7,
-    },
-  });
-
-  // 5. Parse and validate
-  const cleaned = stripMarkdownCodeBlock(text);
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    throw new Error(
-      `Failed to generate market analysis for role: ${role}. Invalid JSON.`,
-    );
-  }
-
-  const result = MarketResearchSchema.safeParse(parsed);
-  if (!result.success) {
-    throw new Error(
-      `Failed to generate market analysis for role: ${role}. Schema validation failed.`,
-    );
-  }
-
-  return result.data;
-}
-
-/**
- * Strips markdown code block formatting from AI response
- */
-function stripMarkdownCodeBlock(raw: string): string {
-  const trimmed = raw.trim();
-  const codeBlockRegex = /^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/;
-  const match = codeBlockRegex.exec(trimmed);
-  if (match) {
-    return match[1].trim();
-  }
-  return trimmed;
+export async function analyzeMarketFlow(
+  input: FlowInput,
+): Promise<MarketResearch> {
+  const flowFn = internalFlow as unknown as (
+    input: FlowInput,
+  ) => Promise<MarketResearch>;
+  const result = await flowFn(input);
+  return result;
 }

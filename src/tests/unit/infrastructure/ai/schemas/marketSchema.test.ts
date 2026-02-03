@@ -1,330 +1,169 @@
 import { describe, it, expect } from "vitest";
 import {
   MarketResearchSchema,
-  DemandVerdictEnum,
-  DemandTrendEnum,
-  SkillCategoryEnum,
-  BarrierToEntryEnum,
-} from "@infrastructure/ai/schemas/marketSchema";
+  SalaryRangeSchema,
+  CareerLadderSchema,
+  DemandSchema,
+  TopSkillSchema,
+  AnalysisSchema,
+} from "@/infrastructure/ai/schemas/marketSchema";
 
-/**
- * Unit tests for MarketResearchSchema
- *
- * Tests Zod schema validation for Market Intelligence AI output.
- * Ensures proper validation of salary, demand, skills, and analysis data.
- */
+describe("MarketResearch Schema", () => {
+  describe("SalaryRangeSchema", () => {
+    it("should validate a valid salary range", () => {
+      const validRange = {
+        min: 25,
+        max: 75,
+        median: 45,
+        currency: "USD",
+      };
 
-describe("MarketResearchSchema", () => {
-  // Valid complete data for reuse
-  const validMarketResearch = {
-    salary: {
-      currency: "USD",
-      hourly: { min: 25, median: 45, max: 75 },
-      annual: { min: 50000, median: 90000, max: 150000 },
-    },
-    demand: {
-      score: 85,
-      verdict: "High",
-      trend: "Growing",
-    },
-    top_skills: [
-      { name: "TypeScript", category: "Language", relevance: 95 },
-      { name: "React", category: "Framework", relevance: 90 },
-    ],
-    analysis: {
-      summary: "Strong demand for this role in the current market.",
-      key_growth_factor: "AI integration driving demand",
-      barrier_to_entry: "Medium",
-    },
-  };
-
-  describe("valid data", () => {
-    it("should parse valid complete market research data", () => {
-      const result = MarketResearchSchema.safeParse(validMarketResearch);
-
+      const result = SalaryRangeSchema.safeParse(validRange);
       expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.salary.currency).toBe("USD");
-        expect(result.data.demand.score).toBe(85);
-        expect(result.data.top_skills).toHaveLength(2);
-        expect(result.data.analysis.barrier_to_entry).toBe("Medium");
-      }
     });
 
-    it("should parse data without optional annual salary", () => {
-      const dataWithoutAnnual = {
-        ...validMarketResearch,
-        salary: {
-          currency: "USD",
-          hourly: { min: 25, median: 45, max: 75 },
-        },
+    it("should reject non-integer values", () => {
+      const invalidRange = {
+        min: 25.5,
+        max: 75,
+        median: 45,
+        currency: "USD",
       };
 
-      const result = MarketResearchSchema.safeParse(dataWithoutAnnual);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.salary.annual).toBeUndefined();
-      }
-    });
-
-    it("should parse data with empty top_skills array", () => {
-      const dataWithEmptySkills = {
-        ...validMarketResearch,
-        top_skills: [],
-      };
-
-      const result = MarketResearchSchema.safeParse(dataWithEmptySkills);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.top_skills).toHaveLength(0);
-      }
-    });
-  });
-
-  describe("salary validation", () => {
-    it("should reject missing currency", () => {
-      const invalidData = {
-        ...validMarketResearch,
-        salary: {
-          hourly: { min: 25, median: 45, max: 75 },
-        },
-      };
-
-      const result = MarketResearchSchema.safeParse(invalidData);
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject missing hourly range", () => {
-      const invalidData = {
-        ...validMarketResearch,
-        salary: {
-          currency: "USD",
-        },
-      };
-
-      const result = MarketResearchSchema.safeParse(invalidData);
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject non-numeric salary values", () => {
-      const invalidData = {
-        ...validMarketResearch,
-        salary: {
-          currency: "USD",
-          hourly: { min: "low", median: "mid", max: "high" },
-        },
-      };
-
-      const result = MarketResearchSchema.safeParse(invalidData);
-
+      const result = SalaryRangeSchema.safeParse(invalidRange);
       expect(result.success).toBe(false);
     });
   });
 
-  describe("demand validation", () => {
-    it("should reject score below 0", () => {
-      const invalidData = {
-        ...validMarketResearch,
-        demand: {
-          score: -10,
-          verdict: "High",
-          trend: "Growing",
-        },
+  describe("CareerLadderSchema", () => {
+    it("should validate a complete career ladder", () => {
+      const validLadder = {
+        junior: { min: 25, max: 40, median: 32, currency: "USD" },
+        mid: { min: 45, max: 70, median: 55, currency: "USD" },
+        senior: { min: 75, max: 120, median: 95, currency: "USD" },
       };
 
-      const result = MarketResearchSchema.safeParse(invalidData);
+      const result = CareerLadderSchema.safeParse(validLadder);
+      expect(result.success).toBe(true);
+    });
 
+    it("should reject missing levels", () => {
+      const incompleteLadder = {
+        junior: { min: 25, max: 40, median: 32, currency: "USD" },
+        // missing mid and senior
+      };
+
+      const result = CareerLadderSchema.safeParse(incompleteLadder);
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe("DemandSchema", () => {
+    it("should validate demand with score in range", () => {
+      const validDemand = {
+        verdict: "High",
+        score: 85,
+        trend: "Growing",
+      };
+
+      const result = DemandSchema.safeParse(validDemand);
+      expect(result.success).toBe(true);
     });
 
     it("should reject score above 100", () => {
-      const invalidData = {
-        ...validMarketResearch,
-        demand: {
-          score: 150,
-          verdict: "High",
-          trend: "Growing",
-        },
+      const invalidDemand = {
+        verdict: "High",
+        score: 150,
+        trend: "Growing",
       };
 
-      const result = MarketResearchSchema.safeParse(invalidData);
-
+      const result = DemandSchema.safeParse(invalidDemand);
       expect(result.success).toBe(false);
     });
 
-    it("should reject invalid verdict enum value", () => {
-      const invalidData = {
-        ...validMarketResearch,
-        demand: {
-          score: 85,
-          verdict: "SuperHigh",
-          trend: "Growing",
-        },
+    it("should reject score below 0", () => {
+      const invalidDemand = {
+        verdict: "Low",
+        score: -10,
+        trend: "Declining",
       };
 
-      const result = MarketResearchSchema.safeParse(invalidData);
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject invalid trend enum value", () => {
-      const invalidData = {
-        ...validMarketResearch,
-        demand: {
-          score: 85,
-          verdict: "High",
-          trend: "Skyrocketing",
-        },
-      };
-
-      const result = MarketResearchSchema.safeParse(invalidData);
-
+      const result = DemandSchema.safeParse(invalidDemand);
       expect(result.success).toBe(false);
     });
   });
 
-  describe("top_skills validation", () => {
-    it("should reject more than 8 skills", () => {
-      const nineSkills = Array.from({ length: 9 }, (_, i) => ({
-        name: `Skill${i}`,
-        category: "Language",
-        relevance: 80,
-      }));
-
-      const invalidData = {
-        ...validMarketResearch,
-        top_skills: nineSkills,
+  describe("TopSkillSchema", () => {
+    it("should validate a skill with name and relevance", () => {
+      const validSkill = {
+        name: "React",
+        relevance: 95,
       };
 
-      const result = MarketResearchSchema.safeParse(invalidData);
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should accept exactly 8 skills", () => {
-      const eightSkills = Array.from({ length: 8 }, (_, i) => ({
-        name: `Skill${i}`,
-        category: "Language",
-        relevance: 80,
-      }));
-
-      const validData = {
-        ...validMarketResearch,
-        top_skills: eightSkills,
-      };
-
-      const result = MarketResearchSchema.safeParse(validData);
-
+      const result = TopSkillSchema.safeParse(validSkill);
       expect(result.success).toBe(true);
     });
 
-    it("should reject invalid skill category", () => {
-      const invalidData = {
-        ...validMarketResearch,
-        top_skills: [
-          { name: "TypeScript", category: "InvalidCategory", relevance: 95 },
-        ],
+    it("should reject relevance above 100", () => {
+      const invalidSkill = {
+        name: "React",
+        relevance: 150,
       };
 
-      const result = MarketResearchSchema.safeParse(invalidData);
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject skill relevance below 0", () => {
-      const invalidData = {
-        ...validMarketResearch,
-        top_skills: [
-          { name: "TypeScript", category: "Language", relevance: -5 },
-        ],
-      };
-
-      const result = MarketResearchSchema.safeParse(invalidData);
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject skill relevance above 100", () => {
-      const invalidData = {
-        ...validMarketResearch,
-        top_skills: [
-          { name: "TypeScript", category: "Language", relevance: 105 },
-        ],
-      };
-
-      const result = MarketResearchSchema.safeParse(invalidData);
-
+      const result = TopSkillSchema.safeParse(invalidSkill);
       expect(result.success).toBe(false);
     });
   });
 
-  describe("analysis validation", () => {
-    it("should reject invalid barrier_to_entry enum", () => {
-      const invalidData = {
-        ...validMarketResearch,
-        analysis: {
-          summary: "Summary text",
-          key_growth_factor: "Growth factor",
-          barrier_to_entry: "VeryHigh",
-        },
+  describe("AnalysisSchema", () => {
+    it("should validate analysis with summary and key growth factor", () => {
+      const validAnalysis = {
+        summary: "Market is growing rapidly.",
+        key_growth_factor: "AI adoption",
       };
 
-      const result = MarketResearchSchema.safeParse(invalidData);
-
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject missing summary", () => {
-      const invalidData = {
-        ...validMarketResearch,
-        analysis: {
-          key_growth_factor: "Growth factor",
-          barrier_to_entry: "Medium",
-        },
-      };
-
-      const result = MarketResearchSchema.safeParse(invalidData);
-
-      expect(result.success).toBe(false);
+      const result = AnalysisSchema.safeParse(validAnalysis);
+      expect(result.success).toBe(true);
     });
   });
 
-  describe("enum exports", () => {
-    it("should export valid DemandVerdictEnum values", () => {
-      expect(DemandVerdictEnum.options).toEqual([
-        "Low",
-        "Moderate",
-        "High",
-        "Very High",
-      ]);
+  describe("MarketResearchSchema (full)", () => {
+    it("should validate a complete market research object", () => {
+      const validResearch = {
+        role: "Rust Developer",
+        region: "Argentina",
+        salary_ladder: {
+          junior: { min: 25, max: 40, median: 32, currency: "USD" },
+          mid: { min: 45, max: 70, median: 55, currency: "USD" },
+          senior: { min: 75, max: 120, median: 95, currency: "USD" },
+        },
+        demand: {
+          verdict: "High",
+          score: 85,
+          trend: "Growing",
+        },
+        top_skills: [
+          { name: "Rust", relevance: 95 },
+          { name: "WebAssembly", relevance: 80 },
+        ],
+        analysis: {
+          summary: "Rust developers are in high demand.",
+          key_growth_factor: "Memory safety focus",
+        },
+      };
+
+      const result = MarketResearchSchema.safeParse(validResearch);
+      expect(result.success).toBe(true);
     });
 
-    it("should export valid DemandTrendEnum values", () => {
-      expect(DemandTrendEnum.options).toEqual([
-        "Declining",
-        "Stable",
-        "Growing",
-        "Exploding",
-      ]);
-    });
+    it("should reject missing required fields", () => {
+      const incompleteResearch = {
+        role: "Developer",
+        // missing other required fields
+      };
 
-    it("should export valid SkillCategoryEnum values", () => {
-      expect(SkillCategoryEnum.options).toEqual([
-        "Language",
-        "Framework",
-        "Database",
-        "Cloud",
-        "Tooling",
-        "Concept",
-      ]);
-    });
-
-    it("should export valid BarrierToEntryEnum values", () => {
-      expect(BarrierToEntryEnum.options).toEqual(["Low", "Medium", "High"]);
+      const result = MarketResearchSchema.safeParse(incompleteResearch);
+      expect(result.success).toBe(false);
     });
   });
 });

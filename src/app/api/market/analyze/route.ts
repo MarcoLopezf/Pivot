@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { MarketResearchService } from "../../../../infrastructure/services/MarketResearchService";
 import { z } from "zod";
+import { analyzeMarketFlow } from "@/infrastructure/ai/flows/analyzeMarketFlow";
 
 /**
  * Request body validation schema
  */
 const bodySchema = z.object({
-  slug: z.string(),
+  slug: z.string(), // Actually the role name/display name
   region: z.string().default("GLOBAL"),
 });
 
@@ -14,17 +14,16 @@ const bodySchema = z.object({
  * POST /api/market/analyze
  *
  * Analyzes job market data for a specific role and region.
- * Returns cached data if available, otherwise generates via AI.
+ * Calls the AI flow directly (bypasses DB cache for now).
  */
 export async function POST(req: Request): Promise<NextResponse> {
   try {
     // Parse and validate request body
     const body = await req.json();
-    const { slug, region } = bodySchema.parse(body);
+    const { slug: role, region } = bodySchema.parse(body);
 
-    // Execute market analysis
-    const service = new MarketResearchService();
-    const data = await service.getMarketAnalysis(slug, region);
+    // Call the AI flow directly
+    const data = await analyzeMarketFlow({ role, region });
 
     return NextResponse.json(data);
   } catch (error) {
@@ -49,12 +48,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
     // Handle known errors
     if (error instanceof Error) {
-      // Role not found - 404
-      if (error.message.includes("not found in catalog")) {
-        return NextResponse.json({ error: error.message }, { status: 404 });
-      }
-
-      // Other errors - 500
+      console.error("Market analysis error:", error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 

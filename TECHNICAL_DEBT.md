@@ -76,7 +76,53 @@ type Result<T> =
 
 ## 🟡 Medium Priority
 
-_(Empty - add items as they are identified)_
+### Extract Shared `extractJSON` Utility for AI Flows
+
+**Status:** Pending  
+**Created:** 2026-02-03  
+**Estimated Effort:** 2-3 hours  
+**Impact:** Medium (code quality, maintainability)
+
+**Problem:**  
+5 AI flows in `src/infrastructure/ai/flows/` each implement their own `stripMarkdownCodeBlock` or similar function to parse JSON from LLM responses. This leads to:
+- Code duplication across flows
+- Inconsistent handling of edge cases
+- If the LLM changes output format, fixes needed in 5 places
+
+**Affected Files:**
+- `generateQuestionsFlow.ts` (line 48)
+- `analyzeProjectFlow.ts` (line 84)
+- `suggestRolesFlow.ts` (line 42)
+- `generateRoadmapFlow.ts` (line 50)
+- `analyzeMarketFlow.ts` (line 99) - Already has improved `extractJSON`
+
+**Desired State:**
+```typescript
+// src/infrastructure/ai/utils/extractJSON.ts
+export function extractJSON(raw: string): string {
+  // 1. Try code block: ```json ... ```
+  // 2. Find first JSON object: { ... }
+  // 3. Fallback: return raw
+}
+```
+
+**Benefits:**
+- ✅ Single source of truth for JSON extraction
+- ✅ Easier to add edge case handling (text before/after JSON)
+- ✅ Centralized testing of parsing logic
+- ✅ DRY principle
+
+**Implementation Checklist:**
+- [ ] Create `src/infrastructure/ai/utils/extractJSON.ts`
+- [ ] Add unit tests for edge cases
+- [ ] Refactor `generateQuestionsFlow.ts`
+- [ ] Refactor `analyzeProjectFlow.ts`
+- [ ] Refactor `suggestRolesFlow.ts`
+- [ ] Refactor `generateRoadmapFlow.ts`
+- [ ] Update `analyzeMarketFlow.ts` to use shared utility
+- [ ] Run `pnpm verify`
+
+---
 
 ---
 
@@ -111,4 +157,4 @@ _(Items will be moved here when completed)_
 
 ---
 
-**Last Updated:** 2026-02-02
+**Last Updated:** 2026-02-03

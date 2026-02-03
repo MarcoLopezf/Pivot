@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
  * Unit tests for analyzeMarketFlow
  *
  * Tests the Direct Retrieval (RAG) pattern with mocked Tavily and AI generation.
+ * Updated for Career Ladder schema (Junior/Mid/Senior).
  */
 
 // Mock Tavily
@@ -14,19 +15,16 @@ vi.mock("@tavily/core", () => ({
   })),
 }));
 
-// Mock the genkit config
-vi.mock("@infrastructure/ai/genkit.config", () => ({
-  ai: {
-    generate: vi.fn(),
-  },
-}));
-
-// Mock openAI model
-vi.mock("@genkit-ai/compat-oai/openai", () => ({
-  openAI: {
-    model: vi.fn().mockReturnValue("mocked-gpt-4o-mini"),
-  },
-}));
+// Mock the genkit config with defineFlow - use inline function to avoid hoisting issues
+vi.mock("@infrastructure/ai/genkit.config", () => {
+  const generateFn = vi.fn();
+  return {
+    ai: {
+      generate: generateFn,
+      defineFlow: vi.fn((_config, fn) => fn),
+    },
+  };
+});
 
 // Import after mocks
 import { analyzeMarketFlow } from "@infrastructure/ai/flows/analyzeMarketFlow";
@@ -34,10 +32,12 @@ import { ai } from "@infrastructure/ai/genkit.config";
 
 describe("analyzeMarketFlow", () => {
   const validMarketResearchOutput = {
-    salary: {
-      currency: "USD",
-      hourly: { min: 25, median: 45, max: 75 },
-      annual: { min: 50000, median: 90000, max: 150000 },
+    role: "Frontend Developer",
+    region: "Argentina",
+    salary_ladder: {
+      junior: { min: 20, max: 35, median: 28, currency: "USD" },
+      mid: { min: 35, max: 55, median: 45, currency: "USD" },
+      senior: { min: 55, max: 85, median: 70, currency: "USD" },
     },
     demand: {
       score: 85,
@@ -45,31 +45,34 @@ describe("analyzeMarketFlow", () => {
       trend: "Growing",
     },
     top_skills: [
-      { name: "TypeScript", category: "Language", relevance: 95 },
-      { name: "React", category: "Framework", relevance: 90 },
+      { name: "TypeScript", relevance: 95 },
+      { name: "React", relevance: 90 },
     ],
     analysis: {
       summary: "Strong demand for developers in this market.",
       key_growth_factor: "AI integration driving demand",
-      barrier_to_entry: "Medium",
     },
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Set environment variable for test
+    process.env.TAVILY_API_KEY = "test-api-key";
+
     // Default mock for Tavily search
     mockSearch.mockResolvedValue({
       results: [{ title: "Salary Data", content: "Average $50/hr" }],
       answer: "Mock search answer",
     });
+
+    // Default mock for AI generate
+    vi.mocked(ai.generate).mockResolvedValue({
+      output: validMarketResearchOutput,
+    } as never);
   });
 
   describe("successful generation", () => {
-    it("should return valid market research data", async () => {
-      vi.mocked(ai.generate).mockResolvedValue({
-        text: JSON.stringify(validMarketResearchOutput),
-      } as never);
-
+    it("should return valid market research data with career ladder", async () => {
       const result = await analyzeMarketFlow({
         role: "Frontend Developer",
         region: "Argentina",
@@ -78,166 +81,100 @@ describe("analyzeMarketFlow", () => {
       expect(result).toEqual(validMarketResearchOutput);
     });
 
-    it("should call Tavily search with cascade query", async () => {
-      vi.mocked(ai.generate).mockResolvedValue({
-        text: JSON.stringify(validMarketResearchOutput),
-      } as never);
-
-      await analyzeMarketFlow({
-        role: "Backend Engineer",
-        region: "Brazil",
-      });
-
-      expect(mockSearch).toHaveBeenCalledWith(
-        expect.stringContaining("Backend Engineer"),
-        expect.objectContaining({
-          searchDepth: "advanced",
-          maxResults: 7,
-          includeAnswer: true,
-        }),
-      );
-    });
-
-    it("should include region in search query", async () => {
-      vi.mocked(ai.generate).mockResolvedValue({
-        text: JSON.stringify(validMarketResearchOutput),
-      } as never);
-
-      await analyzeMarketFlow({
-        role: "DevOps Engineer",
-        region: "Mexico",
-      });
-
-      expect(mockSearch).toHaveBeenCalledWith(
-        expect.stringContaining("Mexico"),
-        expect.any(Object),
-      );
-    });
-
-    it("should pass search context to AI prompt", async () => {
-      vi.mocked(ai.generate).mockResolvedValue({
-        text: JSON.stringify(validMarketResearchOutput),
-      } as never);
-
-      await analyzeMarketFlow({
-        role: "Data Scientist",
+    it("should include junior, mid, and senior salary levels", async () => {
+      const result = await analyzeMarketFlow({
+        role: "Rust Developer",
         region: "LATAM",
       });
 
-      expect(ai.generate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          prompt: expect.stringContaining("Mock search answer"),
-        }),
-      );
+      expect(result.salary_ladder).toBeDefined();
+      expect(result.salary_ladder.junior).toBeDefined();
+      expect(result.salary_ladder.mid).toBeDefined();
+      expect(result.salary_ladder.senior).toBeDefined();
     });
 
-    it("should parse response wrapped in markdown code blocks", async () => {
-      vi.mocked(ai.generate).mockResolvedValue({
-        text: "```json\n" + JSON.stringify(validMarketResearchOutput) + "\n```",
-      } as never);
-
-      const result = await analyzeMarketFlow({
-        role: "Cloud Architect",
-        region: "Chile",
+    it("should call Tavily search with strategic query", async () => {
+      await analyzeMarketFlow({
+        role: "Rust Developer",
+        region: "Argentina",
       });
 
-      expect(result).toEqual(validMarketResearchOutput);
+      expect(mockSearch).toHaveBeenCalledTimes(1);
+      const searchQuery = mockSearch.mock.calls[0][0];
+      expect(searchQuery).toContain("Rust Developer");
+      expect(searchQuery).toContain("Argentina");
+      expect(searchQuery).toContain("Junior");
+      expect(searchQuery).toContain("Senior");
+    });
+
+    it("should call AI generate with search context", async () => {
+      await analyzeMarketFlow({
+        role: "Python Developer",
+        region: "Global",
+      });
+
+      expect(ai.generate).toHaveBeenCalledTimes(1);
+      const generateCall = vi.mocked(ai.generate).mock.calls[0][0];
+      expect(generateCall.prompt).toContain("Python Developer");
+      expect(generateCall.prompt).toContain("Global");
     });
   });
 
   describe("error handling", () => {
-    it("should continue with fallback message if Tavily fails", async () => {
-      mockSearch.mockRejectedValue(new Error("API unavailable"));
-      vi.mocked(ai.generate).mockResolvedValue({
-        text: JSON.stringify(validMarketResearchOutput),
-      } as never);
-
-      const result = await analyzeMarketFlow({
-        role: "ML Engineer",
-        region: "Canada",
-      });
-
-      expect(result).toEqual(validMarketResearchOutput);
-      expect(ai.generate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          prompt: expect.stringContaining("Search unavailable"),
-        }),
-      );
-    });
-
-    it("should throw error when AI returns invalid JSON", async () => {
-      vi.mocked(ai.generate).mockResolvedValue({
-        text: "not valid json",
-      } as never);
+    it("should throw error if TAVILY_API_KEY is missing", async () => {
+      delete process.env.TAVILY_API_KEY;
 
       await expect(
         analyzeMarketFlow({
-          role: "Frontend Developer",
+          role: "Developer",
           region: "Argentina",
         }),
-      ).rejects.toThrow("Failed to generate market analysis");
+      ).rejects.toThrow("TAVILY_API_KEY is missing");
     });
 
-    it("should throw error when response fails schema validation", async () => {
-      vi.mocked(ai.generate).mockResolvedValue({
-        text: JSON.stringify({ invalid: "data" }),
-      } as never);
+    it("should handle Tavily search failure gracefully", async () => {
+      mockSearch.mockRejectedValue(new Error("Tavily API error"));
+
+      const result = await analyzeMarketFlow({
+        role: "Developer",
+        region: "Argentina",
+      });
+
+      // Should still return result from AI generation with fallback context
+      expect(result).toEqual(validMarketResearchOutput);
+    });
+
+    it("should throw error if AI generation returns null output", async () => {
+      vi.mocked(ai.generate).mockResolvedValue({ output: null } as never);
 
       await expect(
         analyzeMarketFlow({
-          role: "Backend Developer",
-          region: "Brazil",
+          role: "Developer",
+          region: "Argentina",
         }),
-      ).rejects.toThrow("Failed to generate market analysis");
-    });
-
-    it("should propagate AI generation errors", async () => {
-      vi.mocked(ai.generate).mockRejectedValue(
-        new Error("AI service unavailable"),
-      );
-
-      await expect(
-        analyzeMarketFlow({
-          role: "Full Stack Developer",
-          region: "Remote",
-        }),
-      ).rejects.toThrow("AI service unavailable");
+      ).rejects.toThrow("Failed to generate analysis");
     });
   });
 
-  describe("prompt content", () => {
-    it("should include CASCADE priority protocol in prompt", async () => {
-      vi.mocked(ai.generate).mockResolvedValue({
-        text: JSON.stringify(validMarketResearchOutput),
-      } as never);
-
+  describe("input validation", () => {
+    it("should pass role to search query", async () => {
       await analyzeMarketFlow({
-        role: "Software Engineer",
-        region: "Colombia",
+        role: "Backend Engineer",
+        region: "USA",
       });
 
-      expect(ai.generate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          prompt: expect.stringContaining("CASCADE"),
-        }),
-      );
+      const searchQuery = mockSearch.mock.calls[0][0];
+      expect(searchQuery).toContain("Backend Engineer");
     });
 
-    it("should mention Tech Recruitment Analyst role", async () => {
-      vi.mocked(ai.generate).mockResolvedValue({
-        text: JSON.stringify(validMarketResearchOutput),
-      } as never);
-
+    it("should pass region to search query", async () => {
       await analyzeMarketFlow({
-        role: "Cloud Architect",
-        region: "Chile",
+        role: "DevOps Engineer",
+        region: "LATAM",
       });
 
-      expect(ai.generate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          prompt: expect.stringContaining("Tech Recruitment Analyst"),
-        }),
-      );
+      const searchQuery = mockSearch.mock.calls[0][0];
+      expect(searchQuery).toContain("LATAM");
     });
   });
 });

@@ -167,3 +167,39 @@ model ProjectSubmission {
   @@index([userId])
   @@index([roadmapItemId])
 }
+
+// ============================================================================
+// Market Intelligence Module
+// ============================================================================
+
+enum SourceType {
+  GENKIT_AUTO
+  MANUAL_SEED
+  CRON_UPDATE
+}
+
+model JobRole {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  displayName String
+  searchTerms String
+  category    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  reports MarketReport[]
+}
+
+model MarketReport {
+  id         String     @id @default(uuid())
+  roleId     String
+  region     String     @default("GLOBAL")
+  createdAt  DateTime   @default(now())
+  expiresAt  DateTime
+  sourceType SourceType @default(GENKIT_AUTO)
+  data       Json
+
+  role JobRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@index([roleId, region, createdAt])
+}

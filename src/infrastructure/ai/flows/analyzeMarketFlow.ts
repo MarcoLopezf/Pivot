@@ -19,6 +19,7 @@ const internalFlow = ai.defineFlow(
     inputSchema: InputSchema as never,
     outputSchema: MarketResearchSchema as never,
   },
+  // @ts-expect-error - Genkit/Zod type incompatibility with 'as never' casting
   async (input) => {
     const { role, region } = input as FlowInput;
     const apiKey = process.env.TAVILY_API_KEY;

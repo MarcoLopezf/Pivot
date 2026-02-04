@@ -1,7 +1,7 @@
 import { type PrismaClient } from "@prisma/client";
 import { IOnboardingRepository } from "@domain/onboarding/repositories/IOnboardingRepository";
 import { OnboardingSession } from "@domain/onboarding/entities/OnboardingSession";
-import { OnboardingStateMapper } from "@infrastructure/database/mappers/OnboardingStateMapper";
+import { OnboardingProgressMapper } from "@infrastructure/database/mappers/OnboardingProgressMapper";
 
 /**
  * PrismaOnboardingRepository - Infrastructure Repository
@@ -20,15 +20,20 @@ export class PrismaOnboardingRepository implements IOnboardingRepository {
    * Uses upsert to create or update the session
    */
   async save(session: OnboardingSession): Promise<void> {
-    const data = OnboardingStateMapper.toPersistence(session);
+    const data = OnboardingProgressMapper.toPersistence(session);
 
-    await this.db.onboardingState.upsert({
+    await this.db.onboardingProgress.upsert({
       where: { userId: session.userId },
-      create: data,
+      create: {
+        userId: data.userId,
+        currentStep: data.currentStep,
+        partialData: data.partialData,
+        lastUpdatedAt: data.lastUpdatedAt,
+      },
       update: {
         currentStep: data.currentStep,
-        data: data.data,
-        updatedAt: data.updatedAt,
+        partialData: data.partialData,
+        lastUpdatedAt: data.lastUpdatedAt,
       },
     });
   }
@@ -37,15 +42,15 @@ export class PrismaOnboardingRepository implements IOnboardingRepository {
    * Retrieves an onboarding session by user ID
    */
   async findByUserId(userId: string): Promise<OnboardingSession | null> {
-    const prismaState = await this.db.onboardingState.findUnique({
+    const prismaProgress = await this.db.onboardingProgress.findUnique({
       where: { userId },
     });
 
-    if (!prismaState) {
+    if (!prismaProgress) {
       return null;
     }
 
-    return OnboardingStateMapper.toDomain(prismaState);
+    return OnboardingProgressMapper.toDomain(prismaProgress);
   }
 
   /**
@@ -54,7 +59,7 @@ export class PrismaOnboardingRepository implements IOnboardingRepository {
    * Used when onboarding is completed or needs to be reset
    */
   async delete(userId: string): Promise<void> {
-    await this.db.onboardingState.delete({
+    await this.db.onboardingProgress.delete({
       where: { userId },
     });
   }

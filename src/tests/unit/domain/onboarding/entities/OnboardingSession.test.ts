@@ -4,27 +4,23 @@ import { OnboardingSession } from "@domain/onboarding/entities/OnboardingSession
 describe("OnboardingSession", () => {
   describe("create", () => {
     it("should create an onboarding session with valid userId and currentStep", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE");
+      const session = OnboardingSession.create("user-123", 1);
 
       expect(session.userId).toBe("user-123");
-      expect(session.currentStep).toBe("PROFILE");
+      expect(session.currentStep).toBe(1);
       expect(session.data).toEqual({});
     });
 
     it("should create with initial data", () => {
       const initialData = { name: "John", email: "john@example.com" };
-      const session = OnboardingSession.create(
-        "user-123",
-        "PROFILE",
-        initialData,
-      );
+      const session = OnboardingSession.create("user-123", 1, initialData);
 
       expect(session.data).toEqual(initialData);
     });
 
     it("should record creation timestamp", () => {
       const before = new Date();
-      const session = OnboardingSession.create("user-123", "PROFILE");
+      const session = OnboardingSession.create("user-123", 1);
       const after = new Date();
 
       expect(session.updatedAt.getTime()).toBeGreaterThanOrEqual(
@@ -34,26 +30,26 @@ describe("OnboardingSession", () => {
     });
 
     it("should reject empty userId", () => {
-      expect(() => OnboardingSession.create("", "PROFILE")).toThrow(
+      expect(() => OnboardingSession.create("", 1)).toThrow(
         "User ID cannot be empty",
       );
     });
 
     it("should reject whitespace-only userId", () => {
-      expect(() => OnboardingSession.create("   ", "PROFILE")).toThrow(
+      expect(() => OnboardingSession.create("   ", 1)).toThrow(
         "User ID cannot be empty",
       );
     });
 
-    it("should reject empty currentStep", () => {
-      expect(() => OnboardingSession.create("user-123", "")).toThrow(
-        "Current step cannot be empty",
+    it("should reject step less than 1", () => {
+      expect(() => OnboardingSession.create("user-123", 0)).toThrow(
+        "Current step must be at least 1",
       );
     });
 
-    it("should reject whitespace-only currentStep", () => {
-      expect(() => OnboardingSession.create("user-123", "   ")).toThrow(
-        "Current step cannot be empty",
+    it("should reject negative step", () => {
+      expect(() => OnboardingSession.create("user-123", -1)).toThrow(
+        "Current step must be at least 1",
       );
     });
   });
@@ -65,13 +61,13 @@ describe("OnboardingSession", () => {
 
       const session = OnboardingSession.reconstitute(
         "user-123",
-        "GOALS",
+        2,
         data,
         updatedAt,
       );
 
       expect(session.userId).toBe("user-123");
-      expect(session.currentStep).toBe("GOALS");
+      expect(session.currentStep).toBe(2);
       expect(session.data).toEqual(data);
       expect(session.updatedAt).toBe(updatedAt);
     });
@@ -79,20 +75,19 @@ describe("OnboardingSession", () => {
 
   describe("updateStep", () => {
     it("should update the current step", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE");
+      const session = OnboardingSession.create("user-123", 1);
 
-      session.updateStep("GOALS");
+      session.updateStep(2);
 
-      expect(session.currentStep).toBe("GOALS");
+      expect(session.currentStep).toBe(2);
     });
 
     it("should update the updatedAt timestamp when step changes", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE");
-      const originalUpdatedAt = session.updatedAt;
+      const session = OnboardingSession.create("user-123", 1);
 
       // Small delay to ensure timestamp difference
       const before = new Date();
-      session.updateStep("GOALS");
+      session.updateStep(2);
       const after = new Date();
 
       expect(session.updatedAt.getTime()).toBeGreaterThanOrEqual(
@@ -101,22 +96,22 @@ describe("OnboardingSession", () => {
       expect(session.updatedAt.getTime()).toBeLessThanOrEqual(after.getTime());
     });
 
-    it("should reject empty step", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE");
+    it("should reject step less than 1", () => {
+      const session = OnboardingSession.create("user-123", 1);
 
-      expect(() => session.updateStep("")).toThrow("Step cannot be empty");
+      expect(() => session.updateStep(0)).toThrow("Step must be at least 1");
     });
 
-    it("should reject whitespace-only step", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE");
+    it("should reject negative step", () => {
+      const session = OnboardingSession.create("user-123", 1);
 
-      expect(() => session.updateStep("   ")).toThrow("Step cannot be empty");
+      expect(() => session.updateStep(-1)).toThrow("Step must be at least 1");
     });
   });
 
   describe("updateData", () => {
     it("should merge new data with existing data", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE", {
+      const session = OnboardingSession.create("user-123", 1, {
         name: "John",
         age: 30,
       });
@@ -131,7 +126,7 @@ describe("OnboardingSession", () => {
     });
 
     it("should handle updating empty data", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE");
+      const session = OnboardingSession.create("user-123", 1);
 
       session.updateData({ name: "John" });
 
@@ -139,7 +134,7 @@ describe("OnboardingSession", () => {
     });
 
     it("should update the updatedAt timestamp", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE");
+      const session = OnboardingSession.create("user-123", 1);
 
       const before = new Date();
       session.updateData({ name: "John" });
@@ -154,7 +149,7 @@ describe("OnboardingSession", () => {
 
   describe("setData", () => {
     it("should replace all data", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE", {
+      const session = OnboardingSession.create("user-123", 1, {
         name: "John",
         age: 30,
       });
@@ -165,7 +160,7 @@ describe("OnboardingSession", () => {
     });
 
     it("should update the updatedAt timestamp", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE");
+      const session = OnboardingSession.create("user-123", 1);
 
       const before = new Date();
       session.setData({ name: "John" });
@@ -180,7 +175,7 @@ describe("OnboardingSession", () => {
 
   describe("clearData", () => {
     it("should clear all data", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE", {
+      const session = OnboardingSession.create("user-123", 1, {
         name: "John",
         age: 30,
       });
@@ -191,7 +186,7 @@ describe("OnboardingSession", () => {
     });
 
     it("should update the updatedAt timestamp", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE");
+      const session = OnboardingSession.create("user-123", 1);
 
       const before = new Date();
       session.clearData();
@@ -206,7 +201,7 @@ describe("OnboardingSession", () => {
 
   describe("data immutability", () => {
     it("should return a copy of data to prevent external mutation", () => {
-      const session = OnboardingSession.create("user-123", "PROFILE", {
+      const session = OnboardingSession.create("user-123", 1, {
         name: "John",
       });
 

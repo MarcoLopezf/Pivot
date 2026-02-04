@@ -12,17 +12,31 @@ enum UserRole {
 }
 
 model User {
-  id                  String              @id @default(uuid())
-  email               String              @unique
-  name                String
-  role                UserRole            @default(USER)
-  onboardingCompleted Boolean             @default(false)
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  careerGoals         CareerGoal[]
-  quizAttempts        QuizAttempt[]
-  projectSubmissions  ProjectSubmission[]
-  onboardingState     OnboardingState?
+  id                    String              @id @default(uuid())
+  email                 String              @unique
+  name                  String
+  role                  UserRole            @default(USER)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // --- NEW FIELDS (Phase 1) ---
+  // Onboarding completion tracking
+  onboardingCompleted   Boolean             @default(false)
+  onboardingCompletedAt DateTime?
+
+  // Location for market research
+  location              String?
+
+  // Entry level flags & experience
+  isEntryLevel          Boolean             @default(false)
+  currentSeniority      String?             // "JUNIOR" | "MID" | "SENIOR"
+  yearsExperience       Int?                // Extracted later from CV/LinkedIn
+
+  // Relations
+  careerGoals           CareerGoal[]
+  quizAttempts          QuizAttempt[]
+  projectSubmissions    ProjectSubmission[]
+  onboardingProgress    OnboardingProgress?
 }
 
 model CareerGoal {
@@ -170,14 +184,26 @@ model ProjectSubmission {
   @@index([roadmapItemId])
 }
 
-model OnboardingState {
-  id          String   @id @default(uuid())
-  userId      String   @unique
-  currentStep String   // e.g., "PROFILE", "GOALS", "ROADMAP"
-  data        Json     // Flexible storage for accumulated data
-  updatedAt   DateTime @updatedAt
+// --- NEW TABLE: OnboardingProgress ---
+// Para guardar el estado temporal del wizard sin ensuciar al User
+model OnboardingProgress {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Tracking
+  currentStep    Int       @default(1)
+  path           String?   // "DIRECT" | "AI_SUGGESTIONS"
+  completedSteps Int[]     @default([])
+
+  // Data flexible (JSON) para guardar partials de los steps
+  partialData    Json      @default("{}")
+
+  // Meta
+  createdAt      DateTime  @default(now())
+  lastUpdatedAt  DateTime  @updatedAt
+  abandonedAt    DateTime?
 
   @@index([userId])
+  @@index([currentStep])
 }

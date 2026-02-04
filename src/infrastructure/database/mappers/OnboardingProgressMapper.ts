@@ -1,35 +1,35 @@
 import {
-  type OnboardingState as PrismaOnboardingState,
+  type OnboardingProgress as PrismaOnboardingProgress,
   type Prisma,
 } from "@prisma/client";
 import { OnboardingSession } from "@domain/onboarding/entities/OnboardingSession";
 
 /**
- * OnboardingStateMapper - Infrastructure Mapper
+ * OnboardingProgressMapper - Infrastructure Mapper
  *
- * Converts between Prisma OnboardingState (persistence) and
+ * Converts between Prisma OnboardingProgress (persistence) and
  * Domain OnboardingSession (business logic).
  *
- * Handles JSON type conversion carefully to maintain type safety.
+ * Handles JSON type conversion and step number to string conversion.
  *
  * @layer Infrastructure
  */
-export class OnboardingStateMapper {
+export class OnboardingProgressMapper {
   /**
-   * Converts Prisma OnboardingState to Domain OnboardingSession
+   * Converts Prisma OnboardingProgress to Domain OnboardingSession
    *
-   * @param prismaState - Prisma database model
+   * @param prismaProgress - Prisma database model
    * @returns Domain entity
    */
-  static toDomain(prismaState: PrismaOnboardingState): OnboardingSession {
+  static toDomain(prismaProgress: PrismaOnboardingProgress): OnboardingSession {
     // Convert Prisma JsonValue to plain object
-    const data = this.jsonValueToRecord(prismaState.data);
+    const data = this.jsonValueToRecord(prismaProgress.partialData);
 
     return OnboardingSession.reconstitute(
-      prismaState.userId,
-      prismaState.currentStep,
+      prismaProgress.userId,
+      prismaProgress.currentStep,
       data,
-      prismaState.updatedAt,
+      prismaProgress.lastUpdatedAt,
     );
   }
 
@@ -41,15 +41,15 @@ export class OnboardingStateMapper {
    */
   static toPersistence(session: OnboardingSession): {
     userId: string;
-    currentStep: string;
-    data: Prisma.InputJsonValue;
-    updatedAt: Date;
+    currentStep: number;
+    partialData: Prisma.InputJsonValue;
+    lastUpdatedAt: Date;
   } {
     return {
       userId: session.userId,
       currentStep: session.currentStep,
-      data: session.data as Prisma.InputJsonValue, // Safe cast: Record<string, unknown> is compatible with InputJsonValue
-      updatedAt: session.updatedAt,
+      partialData: session.data as Prisma.InputJsonValue,
+      lastUpdatedAt: session.updatedAt,
     };
   }
 

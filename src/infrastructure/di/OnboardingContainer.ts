@@ -1,6 +1,11 @@
 import { prisma } from "@infrastructure/database/PrismaClient";
 import { PrismaOnboardingRepository } from "@infrastructure/database/repositories/PrismaOnboardingRepository";
 import { type IOnboardingRepository } from "@domain/onboarding/repositories/IOnboardingRepository";
+import { SaveOnboardingStep } from "@application/use-cases/onboarding/SaveOnboardingStep";
+import { GetOnboardingStatus } from "@application/use-cases/onboarding/GetOnboardingStatus";
+import { CompleteOnboarding } from "@application/use-cases/onboarding/CompleteOnboarding";
+import { profileContainer } from "@infrastructure/di/ProfileContainer";
+import { learningContainer } from "@infrastructure/di/LearningContainer";
 
 /**
  * OnboardingContainer - Dependency Injection Container for Onboarding bounded context
@@ -13,15 +18,35 @@ import { type IOnboardingRepository } from "@domain/onboarding/repositories/IOnb
  *
  * Provides access to:
  * - OnboardingRepository for persisting onboarding session state
+ * - SaveOnboardingStep use case for saving progress
+ * - GetOnboardingStatus use case for retrieving progress
+ * - CompleteOnboarding use case for finalizing onboarding
  *
  * @layer Infrastructure
  */
 class OnboardingContainer {
   private _onboardingRepository: IOnboardingRepository;
+  private _saveOnboardingStep: SaveOnboardingStep;
+  private _getOnboardingStatus: GetOnboardingStatus;
+  private _completeOnboarding: CompleteOnboarding;
 
   constructor() {
     // Initialize infrastructure dependencies
     this._onboardingRepository = new PrismaOnboardingRepository(prisma);
+
+    // Initialize use cases with injected dependencies
+    this._saveOnboardingStep = new SaveOnboardingStep(
+      this._onboardingRepository,
+    );
+    this._getOnboardingStatus = new GetOnboardingStatus(
+      this._onboardingRepository,
+    );
+    this._completeOnboarding = new CompleteOnboarding(
+      this._onboardingRepository,
+      learningContainer.getCareerGoalRepository(),
+      learningContainer.getRoadmapRepository(),
+      learningContainer.getRoadmapFlow(),
+    );
   }
 
   /**
@@ -32,6 +57,33 @@ class OnboardingContainer {
    */
   get onboardingRepository(): IOnboardingRepository {
     return this._onboardingRepository;
+  }
+
+  /**
+   * Returns the SaveOnboardingStep use case instance
+   *
+   * Used by server actions and API routes to save onboarding progress
+   */
+  get saveOnboardingStep(): SaveOnboardingStep {
+    return this._saveOnboardingStep;
+  }
+
+  /**
+   * Returns the GetOnboardingStatus use case instance
+   *
+   * Used by server actions and API routes to retrieve onboarding progress
+   */
+  get getOnboardingStatus(): GetOnboardingStatus {
+    return this._getOnboardingStatus;
+  }
+
+  /**
+   * Returns the CompleteOnboarding use case instance
+   *
+   * Used by server actions to finalize the onboarding process
+   */
+  get completeOnboarding(): CompleteOnboarding {
+    return this._completeOnboarding;
   }
 }
 

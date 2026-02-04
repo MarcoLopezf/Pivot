@@ -14,7 +14,7 @@ describe.skipIf(!hasTestDb)(
       repository = new PrismaOnboardingRepository(prisma);
 
       // Clean up test data before each test
-      await prisma.onboardingState.deleteMany({
+      await prisma.onboardingProgress.deleteMany({
         where: {
           userId: {
             in: [
@@ -63,11 +63,10 @@ describe.skipIf(!hasTestDb)(
     });
 
     it("should save a new onboarding session", async () => {
-      const session = OnboardingSession.create(
-        "test-onboarding-user-001",
-        "PROFILE",
-        { name: "John Doe", email: "john@example.com" },
-      );
+      const session = OnboardingSession.create("test-onboarding-user-001", 1, {
+        name: "John Doe",
+        email: "john@example.com",
+      });
 
       await repository.save(session);
 
@@ -75,7 +74,7 @@ describe.skipIf(!hasTestDb)(
 
       expect(found).not.toBeNull();
       expect(found!.userId).toBe("test-onboarding-user-001");
-      expect(found!.currentStep).toBe("PROFILE");
+      expect(found!.currentStep).toBe(1);
       expect(found!.data).toEqual({
         name: "John Doe",
         email: "john@example.com",
@@ -86,7 +85,7 @@ describe.skipIf(!hasTestDb)(
       // Create initial session
       const initialSession = OnboardingSession.create(
         "test-onboarding-user-002",
-        "PROFILE",
+        1,
         { name: "Jane" },
       );
       await repository.save(initialSession);
@@ -94,7 +93,7 @@ describe.skipIf(!hasTestDb)(
       // Update with new data
       const updatedSession = OnboardingSession.create(
         "test-onboarding-user-002",
-        "GOALS",
+        2,
         { name: "Jane", targetRole: "Developer" },
       );
       await repository.save(updatedSession);
@@ -103,16 +102,14 @@ describe.skipIf(!hasTestDb)(
       const found = await repository.findByUserId("test-onboarding-user-002");
 
       expect(found).not.toBeNull();
-      expect(found!.currentStep).toBe("GOALS");
+      expect(found!.currentStep).toBe(2);
       expect(found!.data).toEqual({ name: "Jane", targetRole: "Developer" });
     });
 
     it("should find onboarding session by userId", async () => {
-      const session = OnboardingSession.create(
-        "test-onboarding-user-003",
-        "ROADMAP",
-        { skills: ["TypeScript", "React"] },
-      );
+      const session = OnboardingSession.create("test-onboarding-user-003", 3, {
+        skills: ["TypeScript", "React"],
+      });
 
       await repository.save(session);
 
@@ -120,7 +117,7 @@ describe.skipIf(!hasTestDb)(
 
       expect(found).not.toBeNull();
       expect(found!.userId).toBe("test-onboarding-user-003");
-      expect(found!.currentStep).toBe("ROADMAP");
+      expect(found!.currentStep).toBe(3);
       expect(found!.data).toEqual({ skills: ["TypeScript", "React"] });
     });
 
@@ -132,11 +129,9 @@ describe.skipIf(!hasTestDb)(
 
     it("should delete an onboarding session", async () => {
       // Create session
-      const session = OnboardingSession.create(
-        "test-onboarding-user-001",
-        "PROFILE",
-        { name: "To Delete" },
-      );
+      const session = OnboardingSession.create("test-onboarding-user-001", 1, {
+        name: "To Delete",
+      });
       await repository.save(session);
 
       // Verify it exists
@@ -172,7 +167,7 @@ describe.skipIf(!hasTestDb)(
 
       const session = OnboardingSession.create(
         "test-onboarding-user-002",
-        "COMPLETED",
+        5,
         complexData,
       );
 
@@ -185,10 +180,7 @@ describe.skipIf(!hasTestDb)(
     });
 
     it("should handle empty data object", async () => {
-      const session = OnboardingSession.create(
-        "test-onboarding-user-003",
-        "PROFILE",
-      );
+      const session = OnboardingSession.create("test-onboarding-user-003", 1);
 
       await repository.save(session);
 
@@ -199,11 +191,9 @@ describe.skipIf(!hasTestDb)(
     });
 
     it("should preserve updatedAt timestamp through save and retrieve", async () => {
-      const session = OnboardingSession.create(
-        "test-onboarding-user-001",
-        "GOALS",
-        { target: "Developer" },
-      );
+      const session = OnboardingSession.create("test-onboarding-user-001", 2, {
+        target: "Developer",
+      });
 
       const beforeSave = session.updatedAt;
       await repository.save(session);

@@ -8,6 +8,8 @@ import { Step2Experience } from "@/interfaces/web/components/onboarding/steps/St
 import { Step3Path } from "@/interfaces/web/components/onboarding/steps/Step3Path";
 import { Step4DirectGoals } from "@/interfaces/web/components/onboarding/steps/Step4DirectGoals";
 import { Step4Discovery } from "@/interfaces/web/components/onboarding/steps/Step4Discovery";
+import { Step5Import } from "@/interfaces/web/components/onboarding/steps/Step5Import";
+import { Step5Generating } from "@/interfaces/web/components/onboarding/steps/Step5Generating";
 import { useOnboardingStore } from "@/interfaces/web/stores/useOnboardingStore";
 
 /**
@@ -30,7 +32,7 @@ import { useOnboardingStore } from "@/interfaces/web/stores/useOnboardingStore";
  * @layer Interface (Web)
  */
 export default function OnboardingPage() {
-  const { step, syncWithServer } = useOnboardingStore();
+  const { step, isLoading, syncWithServer } = useOnboardingStore();
 
   /**
    * On mount, sync onboarding state from server
@@ -63,22 +65,11 @@ export default function OnboardingPage() {
       case "GOALS_DISCOVERY":
         return <Step4Discovery />;
 
+      case "IMPORT":
+        return <Step5Import />;
+
       case "ROADMAP_PREVIEW":
-        // TODO: Implement roadmap generation (Next Phase)
-        return (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-8 text-center">
-            <h2 className="text-2xl font-bold text-green-900">
-              Generating Your Roadmap...
-            </h2>
-            <p className="mt-2 text-green-800">
-              This is where the AI will generate your personalized learning
-              roadmap.
-            </p>
-            <p className="mt-4 text-sm text-green-700">
-              (Implementation coming in next phase)
-            </p>
-          </div>
-        );
+        return <Step5Generating />;
 
       default:
         // Safety fallback - render profile step if unknown step
@@ -95,8 +86,20 @@ export default function OnboardingPage() {
         {/* Progress Indicator */}
         <OnboardingProgress />
 
-        {/* Current Step Component */}
-        {renderStep()}
+        {/* Loading State - Show skeleton while syncing with server */}
+        {isLoading ? (
+          <div className="rounded-lg border border-gray-200 bg-white p-8">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 w-3/4 rounded bg-gray-200"></div>
+              <div className="h-4 w-full rounded bg-gray-200"></div>
+              <div className="h-4 w-5/6 rounded bg-gray-200"></div>
+              <div className="mt-6 h-10 w-32 rounded bg-gray-200"></div>
+            </div>
+          </div>
+        ) : (
+          /* Current Step Component */
+          renderStep()
+        )}
       </div>
     </OnboardingLayout>
   );

@@ -15,10 +15,14 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
+    "db:seed": "prisma db seed",
     "db:test:push": "dotenv -e .env.test -- prisma db push",
     "db:test:up": "docker-compose up -d",
     "db:test:down": "docker-compose down",
     "verify": "pnpm lint && pnpm format:check && pnpm type-check && pnpm test --run && pnpm build"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
@@ -86,6 +90,7 @@
     "pg": "^8.17.2",
     "prettier": "^3.8.1",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.0.18"
   }

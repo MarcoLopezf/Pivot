@@ -1,4 +1,8 @@
 import { create } from "zustand";
+import {
+  saveStepAction,
+  getOnboardingStateAction,
+} from "@interfaces/web/actions/onboarding";
 
 /**
  * Onboarding Store - Client-side state management for the onboarding wizard
@@ -20,6 +24,7 @@ export type OnboardingStep =
   | "PATH_SELECTION"
   | "GOALS_DIRECT"
   | "GOALS_DISCOVERY"
+  | "IMPORT"
   | "ROADMAP_PREVIEW";
 
 export type OnboardingPath = "DIRECT" | "DISCOVERY";
@@ -47,6 +52,10 @@ interface OnboardingData {
   // Discovery goals (for DISCOVERY path)
   interests?: string;
   dislike?: string;
+
+  // Import step
+  resumeText?: string;
+  resumeFileName?: string;
 
   // Additional fields can be added as needed
   [key: string]: unknown;
@@ -82,7 +91,8 @@ const STEP_MAP: Record<number, OnboardingStep> = {
   2: "EXPERIENCE",
   3: "PATH_SELECTION",
   4: "GOALS_DIRECT", // or GOALS_DISCOVERY (depends on path)
-  5: "ROADMAP_PREVIEW",
+  5: "IMPORT",
+  6: "ROADMAP_PREVIEW",
 };
 
 const REVERSE_STEP_MAP: Record<OnboardingStep, number> = {
@@ -91,7 +101,8 @@ const REVERSE_STEP_MAP: Record<OnboardingStep, number> = {
   PATH_SELECTION: 3,
   GOALS_DIRECT: 4,
   GOALS_DISCOVERY: 4, // Same step number (branching)
-  ROADMAP_PREVIEW: 5,
+  IMPORT: 5,
+  ROADMAP_PREVIEW: 6,
 };
 
 /**
@@ -114,7 +125,7 @@ const REVERSE_STEP_MAP: Record<OnboardingStep, number> = {
 export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
   // Initial state
   currentStep: 1,
-  totalSteps: 5,
+  totalSteps: 6,
   step: "PROFILE",
   data: {},
   isLoading: false,
@@ -209,28 +220,24 @@ export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
   /**
    * Saves the current step and data to the server
    *
-   * TODO: Implement actual API call to persist onboarding state
-   * For now, this is a placeholder that simulates a save operation
+   * Calls the server action to persist onboarding progress to the database.
+   * The step is saved as a number (1-5) matching the Prisma schema Int type.
    */
   saveCurrentStep: async () => {
     const state = get();
     set({ isLoading: true });
 
     try {
-      // TODO: Replace with actual API call
-      // await fetch('/api/onboarding', {
-      //   method: 'POST',
-      //   body: JSON.stringify({
-      //     currentStep: state.step,
-      //     data: state.data,
-      //   }),
-      // });
+      // Call server action to persist to database
+      const result = await saveStepAction(state.currentStep, state.data);
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save progress");
+      }
 
       console.log("Saved onboarding progress:", {
-        step: state.step,
+        step: state.currentStep,
+        stepName: state.step,
         data: state.data,
       });
     } catch (error) {
@@ -244,28 +251,46 @@ export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
   /**
    * Syncs onboarding state from the server
    *
-   * Called on mount to restore progress from previous session
-   *
-   * TODO: Implement actual API call to fetch onboarding state
-   * For now, this is a placeholder that checks localStorage
+   * Called on mount to restore progress from previous session.
+   * Retrieves saved onboarding progress from the database and
+   * updates the store to resume where the user left off.
    */
   syncWithServer: async () => {
     set({ isLoading: true });
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/onboarding');
-      // const serverState = await response.json();
+      // Fetch onboarding state from server
+      const result = await getOnboardingStateAction();
 
-      // For now, check localStorage as fallback
-      const savedState = localStorage.getItem("onboarding_state");
-      if (savedState) {
-        const parsed = JSON.parse(savedState);
+      if (!result.success) {
+        console.error(
+          "Failed to sync onboarding state:",
+          result.error || "Unknown error",
+        );
+        // Continue with default state if sync fails
+        return;
+      }
+
+      // If state exists, restore it
+      if (result.state) {
+        const { step, data } = result.state;
+
+        // Map step number to step name
+        const stepName = STEP_MAP[step] || "PROFILE";
+
         set({
-          currentStep: parsed.currentStep || 1,
-          step: parsed.step || "PROFILE",
-          data: parsed.data || {},
+          currentStep: step,
+          step: stepName,
+          data: data,
         });
+
+        console.log("Synced onboarding state from server:", {
+          step,
+          stepName,
+          data,
+        });
+      } else {
+        console.log("No saved onboarding state found - starting fresh");
       }
     } catch (error) {
       console.error("Error syncing onboarding state:", error);

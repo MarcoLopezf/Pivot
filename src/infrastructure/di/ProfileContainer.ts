@@ -26,6 +26,14 @@ class ProfileContainer {
   getCreateUserProfileUseCase(): CreateUserProfile {
     return new CreateUserProfile(this.userRepository);
   }
+
+  /**
+   * Returns the UserRepository instance
+   * Used by other containers (e.g., OnboardingContainer) to access user data
+   */
+  getUserRepository(): PrismaUserRepository {
+    return this.userRepository;
+  }
 }
 
 // Singleton instance - reuse across requests to avoid multiple DB connections

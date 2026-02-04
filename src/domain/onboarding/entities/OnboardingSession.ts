@@ -3,20 +3,22 @@
  *
  * Represents the state of a user's onboarding process.
  * This entity tracks the current step and accumulated data as the user
- * progresses through the onboarding flow (Profile → Goals → Roadmap).
+ * progresses through the onboarding flow.
+ *
+ * Steps are represented as integers (1, 2, 3, etc.) matching the database schema.
  *
  * @domain Onboarding
  * @layer Domain
  */
 export class OnboardingSession {
   private readonly _userId: string;
-  private _currentStep: string;
+  private _currentStep: number;
   private _data: Record<string, unknown>;
   private _updatedAt: Date;
 
   private constructor(
     userId: string,
-    currentStep: string,
+    currentStep: number,
     data: Record<string, unknown>,
     updatedAt: Date,
   ) {
@@ -30,21 +32,21 @@ export class OnboardingSession {
    * Creates a new OnboardingSession for a user
    *
    * @param userId - The user's unique identifier
-   * @param currentStep - The current onboarding step (e.g., "PROFILE", "GOALS")
+   * @param currentStep - The current onboarding step (1, 2, 3, etc.)
    * @param data - Accumulated onboarding data
    * @returns New OnboardingSession instance
    */
   public static create(
     userId: string,
-    currentStep: string,
+    currentStep: number,
     data: Record<string, unknown> = {},
   ): OnboardingSession {
     if (!userId || userId.trim().length === 0) {
       throw new Error("User ID cannot be empty");
     }
 
-    if (!currentStep || currentStep.trim().length === 0) {
-      throw new Error("Current step cannot be empty");
+    if (currentStep < 1) {
+      throw new Error("Current step must be at least 1");
     }
 
     const now = new Date();
@@ -58,7 +60,7 @@ export class OnboardingSession {
    */
   public static reconstitute(
     userId: string,
-    currentStep: string,
+    currentStep: number,
     data: Record<string, unknown>,
     updatedAt: Date,
   ): OnboardingSession {
@@ -71,7 +73,7 @@ export class OnboardingSession {
     return this._userId;
   }
 
-  public get currentStep(): string {
+  public get currentStep(): number {
     return this._currentStep;
   }
 
@@ -88,11 +90,11 @@ export class OnboardingSession {
   /**
    * Updates the current onboarding step
    *
-   * @param step - The new step to move to
+   * @param step - The new step to move to (must be >= 1)
    */
-  public updateStep(step: string): void {
-    if (!step || step.trim().length === 0) {
-      throw new Error("Step cannot be empty");
+  public updateStep(step: number): void {
+    if (step < 1) {
+      throw new Error("Step must be at least 1");
     }
 
     this._currentStep = step;

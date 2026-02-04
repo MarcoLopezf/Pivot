@@ -76,7 +76,93 @@ type Result<T> =
 
 ## 🟡 Medium Priority
 
-_(Empty - add items as they are identified)_
+### Implement Email Verification Flow
+
+**Status:** Pending
+**Created:** 2026-02-04
+**Estimated Effort:** 4-6 hours
+**Impact:** Medium (security, user experience)
+
+**Problem:**
+Currently, email verification is disabled to allow immediate onboarding after user registration. Users can create accounts and access the full platform without confirming their email address. This creates potential security and data quality issues:
+- No verification that users own the email address they register with
+- Potential for spam/bot accounts
+- Users might lose access if they mistype their email
+- No mechanism to handle password resets securely
+
+**Current State:**
+```typescript
+// src/app/login/page.tsx (lines 118-161)
+// After signup, users are redirected directly to onboarding
+// Supabase email confirmation is disabled in dashboard
+if (data.user) {
+  // Immediate redirect without email verification
+  router.push("/onboarding/profile");
+}
+```
+
+**Desired State:**
+```typescript
+// Complete email verification flow:
+// 1. User signs up → Account created but not verified
+// 2. Verification email sent → "Check your email" message shown
+// 3. User clicks verification link → Email confirmed
+// 4. User can now access full platform
+// 5. Resend verification option available
+```
+
+**Benefits:**
+- ✅ Improved security (verified email ownership)
+- ✅ Better data quality (valid email addresses)
+- ✅ Enables password reset functionality
+- ✅ Prevents spam/bot accounts
+- ✅ Standard authentication best practice
+
+**Scope:**
+- **Update:** `src/app/login/page.tsx` - Implement verification flow
+- **Update:** `src/app/auth/callback/route.ts` - Handle email verification redirects
+- **Create:** Email verification status UI component
+- **Create:** Resend verification email functionality
+- **Update:** User profile to track verification status
+- **Update:** Middleware to handle unverified users appropriately
+- **Configure:** Re-enable email confirmation in Supabase dashboard
+- **Update:** Tests for email verification flow
+- **Total:** ~8 files affected
+
+**Implementation Checklist:**
+- [ ] Re-enable "Confirm email" in Supabase dashboard (Authentication → Providers → Email)
+- [ ] Update signup handler to show "Check your email" message
+- [ ] Create email verification status banner component
+- [ ] Implement "Resend verification email" functionality
+- [ ] Update auth callback to handle email verification events
+- [ ] Add `emailVerified` check in relevant areas
+- [ ] Decide on UX: Block access completely vs. show banner with limited access
+- [ ] Add email verification status to user profile/settings
+- [ ] Update middleware to handle unverified users (if blocking access)
+- [ ] Write integration tests for verification flow
+- [ ] Test email templates in Supabase dashboard
+- [ ] Run `pnpm verify` to ensure no regressions
+- [ ] Update documentation with email verification flow
+
+**Related Files:**
+- `src/app/login/page.tsx` (lines 115-161) - Contains TODO comments
+- `src/app/auth/callback/route.ts` - Auth callback handler
+- `src/infrastructure/auth/supabase/middleware.ts` - Auth middleware
+- `src/middleware.ts` - Route protection logic
+
+**Notes:**
+- Quick fix implemented: Email verification disabled temporarily to allow immediate onboarding (2026-02-04)
+- TODO comments added in code marking this as technical debt
+- Consider UX approach: full blocking vs. banner notification for unverified users
+- May need to handle existing users created without verification differently
+
+**Configuration Required:**
+```bash
+# Supabase Dashboard Settings
+# Path: Authentication → Providers → Email
+# Enable: "Confirm email"
+# Customize: Email templates (verification, password reset)
+```
 
 ---
 
@@ -111,4 +197,4 @@ _(Items will be moved here when completed)_
 
 ---
 
-**Last Updated:** 2026-02-02
+**Last Updated:** 2026-02-04

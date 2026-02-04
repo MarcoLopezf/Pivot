@@ -12,15 +12,17 @@ enum UserRole {
 }
 
 model User {
-  id                 String              @id @default(uuid())
-  email              String              @unique
-  name               String
-  role               UserRole            @default(USER)
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  careerGoals        CareerGoal[]
-  quizAttempts       QuizAttempt[]
-  projectSubmissions ProjectSubmission[]
+  id                  String              @id @default(uuid())
+  email               String              @unique
+  name                String
+  role                UserRole            @default(USER)
+  onboardingCompleted Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  careerGoals         CareerGoal[]
+  quizAttempts        QuizAttempt[]
+  projectSubmissions  ProjectSubmission[]
+  onboardingState     OnboardingState?
 }
 
 model CareerGoal {
@@ -166,4 +168,16 @@ model ProjectSubmission {
 
   @@index([userId])
   @@index([roadmapItemId])
+}
+
+model OnboardingState {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  currentStep String   // e.g., "PROFILE", "GOALS", "ROADMAP"
+  data        Json     // Flexible storage for accumulated data
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

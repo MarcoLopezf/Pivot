@@ -27,7 +27,7 @@ type MessageType = "error" | "success";
  * - Email/Password (Login)
  * - Email/Password (Sign Up with email confirmation)
  *
- * After successful authentication, users are redirected to /onboarding/profile
+ * After successful authentication, users are redirected to /onboarding
  */
 export default function LoginPage() {
   const router = useRouter();
@@ -55,7 +55,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/onboarding/profile`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
         },
       });
 
@@ -100,7 +100,7 @@ export default function LoginPage() {
 
       if (data.session) {
         // Login successful - redirect to onboarding
-        router.push("/onboarding/profile");
+        router.push("/onboarding");
       }
     } catch {
       setMessage({
@@ -113,7 +113,16 @@ export default function LoginPage() {
   };
 
   /**
-   * Handles new user sign up with email confirmation
+   * Handles new user sign up
+   *
+   * TODO [TECHNICAL DEBT]: Implement email verification flow
+   * Currently bypassing email confirmation to allow immediate onboarding.
+   * Future implementation should:
+   * - Send verification email after signup
+   * - Show "Check your email" message
+   * - Only allow full platform access after email verification
+   * - Add email verification status to user profile
+   * - Handle resend verification email functionality
    */
   const handleSignUp = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
@@ -125,7 +134,7 @@ export default function LoginPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding/profile`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
         },
       });
 
@@ -137,18 +146,18 @@ export default function LoginPage() {
         return;
       }
 
-      // Check if email confirmation is required
-      if (data.user && !data.session) {
+      // TEMPORARY: Redirect to onboarding immediately without email verification
+      // This allows users to complete onboarding flow without waiting for email confirmation
+      // TODO: Re-enable email verification requirement once verification flow is implemented
+      if (data.user) {
         setMessage({
-          text: "Check your email to confirm your account",
+          text: "Account created! Redirecting to onboarding...",
           type: "success",
         });
-        // Clear form
-        setEmail("");
-        setPassword("");
-      } else if (data.session) {
-        // Auto sign-in after signup (if email confirmation disabled)
-        router.push("/onboarding/profile");
+        // Redirect after brief delay to show success message
+        setTimeout(() => {
+          router.push("/onboarding");
+        }, 1000);
       }
     } catch {
       setMessage({

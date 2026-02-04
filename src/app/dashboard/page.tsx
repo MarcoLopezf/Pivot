@@ -43,8 +43,8 @@ export default function DashboardPage(): React.ReactElement {
   useEffect(() => {
     const storedUserId = getOnboardingUserId();
     if (!storedUserId) {
-      // User hasn't completed onboarding, redirect to profile creation
-      router.push("/onboarding/profile");
+      // User hasn't completed onboarding, redirect to onboarding wizard
+      router.push("/onboarding");
       return;
     }
     setUserId(storedUserId);

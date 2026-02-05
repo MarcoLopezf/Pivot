@@ -147,7 +147,7 @@ export class User {
     location: string | null,
     isEntryLevel: boolean,
     yearsExperience: number,
-    currentSeniority: string,
+    currentSeniority: string | null,
   ): void {
     this._location = location;
     this._isEntryLevel = isEntryLevel;

@@ -30,12 +30,28 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     const redirectUrl = new URL("/login", request.url);
     // Store the original URL to redirect back after login
     redirectUrl.searchParams.set("redirectTo", pathname);
-    return NextResponse.redirect(redirectUrl);
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+
+    // Copy cookies from updateSession response to preserve refreshed session
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie);
+    });
+
+    return redirectResponse;
   }
 
   // If user is authenticated and tries to access auth pages
   if (user && isAuthPage) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const redirectResponse = NextResponse.redirect(
+      new URL("/dashboard", request.url),
+    );
+
+    // Copy cookies from updateSession response to preserve refreshed session
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie);
+    });
+
+    return redirectResponse;
   }
 
   return response;

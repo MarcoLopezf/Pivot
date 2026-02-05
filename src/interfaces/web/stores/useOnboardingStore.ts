@@ -276,7 +276,13 @@ export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
         const { step, data } = result.state;
 
         // Map step number to step name
-        const stepName = STEP_MAP[step] || "PROFILE";
+        let stepName = STEP_MAP[step] || "PROFILE";
+
+        // Handle branching at step 4 (GOALS_DIRECT vs GOALS_DISCOVERY)
+        // Check the path in data to determine which branch the user was on
+        if (step === 4 && data.path === "DISCOVERY") {
+          stepName = "GOALS_DISCOVERY";
+        }
 
         set({
           currentStep: step,

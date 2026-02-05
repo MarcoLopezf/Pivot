@@ -69,9 +69,9 @@ export class CompleteOnboarding {
 
     const data = session.data;
 
-    // 3. Extract profile data from onboarding session
-    const yearsExperience = (data.yearsExperience as number) || 0;
-    const location = (data.region as string) || null;
+    // 3. Extract profile data from onboarding session with runtime type validation
+    const yearsExperience = this.validateNumber(data.yearsExperience, 0);
+    const location = this.validateString(data.region, null);
     const isEntryLevel = yearsExperience === 0;
     const currentSeniority = this.determineSeniority(yearsExperience);
 
@@ -86,9 +86,12 @@ export class CompleteOnboarding {
     // Save updated user
     await this.userRepository.save(user);
 
-    // 5. Create career goal
-    const targetRole = (data.targetRole as string) || "Software Developer";
-    const currentRole = (data.currentRole as string) || "Beginner";
+    // 5. Create career goal with validated data
+    const targetRole = this.validateString(
+      data.targetRole,
+      "Software Developer",
+    );
+    const currentRole = this.validateString(data.currentRole, "Beginner");
 
     const careerGoal = CareerGoal.create(
       CareerGoalId.create(randomUUID()),
@@ -106,8 +109,8 @@ export class CompleteOnboarding {
     console.log(`  Target role: ${targetRole}`);
 
     const experienceSummary = this.buildExperienceSummary(data);
-    const cvText = data.resumeText as string | undefined;
-    const githubUsername = data.githubUsername as string | undefined;
+    const cvText = this.validateOptionalString(data.resumeText);
+    const githubUsername = this.validateOptionalString(data.githubUsername);
 
     console.log(`  Experience summary: ${experienceSummary ? "Yes" : "No"}`);
     console.log(`  CV text: ${cvText ? `Yes (${cvText.length} chars)` : "No"}`);
@@ -130,14 +133,64 @@ export class CompleteOnboarding {
   }
 
   /**
-   * Determines seniority level based on years of experience
+   * Runtime type guard: Validates and coerces to number
+   * @param value - Unknown value from onboarding data
+   * @param defaultValue - Fallback if validation fails
+   * @returns Validated number
    */
-  private determineSeniority(yearsExperience: number): string {
-    if (yearsExperience === 0) return "Entry Level";
-    if (yearsExperience < 2) return "Junior";
-    if (yearsExperience < 5) return "Mid-Level";
-    if (yearsExperience < 8) return "Senior";
-    return "Lead/Staff";
+  private validateNumber(value: unknown, defaultValue: number): number {
+    if (typeof value === "number" && !isNaN(value) && value >= 0) {
+      return Math.floor(value); // Ensure integer
+    }
+    if (typeof value === "string") {
+      const parsed = parseInt(value, 10);
+      if (!isNaN(parsed) && parsed >= 0) {
+        return parsed;
+      }
+    }
+    return defaultValue;
+  }
+
+  /**
+   * Runtime type guard: Validates and coerces to string or null
+   * @param value - Unknown value from onboarding data
+   * @param defaultValue - Fallback if validation fails (null allowed)
+   * @returns Validated string or null
+   */
+  private validateString(value: unknown, defaultValue: null): string | null;
+  private validateString(value: unknown, defaultValue: string): string;
+  private validateString(
+    value: unknown,
+    defaultValue: string | null,
+  ): string | null {
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+    return defaultValue;
+  }
+
+  /**
+   * Runtime type guard: Validates optional string
+   * @param value - Unknown value from onboarding data
+   * @returns Validated string or undefined
+   */
+  private validateOptionalString(value: unknown): string | undefined {
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+    return undefined;
+  }
+
+  /**
+   * Determines seniority level based on years of experience
+   * Returns canonical values: "JUNIOR" | "MID" | "SENIOR" | null
+   * Entry level (0 years) returns null (handled by isEntryLevel flag)
+   */
+  private determineSeniority(yearsExperience: number): string | null {
+    if (yearsExperience === 0) return null; // Entry level - use isEntryLevel flag instead
+    if (yearsExperience < 3) return "JUNIOR";
+    if (yearsExperience < 7) return "MID";
+    return "SENIOR"; // 7+ years including Lead/Staff
   }
 
   /**

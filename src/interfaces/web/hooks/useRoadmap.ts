@@ -31,7 +31,7 @@ export function useRoadmap(): UseRoadmapResult {
 
   // Fetch roadmap on mount
   useEffect(() => {
-    const fetchInitialRoadmap = async () => {
+    const fetchInitialRoadmap = async (): Promise<void> => {
       setIsLoading(true);
       setError(null);
 
@@ -119,7 +119,7 @@ export function useRoadmap(): UseRoadmapResult {
   );
 
   // Refetch roadmap
-  const refetch = useCallback(async () => {
+  const refetch = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
 

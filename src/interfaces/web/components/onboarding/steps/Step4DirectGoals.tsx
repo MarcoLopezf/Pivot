@@ -52,8 +52,9 @@ export function Step4DirectGoals() {
   // Initialize form with store values
   const form = useForm<DirectGoalsFormValues>({
     resolver: zodResolver(directGoalsSchema),
+    mode: "onChange", // Enable real-time validation for isValid updates
     defaultValues: {
-      targetRole: (data.targetRole as string) || "",
+      targetRole: typeof data.targetRole === "string" ? data.targetRole : "",
     },
   });
 

@@ -25,8 +25,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Sparkles, FileText } from "lucide-react";
+import { Sparkles, FileText, ArrowRight, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 /**
  * Step4Discovery - Onboarding Step 4: Discovery Goals
@@ -90,6 +91,7 @@ export function Step4Discovery() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [suggestions, setSuggestions] = useState<RoleSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSelectingRole, setIsSelectingRole] = useState(false);
 
   // Initialize form with store values
   const form = useForm<DiscoveryGoalsFormValues>({
@@ -152,7 +154,42 @@ export function Step4Discovery() {
   };
 
   /**
-   * Handles form submission
+   * Handles role selection from AI suggestions
+   * Saves the selected role and advances to next step
+   */
+  const handleSelectRole = async (role: string): Promise<void> => {
+    setIsSelectingRole(true);
+
+    try {
+      // Update store with selected role and interests
+      updateData({
+        targetRole: role,
+        interests: form.getValues("interests"),
+      });
+
+      // Save progress to server
+      await saveCurrentStep();
+
+      // Show success toast
+      toast.success("Role selected!", {
+        description: `${role} - Moving to next step`,
+      });
+
+      // Navigate to next step (Import CV)
+      setTimeout(() => {
+        nextStep();
+      }, 800);
+    } catch (error) {
+      console.error("Error selecting role:", error);
+      toast.error("Failed to save selection", {
+        description: "Please try again",
+      });
+      setIsSelectingRole(false);
+    }
+  };
+
+  /**
+   * Handles form submission (manual path without AI suggestions)
    * Updates store data, saves progress, and navigates to next step (Import)
    */
   const onSubmit = async (values: DiscoveryGoalsFormValues): Promise<void> => {
@@ -183,8 +220,12 @@ export function Step4Discovery() {
           onNext={form.handleSubmit(onSubmit)}
           onBack={previousStep}
           isNextDisabled={!form.formState.isValid}
-          isLoading={isLoading}
-          nextLabel="Discover My Path"
+          isLoading={isLoading || isSelectingRole}
+          nextLabel={
+            showSuggestions && suggestions.length > 0
+              ? "Or continue with general interests"
+              : "Discover My Path"
+          }
         >
           <div className="space-y-6">
             {/* Interests Field */}
@@ -262,9 +303,14 @@ export function Step4Discovery() {
             {/* AI Suggestions Display */}
             {showSuggestions && (
               <div className="space-y-4">
-                <h3 className="text-center text-sm font-medium">
-                  AI-Recommended Career Paths
-                </h3>
+                <div className="text-center">
+                  <h3 className="text-sm font-medium">
+                    AI-Recommended Career Paths
+                  </h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Click on a card to select your target role
+                  </p>
+                </div>
 
                 {isAnalyzing ? (
                   <div className="grid gap-4 md:grid-cols-3">
@@ -284,20 +330,31 @@ export function Step4Discovery() {
                     {suggestions.map((suggestion, index) => (
                       <Card
                         key={index}
-                        className="border-purple-200 transition-all hover:border-purple-400 hover:shadow-lg"
+                        onClick={() => handleSelectRole(suggestion.role)}
+                        className="group relative cursor-pointer border-2 border-purple-200 transition-all hover:scale-105 hover:border-purple-500 hover:bg-purple-50 hover:shadow-xl"
                       >
                         <CardHeader>
                           <CardTitle className="text-lg">
                             {suggestion.role}
                           </CardTitle>
                           <CardDescription className="text-base font-semibold text-purple-600">
+                            <CheckCircle className="mr-1 inline h-4 w-4" />
                             {suggestion.matchPercentage}% Match
                           </CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-3">
                           <p className="text-sm text-muted-foreground">
                             {suggestion.reasoning}
                           </p>
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="w-full gap-2 bg-purple-600 hover:bg-purple-700"
+                            disabled={isSelectingRole}
+                          >
+                            Select this path
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
                         </CardContent>
                       </Card>
                     ))}

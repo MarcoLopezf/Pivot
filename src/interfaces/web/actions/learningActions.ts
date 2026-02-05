@@ -246,6 +246,8 @@ export async function getUserRoadmapAction(): Promise<{
 export async function getRoleSuggestionsAction(formData: FormData): Promise<{
   success: boolean;
   data?: Array<{ role: string; matchPercentage: number; reasoning: string }>;
+  resumeText?: string;
+  resumeFileName?: string;
   error?: string;
 }> {
   try {
@@ -349,6 +351,8 @@ export async function getRoleSuggestionsAction(formData: FormData): Promise<{
     return {
       success: true,
       data: suggestions,
+      resumeText,
+      resumeFileName: cvFile instanceof File ? cvFile.name : undefined,
     };
   } catch (error) {
     console.error("Error in getRoleSuggestionsAction:", error);

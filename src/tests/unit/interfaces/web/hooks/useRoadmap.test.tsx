@@ -2,8 +2,10 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useRoadmap } from "@interfaces/web/hooks/useRoadmap";
 import * as roadmapApi from "@interfaces/web/api/roadmapApi";
+import * as learningActions from "@interfaces/web/actions/learningActions";
 
 vi.mock("@interfaces/web/api/roadmapApi");
+vi.mock("@interfaces/web/actions/learningActions");
 
 describe("useRoadmap Hook", () => {
   const mockRoadmapData = {
@@ -44,11 +46,11 @@ describe("useRoadmap Hook", () => {
   });
 
   it("should initialize with loading state", () => {
-    vi.mocked(roadmapApi.fetchRoadmap).mockImplementation(
+    vi.mocked(learningActions.getUserRoadmapAction).mockImplementation(
       () => new Promise(() => {}),
     );
 
-    const { result } = renderHook(() => useRoadmap("user-001"));
+    const { result } = renderHook(() => useRoadmap());
 
     expect(result.current.isLoading).toBe(true);
     expect(result.current.roadmap).toBeNull();
@@ -56,9 +58,12 @@ describe("useRoadmap Hook", () => {
   });
 
   it("should fetch roadmap on mount", async () => {
-    vi.mocked(roadmapApi.fetchRoadmap).mockResolvedValue(mockRoadmapData);
+    vi.mocked(learningActions.getUserRoadmapAction).mockResolvedValue({
+      success: true,
+      data: mockRoadmapData,
+    });
 
-    const { result } = renderHook(() => useRoadmap("user-001"));
+    const { result } = renderHook(() => useRoadmap());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -66,15 +71,16 @@ describe("useRoadmap Hook", () => {
 
     expect(result.current.roadmap).toEqual(mockRoadmapData);
     expect(result.current.error).toBeNull();
-    expect(roadmapApi.fetchRoadmap).toHaveBeenCalledWith("user-001");
+    expect(learningActions.getUserRoadmapAction).toHaveBeenCalled();
   });
 
   it("should handle 404 response (no roadmap) as valid state", async () => {
-    vi.mocked(roadmapApi.fetchRoadmap).mockRejectedValue(
-      new Error("ROADMAP_NOT_FOUND"),
-    );
+    vi.mocked(learningActions.getUserRoadmapAction).mockResolvedValue({
+      success: true,
+      data: null,
+    });
 
-    const { result } = renderHook(() => useRoadmap("user-001"));
+    const { result } = renderHook(() => useRoadmap());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -85,11 +91,12 @@ describe("useRoadmap Hook", () => {
   });
 
   it("should handle network errors", async () => {
-    vi.mocked(roadmapApi.fetchRoadmap).mockRejectedValue(
-      new Error("Network error"),
-    );
+    vi.mocked(learningActions.getUserRoadmapAction).mockResolvedValue({
+      success: false,
+      error: "Network error",
+    });
 
-    const { result } = renderHook(() => useRoadmap("user-001"));
+    const { result } = renderHook(() => useRoadmap());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -100,7 +107,10 @@ describe("useRoadmap Hook", () => {
   });
 
   it("should perform optimistic update on toggleItemStatus", async () => {
-    vi.mocked(roadmapApi.fetchRoadmap).mockResolvedValue(mockRoadmapData);
+    vi.mocked(learningActions.getUserRoadmapAction).mockResolvedValue({
+      success: true,
+      data: mockRoadmapData,
+    });
     vi.mocked(roadmapApi.updateItemStatus).mockResolvedValue({
       ...mockRoadmapData,
       items: [
@@ -110,7 +120,7 @@ describe("useRoadmap Hook", () => {
       progress: 0,
     });
 
-    const { result } = renderHook(() => useRoadmap("user-001"));
+    const { result } = renderHook(() => useRoadmap());
 
     await waitFor(() => {
       expect(result.current.roadmap).not.toBeNull();
@@ -134,12 +144,15 @@ describe("useRoadmap Hook", () => {
   });
 
   it("should revert optimistic update on error", async () => {
-    vi.mocked(roadmapApi.fetchRoadmap).mockResolvedValue(mockRoadmapData);
+    vi.mocked(learningActions.getUserRoadmapAction).mockResolvedValue({
+      success: true,
+      data: mockRoadmapData,
+    });
     vi.mocked(roadmapApi.updateItemStatus).mockRejectedValue(
       new Error("Server error"),
     );
 
-    const { result } = renderHook(() => useRoadmap("user-001"));
+    const { result } = renderHook(() => useRoadmap());
 
     await waitFor(() => {
       expect(result.current.roadmap).not.toBeNull();
@@ -164,11 +177,11 @@ describe("useRoadmap Hook", () => {
       title: "Updated Roadmap",
     };
 
-    vi.mocked(roadmapApi.fetchRoadmap)
-      .mockResolvedValueOnce(mockRoadmapData)
-      .mockResolvedValueOnce(updatedRoadmap);
+    vi.mocked(learningActions.getUserRoadmapAction)
+      .mockResolvedValueOnce({ success: true, data: mockRoadmapData })
+      .mockResolvedValueOnce({ success: true, data: updatedRoadmap });
 
-    const { result } = renderHook(() => useRoadmap("user-001"));
+    const { result } = renderHook(() => useRoadmap());
 
     await waitFor(() => {
       expect(result.current.roadmap).not.toBeNull();

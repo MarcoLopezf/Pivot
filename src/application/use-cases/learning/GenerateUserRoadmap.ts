@@ -39,7 +39,12 @@ export class GenerateUserRoadmap {
     // Build user context from experience summary, CV, and GitHub
     let userContext: string | undefined;
 
-    if (dto.experienceSummary || dto.cvFile || dto.githubUsername) {
+    if (
+      dto.experienceSummary ||
+      dto.cvFile ||
+      dto.cvText ||
+      dto.githubUsername
+    ) {
       const contextParts: string[] = [];
 
       // Add manual experience summary
@@ -49,10 +54,15 @@ export class GenerateUserRoadmap {
         );
       }
 
-      // Extract and add CV text
-      if (dto.cvFile) {
+      // Add CV content (prioritize pre-extracted text from onboarding wizard)
+      if (dto.cvText) {
+        if (dto.cvText.trim()) {
+          contextParts.push(`CV CONTENT:\n${dto.cvText.trim()}`);
+        }
+      } else if (dto.cvFile) {
         try {
           const cvText = await this.pdfService.extractText(dto.cvFile);
+
           if (cvText.trim()) {
             contextParts.push(`CV CONTENT:\n${cvText.trim()}`);
           }
@@ -80,15 +90,15 @@ export class GenerateUserRoadmap {
       userContext =
         contextParts.length > 0 ? contextParts.join("\n\n") : undefined;
 
-      // Log the generated context for verification
       if (userContext) {
-        console.log("=== AI Context for Roadmap Generation ===");
-        console.log(userContext);
-        console.log("=========================================");
+        contextParts.forEach((part, index) => {
+          const firstLine = part.split("\n")[0];
+          const partLength = part.length;
+          console.log(`  ${index + 1}. ${firstLine} (${partLength} chars)`);
+        });
       }
     }
 
-    // Generate roadmap items with user context
     const generatedItems = await this.generateRoadmapFlow.generate(
       dto.currentRole,
       dto.targetRole,

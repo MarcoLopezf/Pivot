@@ -22,6 +22,13 @@ export interface GenerateRoadmapDTO {
   cvFile?: Buffer;
 
   /**
+   * Optional CV text (already extracted from PDF)
+   * Use this when the text has already been extracted (e.g., in onboarding wizard)
+   * If both cvFile and cvText are provided, cvText takes priority
+   */
+  cvText?: string;
+
+  /**
    * Optional GitHub username for analyzing public repositories
    * The service will fetch recent repos and extract technical context
    */

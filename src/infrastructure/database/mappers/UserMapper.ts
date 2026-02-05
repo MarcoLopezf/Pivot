@@ -19,6 +19,12 @@ export class UserMapper {
       role,
       prismaUser.createdAt,
       prismaUser.updatedAt,
+      prismaUser.onboardingCompleted,
+      prismaUser.onboardingCompletedAt,
+      prismaUser.location,
+      prismaUser.isEntryLevel,
+      prismaUser.currentSeniority,
+      prismaUser.yearsExperience,
     );
   }
 
@@ -29,6 +35,12 @@ export class UserMapper {
     role: PrismaUserRole;
     createdAt: Date;
     updatedAt: Date;
+    onboardingCompleted: boolean;
+    onboardingCompletedAt: Date | null;
+    location: string | null;
+    isEntryLevel: boolean;
+    currentSeniority: string | null;
+    yearsExperience: number | null;
   } {
     return {
       id: domainUser.id.value,
@@ -37,6 +49,12 @@ export class UserMapper {
       role: domainUser.role as PrismaUserRole,
       createdAt: domainUser.createdAt,
       updatedAt: domainUser.updatedAt,
+      onboardingCompleted: domainUser.onboardingCompleted,
+      onboardingCompletedAt: domainUser.onboardingCompletedAt,
+      location: domainUser.location,
+      isEntryLevel: domainUser.isEntryLevel,
+      currentSeniority: domainUser.currentSeniority,
+      yearsExperience: domainUser.yearsExperience,
     };
   }
 }

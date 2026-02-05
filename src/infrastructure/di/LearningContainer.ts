@@ -93,6 +93,30 @@ class LearningContainer {
   getGetItemResourcesUseCase(): GetItemResources {
     return new GetItemResources(this.resourceRepository, this.youtubeService);
   }
+
+  /**
+   * Returns the CareerGoalRepository instance
+   * Used by other containers (e.g., OnboardingContainer) to access career goals
+   */
+  getCareerGoalRepository(): PrismaCareerGoalRepository {
+    return this.careerGoalRepository;
+  }
+
+  /**
+   * Returns the RoadmapRepository instance
+   * Used by other containers to access roadmaps
+   */
+  getRoadmapRepository(): PrismaRoadmapRepository {
+    return this.roadmapRepository;
+  }
+
+  /**
+   * Returns the RoadmapFlow instance
+   * Used by other containers to generate roadmaps
+   */
+  getRoadmapFlow(): GenkitRoadmapFlow {
+    return this.roadmapFlow;
+  }
 }
 
 // Singleton instance - reuse across requests to avoid multiple DB connections

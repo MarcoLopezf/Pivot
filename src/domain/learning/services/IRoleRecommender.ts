@@ -16,14 +16,14 @@ export interface RoleRecommendation {
  */
 export interface IRoleRecommender {
   /**
-   * Suggest career roles based on current role and skills
+   * Suggest career roles based on user interests and optional resume text
    *
-   * @param currentRole - The user's current job role
-   * @param skills - List of skills the user possesses
+   * @param interests - User's career interests and aspirations
+   * @param resumeText - Optional extracted text from user's CV/resume for context
    * @returns Promise with array of recommended roles (max 3)
    */
   suggestRoles(
-    currentRole: string,
-    skills: string[],
+    interests: string,
+    resumeText?: string,
   ): Promise<RoleRecommendation[]>;
 }

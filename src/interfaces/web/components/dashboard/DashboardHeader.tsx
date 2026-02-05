@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { TemporaryLogoutButton } from "@interfaces/web/components/TemporaryLogoutButton";
 
 interface DashboardHeaderProps {
   userName: string;
@@ -10,6 +11,7 @@ interface DashboardHeaderProps {
  *
  * Displays a personalized greeting and the user's career goal
  * as a badge at the top of the dashboard.
+ * Includes temporary logout button for testing.
  */
 export function DashboardHeader({
   userName,
@@ -18,18 +20,22 @@ export function DashboardHeader({
   const greeting = getGreeting();
 
   return (
-    <div className="space-y-2">
-      <h1 className="text-3xl font-bold tracking-tight">
-        {greeting}, {userName}
-      </h1>
-      {careerGoal && (
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Career Goal:</span>
-          <Badge variant="default" className="text-sm">
-            {careerGoal}
-          </Badge>
-        </div>
-      )}
+    <div className="flex items-start justify-between">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">
+          {greeting}, {userName}
+        </h1>
+        {careerGoal && (
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Career Goal:</span>
+            <Badge variant="default" className="text-sm">
+              {careerGoal}
+            </Badge>
+          </div>
+        )}
+      </div>
+      {/* Temporary Logout Button for Testing */}
+      <TemporaryLogoutButton />
     </div>
   );
 }

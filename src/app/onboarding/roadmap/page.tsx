@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -14,86 +13,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRoadmap } from "@interfaces/web/hooks/useRoadmap";
 import { RoadmapTimeline } from "@interfaces/web/components/roadmap/RoadmapTimeline";
 import { AlertCircle, ArrowRight } from "lucide-react";
-import { getOnboardingUserId } from "@interfaces/web/utils/onboardingStorage";
 
 /**
  * Onboarding Roadmap Page
  *
  * Displays user's generated learning roadmap with interactive status tracking.
- * - Loads roadmap for the current user (from sessionStorage)
+ * - Loads roadmap for authenticated user (via Supabase)
  * - Shows loading skeleton while fetching
  * - Displays empty state if roadmap not generated yet
- * - Shows error state if fetch fails or userId not found
+ * - Shows error state if fetch fails
  * - Allows toggling item status with optimistic updates
  * - Navigate to dashboard when ready
  *
- * TODO: Replace sessionStorage with NextAuth session when auth is implemented
+ * Protected by middleware - user authentication verified before access.
  */
 export default function OnboardingRoadmapPage(): React.ReactElement {
   const router = useRouter();
-  const [userId, setUserId] = React.useState<string | null>(null);
-  const [isCheckingAuth, setIsCheckingAuth] = React.useState(true);
 
-  // Get userId from sessionStorage on mount
-  React.useEffect(() => {
-    const storedUserId = getOnboardingUserId();
-    setUserId(storedUserId);
-    setIsCheckingAuth(false);
-  }, []);
-
-  // Only call useRoadmap when we have a userId (skip if null)
-  // Using a dummy empty string during check, but showing loading state prevents fetch
-  const { roadmap, isLoading, error, toggleItemStatus } = useRoadmap(
-    userId || "",
-  );
+  // Hook now gets user from Supabase auth internally
+  const { roadmap, isLoading, error, toggleItemStatus } = useRoadmap();
 
   // Handle quiz navigation
   const handleTakeQuiz = (itemId: string) => {
     if (!roadmap) return;
     router.push(`/quiz/${roadmap.id}/${itemId}`);
   };
-
-  // Checking auth state
-  if (isCheckingAuth) {
-    return (
-      <div className="container mx-auto p-8 max-w-4xl">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold">Loading...</CardTitle>
-            <CardDescription>Checking your session</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
-  // No userId found - redirect to profile
-  if (!userId) {
-    return (
-      <div className="container mx-auto p-8 max-w-4xl">
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-red-600" />
-              <CardTitle className="text-red-900">Profile Not Found</CardTitle>
-            </div>
-            <CardDescription className="text-red-800">
-              Please complete your profile first before viewing your roadmap.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              variant="outline"
-              onClick={() => router.push("/onboarding/profile")}
-              className="border-red-300 text-red-900 hover:bg-red-100"
-            >
-              Go to Profile Page
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   // Loading state
   if (isLoading) {

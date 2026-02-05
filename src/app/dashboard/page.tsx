@@ -16,7 +16,7 @@ import { DashboardHeader } from "@interfaces/web/components/dashboard/DashboardH
 import { ProgressOverview } from "@interfaces/web/components/dashboard/ProgressOverview";
 import { NextMissionCard } from "@interfaces/web/components/dashboard/NextMissionCard";
 import { DashboardDTO } from "@application/dtos/dashboard/DashboardDTO";
-import { getOnboardingUserId } from "@interfaces/web/utils/onboardingStorage";
+import { getDashboardAction } from "@interfaces/web/actions/dashboardActions";
 
 /**
  * Dashboard Page
@@ -27,8 +27,7 @@ import { getOnboardingUserId } from "@interfaces/web/utils/onboardingStorage";
  * - Learning progress overview
  * - Next task/mission card
  *
- * Retrieves userId from sessionStorage (set during onboarding).
- * Redirects to onboarding if user hasn't completed profile creation.
+ * Protected by middleware - user authentication verified before access.
  */
 export default function DashboardPage(): React.ReactElement {
   const router = useRouter();
@@ -36,48 +35,19 @@ export default function DashboardPage(): React.ReactElement {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get userId from sessionStorage (set during onboarding)
-  const [userId, setUserId] = useState<string | null>(null);
-
-  // Check if user has completed onboarding
-  useEffect(() => {
-    const storedUserId = getOnboardingUserId();
-    if (!storedUserId) {
-      // User hasn't completed onboarding, redirect to onboarding wizard
-      router.push("/onboarding");
-      return;
-    }
-    setUserId(storedUserId);
-  }, [router]);
-
   useEffect(() => {
     async function fetchDashboardData(): Promise<void> {
-      // Don't fetch if userId is not available yet
-      if (!userId) {
-        return;
-      }
-
       try {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(
-          `/api/dashboard?userId=${encodeURIComponent(userId)}`,
-        );
+        // Call Server Action directly (user authenticated via Supabase)
+        const result = await getDashboardAction();
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.error?.message || "Failed to fetch dashboard data",
-          );
-        }
-
-        const result = await response.json();
-
-        if (result.success) {
+        if (result.success && result.data) {
           setDashboardData(result.data);
         } else {
-          throw new Error(result.error?.message || "Unknown error occurred");
+          throw new Error(result.error || "Failed to load dashboard data");
         }
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
@@ -92,7 +62,7 @@ export default function DashboardPage(): React.ReactElement {
     }
 
     fetchDashboardData();
-  }, [userId]);
+  }, []); // No dependencies - middleware ensures auth
 
   // Loading state
   if (isLoading) {

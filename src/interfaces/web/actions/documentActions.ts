@@ -2,7 +2,6 @@
 
 import { createClient } from "@infrastructure/auth/supabase/server";
 import { PdfService } from "@infrastructure/services/PdfService";
-import { saveStepAction } from "@interfaces/web/actions/onboarding";
 
 /**
  * Server Action: Upload Resume
@@ -23,7 +22,12 @@ import { saveStepAction } from "@interfaces/web/actions/onboarding";
  */
 export async function uploadResumeAction(
   formData: FormData,
-): Promise<{ success: boolean; fileName?: string; error?: string }> {
+): Promise<{
+  success: boolean;
+  fileName?: string;
+  extractedText?: string;
+  error?: string;
+}> {
   try {
     // 1. Get authenticated user
     const supabase = await createClient();
@@ -68,21 +72,12 @@ export async function uploadResumeAction(
       );
     }
 
-    // 7. Save extracted text to onboarding state
-    // We'll store it in the current step (5) with resumeText field
-    const result = await saveStepAction(5, {
-      resumeText: extractedText,
-      resumeFileName: file.name,
-    });
-
-    if (!result.success) {
-      throw new Error(result.error || "Failed to save resume data");
-    }
-
-    // 8. Return success
+    // 7. Return extracted text and filename
+    // Step5Import will add this to store and save with all other data
     return {
       success: true,
       fileName: file.name,
+      extractedText: extractedText,
     };
   } catch (error) {
     console.error("Error in uploadResumeAction:", error);

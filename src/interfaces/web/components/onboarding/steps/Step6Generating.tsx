@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { completeOnboardingAction } from "@interfaces/web/actions/onboarding";
 import { Button } from "@/components/ui/button";
 
 /**
- * Step5Generating - Final Onboarding Step
+ * Step6Generating - Final Onboarding Step
  *
  * Triggers the completion of onboarding by:
  * 1. Finalizing user profile
@@ -18,15 +18,19 @@ import { Button } from "@/components/ui/button";
  *
  * @layer Interface (Web)
  */
-export function Step5Generating() {
+export function Step6Generating() {
   const router = useRouter();
   const [status, setStatus] = useState<
     "initializing" | "processing" | "generating" | "complete" | "error"
   >("initializing");
   const [error, setError] = useState<string | null>(null);
+  const hasRun = useRef(false);
 
   useEffect(() => {
-    handleCompletion();
+    if (!hasRun.current) {
+      hasRun.current = true;
+      handleCompletion();
+    }
   }, []);
 
   const handleCompletion = async () => {
@@ -44,12 +48,27 @@ export function Step5Generating() {
       const result = await completeOnboardingAction();
 
       if (!result.success) {
+        // If onboarding session not found, redirect to start
+        if (result.error?.includes("session not found")) {
+          router.push("/onboarding");
+          return;
+        }
         throw new Error(result.error || "Failed to complete onboarding");
       }
 
       // Step 4: Complete
       setStatus("complete");
       await new Promise((resolve) => setTimeout(resolve, 500));
+      console.log("===================");
+      console.log("===================");
+      console.log("===================");
+      console.log("Onboarding completed successfully", result);
+      console.log("===================");
+      console.log("===================");
+      console.log("===================");
+      console.log("===================");
+      console.log("===================");
+      console.log("===================");
 
       // Redirect to dashboard
       if (result.redirectUrl) {
@@ -67,6 +86,7 @@ export function Step5Generating() {
   const handleRetry = () => {
     setError(null);
     setStatus("initializing");
+    hasRun.current = false;
     handleCompletion();
   };
 

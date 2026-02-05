@@ -42,10 +42,10 @@ class OnboardingContainer {
       this._onboardingRepository,
     );
     this._completeOnboarding = new CompleteOnboarding(
+      profileContainer.getUserRepository(),
       this._onboardingRepository,
       learningContainer.getCareerGoalRepository(),
-      learningContainer.getRoadmapRepository(),
-      learningContainer.getRoadmapFlow(),
+      learningContainer.getGenerateUserRoadmapUseCase(),
     );
   }
 

@@ -22,6 +22,12 @@ export class PrismaOnboardingRepository implements IOnboardingRepository {
   async save(session: OnboardingSession): Promise<void> {
     const data = OnboardingProgressMapper.toPersistence(session);
 
+    console.log("PrismaOnboardingRepository.save: Upserting session", {
+      userId: session.userId,
+      currentStep: data.currentStep,
+      dataKeys: Object.keys(data.partialData),
+    });
+
     await this.db.onboardingProgress.upsert({
       where: { userId: session.userId },
       create: {
@@ -36,15 +42,34 @@ export class PrismaOnboardingRepository implements IOnboardingRepository {
         lastUpdatedAt: data.lastUpdatedAt,
       },
     });
+
+    console.log("PrismaOnboardingRepository.save: Upsert completed");
   }
 
   /**
    * Retrieves an onboarding session by user ID
    */
   async findByUserId(userId: string): Promise<OnboardingSession | null> {
+    console.log(
+      "PrismaOnboardingRepository.findByUserId: Searching for userId:",
+      userId,
+    );
+
     const prismaProgress = await this.db.onboardingProgress.findUnique({
       where: { userId },
     });
+
+    console.log(
+      "PrismaOnboardingRepository.findByUserId: Result:",
+      prismaProgress ? "FOUND" : "NOT FOUND",
+    );
+
+    if (prismaProgress) {
+      console.log("PrismaOnboardingRepository.findByUserId: Found session", {
+        currentStep: prismaProgress.currentStep,
+        dataKeys: Object.keys(prismaProgress.partialData as object),
+      });
+    }
 
     if (!prismaProgress) {
       return null;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
 import * as roadmapApi from "@interfaces/web/api/roadmapApi";
+import { getUserRoadmapAction } from "@interfaces/web/actions/learningActions";
 import { toast } from "sonner";
 
 export interface UseRoadmapResult {
@@ -18,33 +19,31 @@ export interface UseRoadmapResult {
  * useRoadmap Hook
  *
  * Manages roadmap state with fetch + optimistic updates.
- * - Auto-fetches on mount
+ * - Auto-fetches on mount using Supabase authentication
  * - Optimistic UI updates (immediate feedback)
  * - Reverts to previous state on server error
  * - Toast notifications for success/error
  */
-export function useRoadmap(userId: string): UseRoadmapResult {
+export function useRoadmap(): UseRoadmapResult {
   const [roadmap, setRoadmap] = useState<RoadmapDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch roadmap on mount
   useEffect(() => {
-    // Skip fetch if userId is empty (initial state)
-    if (!userId || userId.trim() === "") {
-      setIsLoading(false);
-      setRoadmap(null);
-      setError(null);
-      return;
-    }
-
     const fetchInitialRoadmap = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const data = await roadmapApi.fetchRoadmap(userId);
-        setRoadmap(data);
+        // Call Server Action (handles auth internally)
+        const result = await getUserRoadmapAction();
+
+        if (result.success) {
+          setRoadmap(result.data || null);
+        } else {
+          throw new Error(result.error || "Failed to fetch roadmap");
+        }
       } catch (err) {
         // 404 is not an error - user hasn't generated a roadmap yet
         if (err instanceof Error && err.message === "ROADMAP_NOT_FOUND") {
@@ -64,7 +63,7 @@ export function useRoadmap(userId: string): UseRoadmapResult {
     };
 
     fetchInitialRoadmap();
-  }, [userId]);
+  }, []); // No dependencies - middleware ensures auth
 
   // Toggle item status with optimistic update
   const toggleItemStatus = useCallback(
@@ -125,8 +124,13 @@ export function useRoadmap(userId: string): UseRoadmapResult {
     setError(null);
 
     try {
-      const data = await roadmapApi.fetchRoadmap(userId);
-      setRoadmap(data);
+      const result = await getUserRoadmapAction();
+
+      if (result.success) {
+        setRoadmap(result.data || null);
+      } else {
+        throw new Error(result.error || "Failed to fetch roadmap");
+      }
     } catch (err) {
       if (err instanceof Error && err.message === "ROADMAP_NOT_FOUND") {
         setRoadmap(null);
@@ -141,7 +145,7 @@ export function useRoadmap(userId: string): UseRoadmapResult {
     } finally {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, []); // No dependencies
 
   return {
     roadmap,

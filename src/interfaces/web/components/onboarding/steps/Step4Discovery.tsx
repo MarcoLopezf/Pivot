@@ -50,7 +50,7 @@ export function Step4Discovery() {
     data,
     updateData,
     saveCurrentStep,
-    setStep,
+    nextStep,
     previousStep,
     isLoading,
   } = useOnboardingStore();
@@ -66,7 +66,7 @@ export function Step4Discovery() {
 
   /**
    * Handles form submission
-   * Updates store data, saves progress, and navigates to roadmap preview
+   * Updates store data, saves progress, and navigates to next step (Import)
    */
   const onSubmit = async (values: DiscoveryGoalsFormValues): Promise<void> => {
     try {
@@ -76,9 +76,9 @@ export function Step4Discovery() {
       // Save progress to server
       await saveCurrentStep();
 
-      // Navigate to roadmap preview (final step)
+      // Navigate to next step (Import CV)
       // TODO: In the future, trigger AI suggestion flow here
-      setStep("ROADMAP_PREVIEW");
+      nextStep();
     } catch (error) {
       console.error("Error saving discovery goals:", error);
       // TODO: Show error toast to user

@@ -50,8 +50,8 @@ export async function saveStepAction(
     });
 
     // 3. Validate step number
-    if (step < 1 || step > 5) {
-      throw new Error("Invalid step number. Must be between 1 and 5.");
+    if (step < 1 || step > 6) {
+      throw new Error("Invalid step number. Must be between 1 and 6.");
     }
 
     // 4. Get use case from DI container
@@ -168,37 +168,21 @@ export async function completeOnboardingAction(): Promise<{
   redirectUrl?: string;
   error?: string;
 }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "Unauthorized" };
+  }
+
   try {
-    // 1. Get authenticated user
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      throw new Error("Unauthorized: User not authenticated");
-    }
-
-    // 2. Get use case from DI container
-    const completeOnboarding = onboardingContainer.completeOnboarding;
-
-    // 3. Execute use case (this will generate the roadmap via AI)
-    await completeOnboarding.execute(user.id);
-
-    // 4. Return success with redirect URL
-    return {
-      success: true,
-      redirectUrl: "/dashboard",
-    };
+    // Resolve from container
+    await onboardingContainer.completeOnboarding.execute(user.id);
+    return { success: true, redirectUrl: "/dashboard" };
   } catch (error) {
-    console.error("Error in completeOnboardingAction:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to complete onboarding",
-    };
+    console.error("Onboarding completion failed:", error);
+    return { success: false, error: "Failed to generate roadmap" };
   }
 }

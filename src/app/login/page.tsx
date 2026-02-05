@@ -41,6 +41,25 @@ export default function LoginPage() {
   } | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  /**
+   * Validates email format using regex
+   */
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  /**
+   * Clears form fields when switching tabs
+   */
+  const handleTabChange = (value: string): void => {
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setMessage(null);
+  };
 
   /**
    * Initiates OAuth login flow with the specified provider
@@ -83,6 +102,16 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setMessage(null);
+
+    // Validate email format
+    if (!isValidEmail(email)) {
+      setMessage({
+        text: "Please enter a valid email address",
+        type: "error",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -128,6 +157,36 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setMessage(null);
+
+    // Validate email format
+    if (!isValidEmail(email)) {
+      setMessage({
+        text: "Please enter a valid email address",
+        type: "error",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      setMessage({
+        text: "Password must be at least 6 characters long",
+        type: "error",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      setMessage({
+        text: "Passwords do not match",
+        type: "error",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -228,7 +287,11 @@ export default function LoginPage() {
           </div>
 
           {/* Email/Password Tabs */}
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs
+            defaultValue="login"
+            className="w-full"
+            onValueChange={handleTabChange}
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
@@ -303,6 +366,21 @@ export default function LoginPage() {
                     placeholder="Min. 6 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="register-confirm-password">
+                    Confirm Password
+                  </Label>
+                  <Input
+                    id="register-confirm-password"
+                    type="password"
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     minLength={6}
                     disabled={isLoading}

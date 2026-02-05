@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Sparkles, Target } from "lucide-react";
+import { createCareerGoalAction } from "@interfaces/web/actions/learningActions";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -84,7 +85,6 @@ interface ApiErrorResponse {
  * CareerGoalForm Component Props
  */
 interface CareerGoalFormProps {
-  userId: string;
   defaultSkills?: string[];
 }
 
@@ -95,9 +95,10 @@ interface CareerGoalFormProps {
  * Two modes:
  * 1. Manual: User enters current and target roles directly
  * 2. AI Suggested: User gets AI-generated role suggestions based on their profile
+ *
+ * User authentication handled by Server Actions.
  */
 export function CareerGoalForm({
-  userId,
   defaultSkills = [],
 }: CareerGoalFormProps): React.ReactElement {
   const router = useRouter();
@@ -195,7 +196,6 @@ export function CareerGoalForm({
 
       // Build FormData for multipart/form-data submission
       const formData = new FormData();
-      formData.append("userId", userId);
       formData.append("currentRole", values.currentRole);
       formData.append("targetRole", values.targetRole);
 
@@ -211,22 +211,19 @@ export function CareerGoalForm({
         formData.append("cvFile", values.cvFile);
       }
 
-      const response = await fetch("/api/learning/goals", {
-        method: "POST",
-        body: formData, // No Content-Type header - browser sets it with boundary
-      });
-
-      const data: ApiSuccessResponse<unknown> | ApiErrorResponse =
-        await response.json();
+      // Call Server Action (handles auth internally)
+      const result = await createCareerGoalAction(formData);
 
       // Dismiss loading toast
       toast.dismiss(loadingToast);
 
-      if (!response.ok || !data.success) {
-        const errorData = data as ApiErrorResponse;
-
+      if (!result.success) {
         // Special handling for roadmap generation failure
-        if (errorData.error.code === "ROADMAP_GENERATION_FAILED") {
+        if (
+          result.error?.includes(
+            "Career goal saved, but roadmap generation failed",
+          )
+        ) {
           toast.warning("Goal saved, but roadmap generation failed", {
             description:
               "Your career goal was saved successfully, but we couldn't generate your roadmap. Please try again from the roadmap page.",
@@ -240,7 +237,7 @@ export function CareerGoalForm({
         }
 
         toast.error("Failed to save career goal", {
-          description: errorData.error.message,
+          description: result.error || "Unknown error occurred",
         });
         return;
       }

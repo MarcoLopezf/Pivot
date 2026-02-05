@@ -9,7 +9,7 @@ import { Step3Path } from "@/interfaces/web/components/onboarding/steps/Step3Pat
 import { Step4DirectGoals } from "@/interfaces/web/components/onboarding/steps/Step4DirectGoals";
 import { Step4Discovery } from "@/interfaces/web/components/onboarding/steps/Step4Discovery";
 import { Step5Import } from "@/interfaces/web/components/onboarding/steps/Step5Import";
-import { Step5Generating } from "@/interfaces/web/components/onboarding/steps/Step5Generating";
+import { Step6Generating } from "@/interfaces/web/components/onboarding/steps/Step6Generating";
 import { useOnboardingStore } from "@/interfaces/web/stores/useOnboardingStore";
 
 /**
@@ -69,7 +69,7 @@ export default function OnboardingPage() {
         return <Step5Import />;
 
       case "ROADMAP_PREVIEW":
-        return <Step5Generating />;
+        return <Step6Generating />;
 
       default:
         // Safety fallback - render profile step if unknown step

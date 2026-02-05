@@ -44,7 +44,7 @@ export function Step4DirectGoals() {
     data,
     updateData,
     saveCurrentStep,
-    setStep,
+    nextStep,
     previousStep,
     isLoading,
   } = useOnboardingStore();
@@ -59,7 +59,7 @@ export function Step4DirectGoals() {
 
   /**
    * Handles form submission
-   * Updates store data, saves progress, and navigates to roadmap preview
+   * Updates store data, saves progress, and navigates to next step (Import)
    */
   const onSubmit = async (values: DirectGoalsFormValues): Promise<void> => {
     try {
@@ -69,8 +69,8 @@ export function Step4DirectGoals() {
       // Save progress to server
       await saveCurrentStep();
 
-      // Navigate to roadmap preview (final step)
-      setStep("ROADMAP_PREVIEW");
+      // Navigate to next step (Import CV)
+      nextStep();
     } catch (error) {
       console.error("Error saving direct goals:", error);
       // TODO: Show error toast to user

@@ -17,7 +17,7 @@ export class SaveOnboardingStep {
    * Execute the use case
    *
    * @param userId - The user's unique identifier
-   * @param step - The current step number (1-5)
+   * @param step - The current step number (1-6)
    * @param data - Partial onboarding data collected so far
    * @returns Promise that resolves when saved successfully
    */
@@ -31,14 +31,22 @@ export class SaveOnboardingStep {
       throw new Error("User ID is required");
     }
 
-    if (step < 1 || step > 5) {
-      throw new Error("Step must be between 1 and 5");
+    if (step < 1 || step > 6) {
+      throw new Error("Step must be between 1 and 6");
     }
+
+    console.log("SaveOnboardingStep: Saving session", {
+      userId,
+      step,
+      dataKeys: Object.keys(data),
+      dataSize: JSON.stringify(data).length,
+    });
 
     // Create or update onboarding session
     const session = OnboardingSession.create(userId, step, data);
 
     // Persist to database
     await this.onboardingRepository.save(session);
+    console.log("SaveOnboardingStep: Session saved successfully");
   }
 }

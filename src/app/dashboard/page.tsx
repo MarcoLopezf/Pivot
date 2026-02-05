@@ -116,8 +116,8 @@ export default function DashboardPage(): React.ReactElement {
               career goal. This will help us create a customized roadmap
               tailored to your aspirations.
             </p>
-            <Link href="/onboarding/goals">
-              <Button size="lg">Set Your Career Goal</Button>
+            <Link href="/onboarding">
+              <Button size="lg">Start Onboarding</Button>
             </Link>
           </CardContent>
         </Card>
@@ -158,7 +158,7 @@ export default function DashboardPage(): React.ReactElement {
               Click below to generate a personalized learning roadmap based on
               your career goal: <strong>{dashboardData.careerGoal}</strong>
             </p>
-            <Link href="/onboarding/goals">
+            <Link href="/onboarding">
               <Button>Generate Roadmap</Button>
             </Link>
           </CardContent>

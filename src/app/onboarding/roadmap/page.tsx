@@ -108,8 +108,8 @@ export default function OnboardingRoadmapPage(): React.ReactElement {
               You haven&apos;t generated a learning roadmap yet. Create a career
               goal first to generate your personalized roadmap.
             </p>
-            <Button onClick={() => router.push("/onboarding/goals")}>
-              Set Your Career Goal
+            <Button onClick={() => router.push("/onboarding")}>
+              Start Onboarding
             </Button>
           </CardContent>
         </Card>

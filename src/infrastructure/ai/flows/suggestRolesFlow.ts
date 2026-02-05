@@ -24,11 +24,11 @@ interface RoleSuggestionResponse {
  */
 export class GenkitRoleRecommender implements IRoleRecommender {
   async suggestRoles(
-    currentRole: string,
-    skills: string[],
+    interests: string,
+    resumeText?: string,
   ): Promise<RoleRecommendation[]> {
     try {
-      const prompt = this.buildPrompt(currentRole, skills);
+      const prompt = this.buildPrompt(interests, resumeText);
 
       const { text } = await ai.generate({
         model: openAI.model("gpt-4o-mini"),
@@ -56,20 +56,27 @@ export class GenkitRoleRecommender implements IRoleRecommender {
   /**
    * Build the prompt for the AI model
    */
-  private buildPrompt(currentRole: string, skills: string[]): string {
-    const skillsList = skills.join(", ");
+  private buildPrompt(interests: string, resumeText?: string): string {
+    // Build context section with optional resume
+    let contextSection = `User Interests: ${interests}`;
 
-    return `You are a career advisor for tech professionals. Based on the user's current role and skills, suggest 3 alternative tech career roles they could transition to.
+    if (resumeText) {
+      contextSection += `
 
-Current Role: ${currentRole}
-Skills: ${skillsList}
+Resume/CV Context:
+${resumeText.substring(0, 3000)}`;
+    }
+
+    return `You are a career advisor for tech professionals. Based on the user's interests${resumeText ? " and resume" : ""}, suggest 3 alternative tech career roles they could pursue.
+
+${contextSection}
 
 For each suggested role, provide:
 1. The role name (clear and specific, e.g., "Frontend Developer", "DevOps Engineer")
-2. A match percentage (0-100) indicating how well their current skills align with this role
-3. A brief reasoning (2-3 sentences) explaining why this role is a good fit and what additional skills they might need
+2. A match percentage (0-100) indicating how well their interests${resumeText ? " and background" : ""} align with this role
+3. A brief reasoning (2-3 sentences) explaining why this role is a good fit${resumeText ? " based on their experience" : ""} and what skills they should develop
 
-Focus on realistic career transitions that leverage their existing skills while offering growth opportunities. Consider both lateral moves and progressive career paths.
+Focus on realistic career transitions that align with their interests while offering growth opportunities. Consider both lateral moves and progressive career paths.
 
 Return ONLY a JSON object with this exact structure (no markdown, no code blocks):
 {

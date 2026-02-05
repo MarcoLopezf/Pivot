@@ -4,8 +4,8 @@ import { IRoleRecommender } from "@domain/learning/services/IRoleRecommender";
  * Input DTO for role suggestions
  */
 export interface SuggestCareerRolesDTO {
-  currentRole: string;
-  skills: string[];
+  interests: string;
+  resumeText?: string;
 }
 
 /**
@@ -21,15 +21,16 @@ export interface RoleSuggestionDTO {
  * SuggestCareerRoles Use Case
  *
  * Application service that uses the IRoleRecommender domain service
- * to generate AI-powered career role suggestions for users.
+ * to generate AI-powered career role suggestions for users based on
+ * their interests and optional resume/CV context.
  */
 export class SuggestCareerRoles {
   constructor(private readonly roleRecommender: IRoleRecommender) {}
 
   async execute(dto: SuggestCareerRolesDTO): Promise<RoleSuggestionDTO[]> {
     const recommendations = await this.roleRecommender.suggestRoles(
-      dto.currentRole,
-      dto.skills,
+      dto.interests,
+      dto.resumeText,
     );
 
     return recommendations.map((rec) => ({

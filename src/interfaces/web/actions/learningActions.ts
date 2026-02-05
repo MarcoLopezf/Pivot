@@ -4,6 +4,8 @@ import { createClient } from "@infrastructure/auth/supabase/server";
 import { learningContainer } from "@infrastructure/di/LearningContainer";
 import { CareerGoalDTO } from "@application/dtos/learning/CareerGoalDTO";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
+import { PdfService } from "@infrastructure/services/PdfService";
+import { saveStepAction } from "./onboarding";
 
 /**
  * Server Action: Create Career Goal and Generate Roadmap
@@ -220,6 +222,143 @@ export async function getUserRoadmapAction(): Promise<{
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to load roadmap data",
+    };
+  }
+}
+
+/**
+ * Server Action: Get Role Suggestions
+ *
+ * Generates AI-powered career role suggestions based on user interests
+ * and optional CV/resume upload. If a CV is uploaded, the extracted text
+ * is persisted to onboarding step 4 for later use (avoiding double upload).
+ *
+ * Security:
+ * - Verifies user authentication via Supabase
+ * - Validates PDF file type
+ * - Limits resume text to 3000 characters for AI context
+ *
+ * @param formData - Form data with interests (string) and optional cvFile (File)
+ * @returns Role suggestions or error
+ *
+ * @layer Interface (Web)
+ */
+export async function getRoleSuggestionsAction(formData: FormData): Promise<{
+  success: boolean;
+  data?: Array<{ role: string; matchPercentage: number; reasoning: string }>;
+  error?: string;
+}> {
+  try {
+    // 1. Get authenticated user
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: "Unauthorized: User not authenticated",
+      };
+    }
+
+    // 2. Extract interests (required)
+    const interests = formData.get("interests");
+    if (!interests || typeof interests !== "string" || !interests.trim()) {
+      return {
+        success: false,
+        error: "Interests field is required",
+      };
+    }
+
+    // 3. Extract and process optional CV file
+    let resumeText: string | undefined;
+    const cvFile = formData.get("cvFile");
+
+    if (cvFile instanceof File && cvFile.size > 0) {
+      console.log("\n🔵 DISCOVERY: CV file received");
+      console.log(`  Filename: ${cvFile.name}`);
+      console.log(`  File type: ${cvFile.type}`);
+      console.log(
+        `  File size: ${cvFile.size} bytes (${(cvFile.size / 1024).toFixed(2)} KB)`,
+      );
+
+      // Validate PDF
+      if (cvFile.type !== "application/pdf") {
+        console.error("❌ Invalid file type - must be PDF");
+        return {
+          success: false,
+          error: "CV file must be a PDF",
+        };
+      }
+
+      try {
+        // Extract text from PDF
+        const arrayBuffer = await cvFile.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        const pdfService = new PdfService();
+        resumeText = await pdfService.extractText(buffer);
+
+        console.log(`✅ Extracted ${resumeText.length} characters from resume`);
+
+        // CRITICAL: Persist resume text to Step 4 for later use (avoid double upload)
+        const saveResult = await saveStepAction(4, {
+          resumeText,
+          fileName: cvFile.name,
+        });
+
+        if (!saveResult.success) {
+          console.error(
+            "⚠️ Failed to save resume to onboarding step:",
+            saveResult.error,
+          );
+          // Continue anyway - we still have the text for suggestions
+        } else {
+          console.log("✅ Resume text saved to onboarding step 4");
+        }
+      } catch (pdfError) {
+        console.error("❌ Failed to extract text from PDF:", pdfError);
+        return {
+          success: false,
+          error: "Failed to process CV file. Please ensure it's a valid PDF.",
+        };
+      }
+    } else {
+      console.log(
+        "ℹ️ No CV file provided - generating suggestions from interests only",
+      );
+    }
+
+    // 4. Get use case from DI container
+    const suggestCareerRoles = learningContainer.getSuggestCareerRolesUseCase();
+
+    // 5. Execute use case with interests and optional resume text
+    console.log("\n🚀 Calling SuggestCareerRoles use case");
+    console.log(`  Interests: ${interests.substring(0, 100)}...`);
+    console.log(`  Resume context: ${resumeText ? "Yes" : "No"}`);
+
+    const suggestions = await suggestCareerRoles.execute({
+      interests: interests.trim(),
+      resumeText,
+    });
+
+    console.log(`✅ Generated ${suggestions.length} role suggestions`);
+
+    return {
+      success: true,
+      data: suggestions,
+    };
+  } catch (error) {
+    console.error("Error in getRoleSuggestionsAction:", error);
+
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to generate role suggestions",
     };
   }
 }

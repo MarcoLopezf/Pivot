@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { StepContainer } from "@/interfaces/web/components/onboarding/StepContainer";
 import { useOnboardingStore } from "@/interfaces/web/stores/useOnboardingStore";
+import { getRoleSuggestionsAction } from "@/interfaces/web/actions/learningActions";
 import {
   Form,
   FormControl,
@@ -15,6 +17,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Sparkles, FileText } from "lucide-react";
+import { toast } from "sonner";
 
 /**
  * Step4Discovery - Onboarding Step 4: Discovery Goals
@@ -41,9 +53,29 @@ const discoveryGoalsSchema = z.object({
     .max(500, "Dislikes must be less than 500 characters")
     .optional()
     .or(z.literal("")),
+  cvFile: z
+    .instanceof(File)
+    .refine(
+      (file) => !file || file.size === 0 || file.type === "application/pdf",
+      "CV must be a PDF file",
+    )
+    .refine(
+      (file) => !file || file.size === 0 || file.size <= 5 * 1024 * 1024,
+      "CV file must be less than 5MB",
+    )
+    .optional(),
 });
 
 type DiscoveryGoalsFormValues = z.infer<typeof discoveryGoalsSchema>;
+
+/**
+ * Role suggestion from AI
+ */
+interface RoleSuggestion {
+  role: string;
+  matchPercentage: number;
+  reasoning: string;
+}
 
 export function Step4Discovery() {
   const {
@@ -55,6 +87,10 @@ export function Step4Discovery() {
     isLoading,
   } = useOnboardingStore();
 
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [suggestions, setSuggestions] = useState<RoleSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
   // Initialize form with store values
   const form = useForm<DiscoveryGoalsFormValues>({
     resolver: zodResolver(discoveryGoalsSchema),
@@ -65,23 +101,76 @@ export function Step4Discovery() {
   });
 
   /**
+   * Handles "Get AI Suggestions" button click
+   * Calls getRoleSuggestionsAction with interests and optional CV file
+   */
+  const handleGetSuggestions = async (): Promise<void> => {
+    const interests = form.getValues("interests");
+    const cvFile = form.getValues("cvFile");
+
+    if (!interests || interests.trim().length < 10) {
+      toast.error(
+        "Please describe your interests first (at least 10 characters)",
+      );
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setShowSuggestions(true);
+
+    try {
+      // Build FormData with interests and optional CV file
+      const formData = new FormData();
+      formData.append("interests", interests);
+
+      if (cvFile && cvFile.size > 0) {
+        formData.append("cvFile", cvFile);
+      }
+      // Call server action to get AI suggestions
+      const result = await getRoleSuggestionsAction(formData);
+
+      if (!result.success) {
+        toast.error("Failed to get suggestions", {
+          description: result.error || "Please try again",
+        });
+        return;
+      }
+
+      // Update suggestions state
+      setSuggestions(result.data || []);
+      toast.success("AI suggestions generated!", {
+        description: "Review the suggested career paths below",
+      });
+    } catch (error) {
+      console.error("Error getting role suggestions:", error);
+      toast.error("Something went wrong", {
+        description: "Please check your connection and try again",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  /**
    * Handles form submission
    * Updates store data, saves progress, and navigates to next step (Import)
    */
   const onSubmit = async (values: DiscoveryGoalsFormValues): Promise<void> => {
     try {
-      // Update store with form data
-      updateData(values);
+      // Update store with form data (excluding cvFile which is already saved if uploaded)
+      const { cvFile, ...dataToSave } = values;
+      updateData(dataToSave);
 
       // Save progress to server
       await saveCurrentStep();
 
       // Navigate to next step (Import CV)
-      // TODO: In the future, trigger AI suggestion flow here
       nextStep();
     } catch (error) {
       console.error("Error saving discovery goals:", error);
-      // TODO: Show error toast to user
+      toast.error("Failed to save progress", {
+        description: "Please try again",
+      });
     }
   };
 
@@ -111,7 +200,7 @@ export function Step4Discovery() {
                       className="resize-none"
                       rows={5}
                       {...field}
-                      disabled={isLoading}
+                      disabled={isLoading || isAnalyzing}
                     />
                   </FormControl>
                   <FormDescription>
@@ -123,8 +212,102 @@ export function Step4Discovery() {
               )}
             />
 
-            {/* Dislikes Field (Optional) */}
+            {/* Optional CV Upload for Better Suggestions */}
             <FormField
+              control={form.control}
+              name="cvFile"
+              render={({ field: { onChange, value, ...fieldProps } }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Upload CV for Better Suggestions (Optional)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept=".pdf"
+                      disabled={isLoading || isAnalyzing}
+                      className="cursor-pointer file:mr-4 file:rounded-md file:border-0 file:bg-purple-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-purple-700"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        onChange(file || new File([], ""));
+                      }}
+                      {...fieldProps}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    Upload your CV to get personalized suggestions based on your
+                    experience (PDF, max 5MB)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Get AI Suggestions Button */}
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={handleGetSuggestions}
+                disabled={isAnalyzing || isLoading || !form.watch("interests")}
+                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:from-purple-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Sparkles className="h-5 w-5" />
+                {isAnalyzing
+                  ? "Reading CV & Analyzing..."
+                  : "Get AI Suggestions"}
+              </button>
+            </div>
+
+            {/* AI Suggestions Display */}
+            {showSuggestions && (
+              <div className="space-y-4">
+                <h3 className="text-center text-sm font-medium">
+                  AI-Recommended Career Paths
+                </h3>
+
+                {isAnalyzing ? (
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="animate-pulse rounded-lg border border-gray-200 p-4"
+                      >
+                        <div className="mb-2 h-5 w-3/4 rounded bg-gray-200"></div>
+                        <div className="mb-4 h-4 w-1/2 rounded bg-gray-200"></div>
+                        <div className="h-20 w-full rounded bg-gray-200"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {suggestions.map((suggestion, index) => (
+                      <Card
+                        key={index}
+                        className="border-purple-200 transition-all hover:border-purple-400 hover:shadow-lg"
+                      >
+                        <CardHeader>
+                          <CardTitle className="text-lg">
+                            {suggestion.role}
+                          </CardTitle>
+                          <CardDescription className="text-base font-semibold text-purple-600">
+                            {suggestion.matchPercentage}% Match
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground">
+                            {suggestion.reasoning}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Dislikes Field (Optional) - Hidden for now */}
+            {/* <FormField
               control={form.control}
               name="dislike"
               render={({ field }) => (
@@ -136,7 +319,7 @@ export function Step4Discovery() {
                       className="resize-none"
                       rows={4}
                       {...field}
-                      disabled={isLoading}
+                      disabled={isLoading || isAnalyzing}
                     />
                   </FormControl>
                   <FormDescription>
@@ -146,15 +329,15 @@ export function Step4Discovery() {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
 
             {/* Info Box */}
             <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 text-sm text-purple-900">
               <p className="font-medium">How This Works</p>
               <p className="mt-1">
-                Our AI will analyze your profile, experience, and interests to
-                suggest career paths that align with your strengths and
-                preferences.
+                {data.resumeText
+                  ? "We'll use your CV context to create a personalized roadmap in the next step."
+                  : "Our AI will analyze your interests to suggest career paths that align with your preferences."}
               </p>
             </div>
           </div>

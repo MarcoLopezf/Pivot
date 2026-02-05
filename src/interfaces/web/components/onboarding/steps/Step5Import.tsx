@@ -6,7 +6,13 @@ import { useOnboardingStore } from "@interfaces/web/stores/useOnboardingStore";
 import { uploadResumeAction } from "@interfaces/web/actions/documentActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  CheckCircle,
+  AlertCircle,
+  FileCheck,
+} from "lucide-react";
 
 /**
  * Step5Import - CV/Resume Upload Step
@@ -31,11 +37,14 @@ export function Step5Import() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Read uploaded file from store instead of local state
+  // Check if CV was already uploaded in Step 4 (Discovery)
+  const hasResumeFromStep4 = Boolean(data.resumeText && data.resumeFileName);
   const uploadedFile = data.resumeFileName as string | undefined;
 
   console.log(
-    "Step5Import rendering - uploadedFile:",
+    "Step5Import rendering - hasResumeFromStep4:",
+    hasResumeFromStep4,
+    "uploadedFile:",
     uploadedFile,
     "isUploading:",
     isUploading,
@@ -163,16 +172,74 @@ export function Step5Import() {
 
   return (
     <StepContainer
-      title="Import Your Experience"
-      description="Upload your CV or LinkedIn PDF export to personalize your learning path (optional)"
+      title={hasResumeFromStep4 ? "Confirm Your CV" : "Import Your Experience"}
+      description={
+        hasResumeFromStep4
+          ? "We have your CV context from the previous step"
+          : "Upload your CV or LinkedIn PDF export to personalize your learning path (optional)"
+      }
       onNext={uploadedFile ? handleNext : handleSkip}
       onBack={previousStep}
       isLoading={isUploading}
-      nextLabel={uploadedFile ? "Continue" : "Skip for Now"}
+      nextLabel={uploadedFile ? "Generate Roadmap" : "Skip for Now"}
     >
       <div className="space-y-6">
-        {/* Upload Area */}
-        {!uploadedFile && (
+        {/* Success Card - CV Already Uploaded from Step 4 */}
+        {hasResumeFromStep4 && !error && (
+          <div className="rounded-lg border-2 border-green-200 bg-green-50 p-8">
+            <div className="flex flex-col items-center justify-center gap-6">
+              {/* Icon */}
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+                <FileCheck className="h-10 w-10 text-green-600" />
+              </div>
+
+              {/* Text Content */}
+              <div className="text-center">
+                <h3 className="mb-2 text-xl font-bold text-green-900">
+                  CV Context Available
+                </h3>
+                <p className="mb-1 text-base text-green-700">{uploadedFile}</p>
+                <p className="text-sm text-green-600">
+                  We have your CV context from the previous step and will use it
+                  to personalize your learning roadmap.
+                </p>
+              </div>
+
+              {/* Primary Action - Generate Roadmap */}
+              <Button
+                type="button"
+                onClick={handleNext}
+                disabled={isUploading}
+                className="w-full gap-2 bg-green-600 hover:bg-green-700 sm:w-auto"
+                size="lg"
+              >
+                <CheckCircle className="h-5 w-5" />
+                Generate My Roadmap
+              </Button>
+
+              {/* Secondary Action - Upload Different File */}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  updateData({
+                    resumeFileName: undefined,
+                    resumeText: undefined,
+                  });
+                  setError(null);
+                }}
+                className="text-green-700 hover:text-green-900"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Different File
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Upload Area - Only show if no CV from Step 4 */}
+        {!hasResumeFromStep4 && !uploadedFile && (
           <div
             className={`relative rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
               isDragging
@@ -229,8 +296,8 @@ export function Step5Import() {
           </div>
         )}
 
-        {/* Success State */}
-        {uploadedFile && !error && (
+        {/* Success State - Manual Upload in Step 5 */}
+        {!hasResumeFromStep4 && uploadedFile && !error && (
           <div className="rounded-lg border border-green-200 bg-green-50 p-6">
             <div className="flex items-start gap-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
@@ -281,18 +348,20 @@ export function Step5Import() {
           </div>
         )}
 
-        {/* Info Box */}
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <h4 className="font-semibold text-blue-900">Why upload your CV?</h4>
-          <ul className="mt-2 space-y-1 text-sm text-blue-700">
-            <li>• Get a personalized roadmap based on your experience</li>
-            <li>• AI analyzes your skills to identify knowledge gaps</li>
-            <li>• Skip topics you already know</li>
-          </ul>
-        </div>
+        {/* Info Box - Only show if no CV uploaded yet */}
+        {!hasResumeFromStep4 && !uploadedFile && (
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <h4 className="font-semibold text-blue-900">Why upload your CV?</h4>
+            <ul className="mt-2 space-y-1 text-sm text-blue-700">
+              <li>• Get a personalized roadmap based on your experience</li>
+              <li>• AI analyzes your skills to identify knowledge gaps</li>
+              <li>• Skip topics you already know</li>
+            </ul>
+          </div>
+        )}
 
-        {/* Skip Option */}
-        {!uploadedFile && (
+        {/* Skip Option - Only show if no CV uploaded yet */}
+        {!hasResumeFromStep4 && !uploadedFile && (
           <div className="text-center">
             <Button
               type="button"

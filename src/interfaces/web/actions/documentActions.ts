@@ -20,9 +20,7 @@ import { PdfService } from "@infrastructure/services/PdfService";
  *
  * @layer Interface (Web)
  */
-export async function uploadResumeAction(
-  formData: FormData,
-): Promise<{
+export async function uploadResumeAction(formData: FormData): Promise<{
   success: boolean;
   fileName?: string;
   extractedText?: string;

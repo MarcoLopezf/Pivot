@@ -29,7 +29,7 @@ interface ApiErrorResponse {
  */
 const QueryParamsSchema = z.object({
   topic: z.string().min(1, "topic is required"),
-  difficulty: z.string().optional(),
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
 });
 
 /**

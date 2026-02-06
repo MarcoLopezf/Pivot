@@ -46,21 +46,27 @@ export class YouTubeService {
   }
 
   /**
-   * Search YouTube videos by tags
+   * Search YouTube videos by tags with difficulty-based contextualization
    *
    * Returns empty array on error to prevent crashes (fail-safe design).
    * Logs errors for debugging.
+   *
+   * @param tags - Search keywords/topics
+   * @param difficulty - Learning level: 'beginner', 'intermediate', or 'advanced'
    */
-  async searchVideos(tags: string[]): Promise<LearningResource[]> {
+  async searchVideos(
+    tags: string[],
+    difficulty?: string,
+  ): Promise<LearningResource[]> {
     // Guard: Empty tags
     if (!tags || tags.length === 0) {
       return [];
     }
 
     try {
-      // Build search query from tags
-      const query = tags.join(" ");
-
+      // Build contextualized search query based on difficulty
+      const query = this.buildQuery(tags, difficulty);
+      console.log("query", query);
       // Call YouTube API (with 10s timeout)
       const response = await axios.get<YouTubeSearchResponse>(this.baseUrl, {
         params: {
@@ -82,6 +88,63 @@ export class YouTubeService {
       // Log error but return empty array (fail-safe)
       console.error("[YouTubeService] Error fetching videos:", error);
       return [];
+    }
+  }
+
+  /**
+   * Build contextualized search query based on difficulty level
+   *
+   * Appends difficulty-specific qualifiers to avoid showing beginner tutorials
+   * to advanced users, and vice versa.
+   */
+  private buildQuery(tags: string[], difficulty?: string): string {
+    const baseTopic = tags.join(" ");
+    const difficultyQualifier = this.getDifficultyQualifier(difficulty);
+    const contentFilters = "-shorts -song -music"; // Block irrelevant content
+
+    return `${baseTopic} ${difficultyQualifier} ${contentFilters}`.trim();
+  }
+
+  /**
+   * Get difficulty-specific search qualifiers
+   */
+  private getDifficultyQualifier(difficulty?: string): string {
+    const normalizedDifficulty = difficulty?.toLowerCase();
+
+    switch (normalizedDifficulty) {
+      case "beginner":
+        return "tutorial for beginners basics";
+      case "intermediate":
+        return "intermediate guide in depth";
+      case "advanced":
+        return "advanced deep dive architecture";
+      default:
+        // Default to general tutorial if difficulty not specified
+        return "tutorial guide";
+    }
+  }
+
+  /**
+   * Get video duration filter based on difficulty
+   *
+   * - Beginner: medium (4-20 min, focused tutorials)
+   * - Intermediate: medium (balanced depth)
+   * - Advanced: long (20+ min, in-depth content)
+   */
+  private getVideoDuration(
+    difficulty?: string,
+  ): "short" | "medium" | "long" | "any" {
+    const normalizedDifficulty = difficulty?.toLowerCase();
+
+    switch (normalizedDifficulty) {
+      case "beginner":
+        return "medium";
+      case "intermediate":
+        return "medium";
+      case "advanced":
+        return "long";
+      default:
+        return "medium";
     }
   }
 

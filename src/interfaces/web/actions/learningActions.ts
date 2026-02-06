@@ -9,7 +9,113 @@ import { RoadmapOverviewDTO } from "@application/use-cases/learning/GetRoadmapBy
 import { RoadmapItemDetailDTO } from "@application/use-cases/learning/GetRoadmapItemById";
 import { LearningResource } from "@domain/learning/repositories/IResourceRepository";
 import { PdfService } from "@infrastructure/services/PdfService";
+import type { RoadmapListItemDTO } from "@application/use-cases/learning/GetUserRoadmaps";
 import { saveStepAction } from "./onboarding";
+
+/**
+ * Server Action: Get User Roadmaps List
+ *
+ * Returns a lightweight list of all user roadmaps (id, title, role)
+ * sorted by updatedAt desc. Used for the context switcher in the header.
+ *
+ * Security:
+ * - Verifies user authentication via Supabase
+ * - Only returns authenticated user's own roadmaps
+ *
+ * @returns Lightweight roadmap list or error
+ *
+ * @layer Interface (Web)
+ */
+export async function getUserRoadmapsListAction(): Promise<{
+  success: boolean;
+  data?: RoadmapListItemDTO[];
+  error?: string;
+}> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: "Unauthorized: User not authenticated",
+      };
+    }
+
+    const getUserRoadmaps = learningContainer.getGetUserRoadmapsUseCase();
+    const roadmaps = await getUserRoadmaps.execute(user.id);
+
+    return {
+      success: true,
+      data: roadmaps,
+    };
+  } catch (error) {
+    console.error("Error in getUserRoadmapsListAction:", error);
+
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to load roadmaps list",
+    };
+  }
+}
+
+/**
+ * Server Action: Get Last Active Roadmap ID
+ *
+ * Returns the ID of the most recently updated roadmap for the authenticated user.
+ * Used for smart redirect on the root page.
+ *
+ * Security:
+ * - Verifies user authentication via Supabase
+ * - Only returns authenticated user's own roadmap
+ *
+ * @returns Roadmap ID or null if none exists
+ *
+ * @layer Interface (Web)
+ */
+export async function getLastActiveRoadmapIdAction(): Promise<{
+  success: boolean;
+  data?: string | null;
+  error?: string;
+}> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: "Unauthorized: User not authenticated",
+      };
+    }
+
+    const getLastActiveRoadmap =
+      learningContainer.getGetLastActiveRoadmapUseCase();
+    const roadmapId = await getLastActiveRoadmap.execute(user.id);
+
+    return {
+      success: true,
+      data: roadmapId,
+    };
+  } catch (error) {
+    console.error("Error in getLastActiveRoadmapIdAction:", error);
+
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get last active roadmap",
+    };
+  }
+}
 
 /**
  * Server Action: Create Career Goal and Generate Roadmap
@@ -530,12 +636,16 @@ export async function getRoadmapItemAction(
       return { success: true, data: null };
     }
 
-    // 4. Fetch resources for the item's topic
+    // 4. Fetch resources for the item's topic with difficulty context
     let resources: LearningResource[] = [];
     if (detail.item.topic) {
       try {
         const getResources = learningContainer.getGetItemResourcesUseCase();
-        resources = await getResources.execute(itemId, detail.item.topic);
+        resources = await getResources.execute(
+          itemId,
+          detail.item.topic,
+          detail.item.difficulty,
+        );
       } catch (resourceError) {
         // Resources are non-critical; log and continue
         console.error("Failed to fetch resources:", resourceError);

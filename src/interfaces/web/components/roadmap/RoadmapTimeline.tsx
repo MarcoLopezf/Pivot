@@ -64,7 +64,7 @@ function RoadmapItem({
 }: RoadmapItemProps): React.ReactElement {
   const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
   const { resources, isLoading, error, hasFetched, fetchResources } =
-    useItemResources(item.id, item.topic);
+    useItemResources(item.id, item.topic, item.difficulty);
 
   const getStatusIcon = (status: RoadmapItemStatus) => {
     switch (status) {

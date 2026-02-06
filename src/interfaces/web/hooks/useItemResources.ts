@@ -27,7 +27,7 @@ type ApiResponse = ApiSuccessResponse | ApiErrorResponse;
  *
  * Usage:
  * ```tsx
- * const { resources, isLoading, error, fetchResources } = useItemResources(itemId, topic);
+ * const { resources, isLoading, error, fetchResources } = useItemResources(itemId, topic, difficulty);
  *
  * <button onClick={fetchResources}>Show Resources</button>
  * ```
@@ -37,8 +37,13 @@ type ApiResponse = ApiSuccessResponse | ApiErrorResponse;
  * - Prevents duplicate fetches
  * - Error handling
  * - Loading states
+ * - Difficulty-based contextualized search
  */
-export function useItemResources(itemId: string, topic: string) {
+export function useItemResources(
+  itemId: string,
+  topic: string,
+  difficulty?: string,
+) {
   const [resources, setResources] = useState<LearningResource[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,8 +72,17 @@ export function useItemResources(itemId: string, topic: string) {
     setError(null);
 
     try {
+      // Build query string with difficulty if provided
+      const queryParams = new URLSearchParams({
+        topic: topic,
+      });
+
+      if (difficulty) {
+        queryParams.append("difficulty", difficulty);
+      }
+
       const response = await fetch(
-        `/api/learning/roadmap/items/${itemId}/resources?topic=${encodeURIComponent(topic)}`,
+        `/api/learning/roadmap/items/${itemId}/resources?${queryParams.toString()}`,
       );
 
       if (!response.ok) {
@@ -89,7 +103,7 @@ export function useItemResources(itemId: string, topic: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [itemId, topic, hasFetched, isLoading]);
+  }, [itemId, topic, difficulty, hasFetched, isLoading]);
 
   return {
     resources,

@@ -39,10 +39,15 @@ export class GetItemResources {
    *
    * @param itemId - Roadmap item ID (for logging/future features)
    * @param topic - The topic to search for (e.g., "React Hooks", "TypeScript Generics")
+   * @param difficulty - Learning level: 'beginner', 'intermediate', or 'advanced'
    * @returns Array of learning resources (videos)
    * @throws Error if database or YouTube API fails
    */
-  async execute(itemId: string, topic: string): Promise<LearningResource[]> {
+  async execute(
+    itemId: string,
+    topic: string,
+    difficulty?: string,
+  ): Promise<LearningResource[]> {
     // Step 1: Normalize topic into tags using TagNormalizer
     const normalizedTags = this.normalizeTopic(topic);
 
@@ -60,8 +65,11 @@ export class GetItemResources {
       return dbResources;
     }
 
-    // Step 3: Cache miss - Fetch from YouTube API
-    const apiResources = await this.youtubeService.searchVideos(normalizedTags);
+    // Step 3: Cache miss - Fetch from YouTube API with difficulty context
+    const apiResources = await this.youtubeService.searchVideos(
+      normalizedTags,
+      difficulty,
+    );
 
     // Step 4: Save API results to DB (if any)
     if (apiResources.length > 0) {

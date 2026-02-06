@@ -29,6 +29,7 @@ interface ApiErrorResponse {
  */
 const QueryParamsSchema = z.object({
   topic: z.string().min(1, "topic is required"),
+  difficulty: z.string().optional(),
 });
 
 /**
@@ -41,6 +42,7 @@ const QueryParamsSchema = z.object({
  *
  * Query parameters:
  * - topic (required): The topic to search for (e.g., "React Hooks", "TypeScript Generics")
+ * - difficulty (optional): Learning level ('beginner', 'intermediate', 'advanced') for contextualized search
  *
  * Route parameters:
  * - itemId (required): ID of the roadmap item
@@ -50,8 +52,9 @@ const QueryParamsSchema = z.object({
  * - 400: Invalid parameters
  * - 500: Internal server error
  *
- * Example:
- * GET /api/learning/roadmap/items/abc123/resources?topic=React%20Hooks
+ * Examples:
+ * GET /api/learning/roadmap/items/abc123/resources?topic=React%20Hooks&difficulty=beginner
+ * GET /api/learning/roadmap/items/abc123/resources?topic=Variables&difficulty=advanced
  */
 export async function GET(
   request: NextRequest,
@@ -80,15 +83,17 @@ export async function GET(
       return NextResponse.json(response, { status: 400 });
     }
 
-    const { topic } = parseResult.data;
+    const { topic, difficulty } = parseResult.data;
 
-    logger.info(`Fetching resources for item ${itemId}, topic: ${topic}`);
+    logger.info(
+      `Fetching resources for item ${itemId}, topic: ${topic}, difficulty: ${difficulty || "default"}`,
+    );
 
     // Get use case from DI container
     const getItemResources = learningContainer.getGetItemResourcesUseCase();
 
     // Execute use case (lazy loading: DB -> API -> Save)
-    const resources = await getItemResources.execute(itemId, topic);
+    const resources = await getItemResources.execute(itemId, topic, difficulty);
 
     logger.info(`Found ${resources.length} resources for item ${itemId}`);
 

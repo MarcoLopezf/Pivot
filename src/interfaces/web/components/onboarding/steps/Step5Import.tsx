@@ -75,17 +75,13 @@ export function Step5Import() {
       }
 
       // Update store with both extracted text and filename
+      // (will be saved to server when user clicks "Generate Roadmap")
       console.log("4. Updating store with extracted text...");
       updateData({
         resumeText: result.extractedText,
         resumeFileName: result.fileName,
       });
-
-      // Save to server with all current data
-      console.log("5. Saving current step to server...");
-      await saveCurrentStep();
-      console.log("6. Save completed successfully");
-      console.log("7. Upload complete!");
+      console.log("5. Upload complete!");
     } catch (err) {
       console.error("Error uploading file:", err);
       setError(err instanceof Error ? err.message : "Failed to upload file");

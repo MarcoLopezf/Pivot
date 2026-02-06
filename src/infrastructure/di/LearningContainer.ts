@@ -2,6 +2,7 @@ import { prisma } from "@infrastructure/database/PrismaClient";
 import { PrismaCareerGoalRepository } from "@infrastructure/database/repositories/PrismaCareerGoalRepository";
 import { PrismaRoadmapRepository } from "@infrastructure/database/repositories/PrismaRoadmapRepository";
 import { PrismaResourceRepository } from "@infrastructure/database/repositories/PrismaResourceRepository";
+import { PrismaJobRoleRepository } from "@infrastructure/database/repositories/PrismaJobRoleRepository";
 import { GenkitRoleRecommender } from "@infrastructure/ai/flows/suggestRolesFlow";
 import { GenkitRoadmapFlow } from "@infrastructure/ai/flows/generateRoadmapFlow";
 import { PdfService } from "@infrastructure/services/PdfService";
@@ -13,6 +14,7 @@ import { GenerateUserRoadmap } from "@application/use-cases/learning/GenerateUse
 import { GetUserRoadmap } from "@application/use-cases/learning/GetUserRoadmap";
 import { UpdateRoadmapItemStatus } from "@application/use-cases/learning/UpdateRoadmapItemStatus";
 import { GetItemResources } from "@application/use-cases/learning/GetItemResources";
+import { GetJobRoles } from "@application/use-cases/learning/GetJobRoles";
 
 /**
  * LearningContainer - Dependency Injection Container for Learning bounded context
@@ -29,6 +31,7 @@ class LearningContainer {
   private careerGoalRepository: PrismaCareerGoalRepository;
   private roadmapRepository: PrismaRoadmapRepository;
   private resourceRepository: PrismaResourceRepository;
+  private jobRoleRepository: PrismaJobRoleRepository;
   private roleRecommender: GenkitRoleRecommender;
   private roadmapFlow: GenkitRoadmapFlow;
   private pdfService: PdfService;
@@ -40,7 +43,9 @@ class LearningContainer {
     this.careerGoalRepository = new PrismaCareerGoalRepository(prisma);
     this.roadmapRepository = new PrismaRoadmapRepository(prisma);
     this.resourceRepository = new PrismaResourceRepository(prisma);
-    this.roleRecommender = new GenkitRoleRecommender();
+    this.jobRoleRepository = new PrismaJobRoleRepository(prisma);
+    // Inject jobRoleRepository to ground AI suggestions to valid database roles
+    this.roleRecommender = new GenkitRoleRecommender(this.jobRoleRepository);
     this.roadmapFlow = new GenkitRoadmapFlow();
     this.pdfService = new PdfService();
     this.gitHubService = new GitHubService();
@@ -116,6 +121,21 @@ class LearningContainer {
    */
   getRoadmapFlow(): GenkitRoadmapFlow {
     return this.roadmapFlow;
+  }
+
+  /**
+   * Returns an initialized GetJobRoles use case with all dependencies injected
+   */
+  getGetJobRolesUseCase(): GetJobRoles {
+    return new GetJobRoles(this.jobRoleRepository);
+  }
+
+  /**
+   * Returns the JobRoleRepository instance
+   * Used by other containers to access job roles
+   */
+  getJobRoleRepository(): PrismaJobRoleRepository {
+    return this.jobRoleRepository;
   }
 }
 

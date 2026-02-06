@@ -4,6 +4,7 @@ import { createClient } from "@infrastructure/auth/supabase/server";
 import { learningContainer } from "@infrastructure/di/LearningContainer";
 import { CareerGoalDTO } from "@application/dtos/learning/CareerGoalDTO";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
+import { JobRoleDTO } from "@application/dtos/learning/JobRoleDTO";
 import { PdfService } from "@infrastructure/services/PdfService";
 import { saveStepAction } from "./onboarding";
 
@@ -363,6 +364,48 @@ export async function getRoleSuggestionsAction(formData: FormData): Promise<{
         error instanceof Error
           ? error.message
           : "Failed to generate role suggestions",
+    };
+  }
+}
+
+/**
+ * Server Action: Get Job Roles
+ *
+ * Retrieves curated job roles, optionally filtered by search query.
+ * Returns only enabled roles sorted by popularity.
+ *
+ * Security:
+ * - No authentication required (public data)
+ * - Returns only enabled roles
+ *
+ * @param query - Optional search term to filter roles
+ * @returns Job role DTOs or error
+ *
+ * @layer Interface (Web)
+ */
+export async function getJobRolesAction(query?: string): Promise<{
+  success: boolean;
+  data?: JobRoleDTO[];
+  error?: string;
+}> {
+  try {
+    // Get use case from DI container
+    const getJobRoles = learningContainer.getGetJobRolesUseCase();
+
+    // Execute use case
+    const roles = await getJobRoles.execute(query);
+
+    return {
+      success: true,
+      data: roles,
+    };
+  } catch (error) {
+    console.error("Error in getJobRolesAction:", error);
+
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch job roles",
     };
   }
 }

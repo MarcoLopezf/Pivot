@@ -221,17 +221,12 @@ export function Step4Discovery() {
           description="Help us understand what excites you so we can suggest the best career paths."
           onNext={form.handleSubmit(onSubmit)}
           onBack={previousStep}
-          isNextDisabled={
-            !form.formState.isValid ||
-            (showSuggestions && suggestions.length > 0 && !selectedRole)
-          }
+          isNextDisabled={!selectedRole}
           isLoading={isLoading}
           nextLabel={
             selectedRole
               ? "Continue with this role"
-              : showSuggestions && suggestions.length > 0
-                ? "Skip suggestions"
-                : "Discover My Path"
+              : "Select a role to continue"
           }
         >
           <div className="space-y-6">

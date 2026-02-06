@@ -207,3 +207,18 @@ model OnboardingProgress {
   @@index([userId])
   @@index([currentStep])
 }
+
+// --- NEW TABLE: JobRole ---
+// Curated job roles for career goal selection and roadmap generation
+model JobRole {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  category   String?
+  isEnabled  Boolean  @default(true)
+  popularity Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isEnabled])
+  @@index([popularity])
+}

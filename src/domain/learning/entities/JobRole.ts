@@ -60,6 +60,9 @@ export class JobRole {
     if (popularity < 0) {
       throw new Error("Popularity cannot be negative");
     }
+    if (popularity > 100) {
+      throw new Error("Popularity cannot exceed 100");
+    }
     const now = new Date();
     return new JobRole(id, name, category, true, popularity, now);
   }
@@ -130,9 +133,12 @@ export class JobRole {
   /**
    * Increment popularity by 1
    * Used to track user selections
+   * Caps at 100 (maximum popularity)
    */
   public incrementPopularity(): void {
-    this._popularity += 1;
+    if (this._popularity < 100) {
+      this._popularity += 1;
+    }
     this._updatedAt = new Date();
   }
 

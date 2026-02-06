@@ -45,6 +45,12 @@ describe("JobRole Entity", () => {
       ).toThrow("Popularity cannot be negative");
     });
 
+    it("should throw error when popularity exceeds 100", () => {
+      expect(() =>
+        JobRole.create(roleId, "Software Engineer", "Engineering", 101),
+      ).toThrow("Popularity cannot exceed 100");
+    });
+
     it("should create role with null category", () => {
       const role = JobRole.create(roleId, "Software Engineer", null, 85);
 
@@ -93,6 +99,48 @@ describe("JobRole Entity", () => {
         "Software Engineer",
         "Engineering",
         85,
+      );
+
+      const before = Date.now();
+      role.incrementPopularity();
+      const after = Date.now();
+
+      expect(role.updatedAt.getTime()).toBeGreaterThanOrEqual(before);
+      expect(role.updatedAt.getTime()).toBeLessThanOrEqual(after);
+    });
+
+    it("should cap popularity at 100 when incrementing from 99", () => {
+      const role = JobRole.create(
+        roleId,
+        "Software Engineer",
+        "Engineering",
+        99,
+      );
+
+      role.incrementPopularity();
+
+      expect(role.popularity).toBe(100);
+    });
+
+    it("should not increment popularity beyond 100", () => {
+      const role = JobRole.create(
+        roleId,
+        "Software Engineer",
+        "Engineering",
+        100,
+      );
+
+      role.incrementPopularity();
+
+      expect(role.popularity).toBe(100);
+    });
+
+    it("should still update updatedAt even when at max popularity", () => {
+      const role = JobRole.create(
+        roleId,
+        "Software Engineer",
+        "Engineering",
+        100,
       );
 
       const before = Date.now();

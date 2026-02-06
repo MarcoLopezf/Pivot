@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -5,12 +6,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
 interface ProgressOverviewProps {
   progress: number;
   totalTasks: number;
   completedTasks: number;
+  roadmapId?: string | null;
 }
 
 /**
@@ -23,6 +26,7 @@ export function ProgressOverview({
   progress,
   totalTasks,
   completedTasks,
+  roadmapId,
 }: ProgressOverviewProps): React.ReactElement {
   return (
     <Card>
@@ -50,6 +54,13 @@ export function ProgressOverview({
           <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
             Congratulations! You have completed all tasks in your roadmap.
           </div>
+        )}
+        {roadmapId && (
+          <Link href={`/roadmap/${roadmapId}`}>
+            <Button variant="outline" className="w-full">
+              View Full Roadmap
+            </Button>
+          </Link>
         )}
       </CardContent>
     </Card>

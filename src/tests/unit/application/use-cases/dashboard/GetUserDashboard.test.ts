@@ -105,6 +105,7 @@ describe("GetUserDashboard Use Case", () => {
       expect(result!.totalTasks).toBe(2);
       expect(result!.completedTasks).toBe(1);
       expect(result!.progress).toBe(50);
+      expect(result!.roadmapId).toBe("roadmap-001");
       expect(result!.nextTask).not.toBeNull();
       expect(result!.nextTask!.id).toBe("item-002");
       expect(result!.nextTask!.title).toBe("Learn React");
@@ -248,6 +249,7 @@ describe("GetUserDashboard Use Case", () => {
       expect(result).not.toBeNull();
       expect(result!.userName).toBe("New User");
       expect(result!.careerGoal).toBeNull();
+      expect(result!.roadmapId).toBeNull();
       expect(result!.totalTasks).toBe(0);
       expect(result!.completedTasks).toBe(0);
       expect(result!.progress).toBe(0);
@@ -284,6 +286,7 @@ describe("GetUserDashboard Use Case", () => {
       expect(result).not.toBeNull();
       expect(result!.userName).toBe("User With Goal");
       expect(result!.careerGoal).toBe("Data Scientist");
+      expect(result!.roadmapId).toBeNull();
       expect(result!.totalTasks).toBe(0);
       expect(result!.completedTasks).toBe(0);
       expect(result!.progress).toBe(0);

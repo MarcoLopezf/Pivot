@@ -138,8 +138,12 @@ export default function DashboardPage(): React.ReactElement {
           progress={dashboardData.progress}
           totalTasks={dashboardData.totalTasks}
           completedTasks={dashboardData.completedTasks}
+          roadmapId={dashboardData.roadmapId}
         />
-        <NextMissionCard nextTask={dashboardData.nextTask} />
+        <NextMissionCard
+          nextTask={dashboardData.nextTask}
+          roadmapId={dashboardData.roadmapId}
+        />
       </div>
 
       {dashboardData.totalTasks === 0 && (

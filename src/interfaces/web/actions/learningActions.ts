@@ -5,6 +5,9 @@ import { learningContainer } from "@infrastructure/di/LearningContainer";
 import { CareerGoalDTO } from "@application/dtos/learning/CareerGoalDTO";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
 import { JobRoleDTO } from "@application/dtos/learning/JobRoleDTO";
+import { RoadmapOverviewDTO } from "@application/use-cases/learning/GetRoadmapById";
+import { RoadmapItemDetailDTO } from "@application/use-cases/learning/GetRoadmapItemById";
+import { LearningResource } from "@domain/learning/repositories/IResourceRepository";
 import { PdfService } from "@infrastructure/services/PdfService";
 import { saveStepAction } from "./onboarding";
 
@@ -369,6 +372,68 @@ export async function getRoleSuggestionsAction(formData: FormData): Promise<{
 }
 
 /**
+ * Server Action: Get Roadmap By ID
+ *
+ * Retrieves a specific roadmap by its ID with ownership verification.
+ *
+ * Security:
+ * - Verifies user authentication via Supabase
+ * - Verifies roadmap ownership (only returns if user owns it)
+ *
+ * @param roadmapId - The roadmap ID to fetch
+ * @returns Roadmap DTO or error
+ *
+ * @layer Interface (Web)
+ */
+export async function getRoadmapByIdAction(roadmapId: string): Promise<{
+  success: boolean;
+  data?: RoadmapOverviewDTO | null;
+  error?: string;
+}> {
+  try {
+    // 1. Get authenticated user
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: "Unauthorized: User not authenticated",
+      };
+    }
+
+    // 2. Validate input
+    if (!roadmapId || typeof roadmapId !== "string" || !roadmapId.trim()) {
+      return {
+        success: false,
+        error: "Roadmap ID is required",
+      };
+    }
+
+    // 3. Get use case from DI container
+    const getRoadmapById = learningContainer.getGetRoadmapByIdUseCase();
+
+    // 4. Execute use case (includes ownership check)
+    const roadmapDTO = await getRoadmapById.execute(roadmapId, user.id);
+
+    return {
+      success: true,
+      data: roadmapDTO,
+    };
+  } catch (error) {
+    console.error("Error in getRoadmapByIdAction:", error);
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to load roadmap",
+    };
+  }
+}
+
+/**
  * Server Action: Get Job Roles
  *
  * Retrieves curated job roles, optionally filtered by search query.
@@ -406,6 +471,88 @@ export async function getJobRolesAction(query?: string): Promise<{
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to fetch job roles",
+    };
+  }
+}
+
+/**
+ * Server Action: Get Roadmap Item
+ *
+ * Retrieves a single roadmap item with its learning resources.
+ * Orchestrates two use cases: item fetch (with ownership check) + resource fetch.
+ *
+ * Security:
+ * - Verifies user authentication via Supabase
+ * - Verifies roadmap ownership (only returns if user owns it)
+ *
+ * @param roadmapId - The roadmap ID
+ * @param itemId - The item ID to fetch
+ * @returns Item detail DTO with resources or error
+ *
+ * @layer Interface (Web)
+ */
+export async function getRoadmapItemAction(
+  roadmapId: string,
+  itemId: string,
+): Promise<{
+  success: boolean;
+  data?: { detail: RoadmapItemDetailDTO; resources: LearningResource[] } | null;
+  error?: string;
+}> {
+  try {
+    // 1. Get authenticated user
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: "Unauthorized: User not authenticated",
+      };
+    }
+
+    // 2. Validate inputs
+    if (!roadmapId || !itemId) {
+      return {
+        success: false,
+        error: "Roadmap ID and Item ID are required",
+      };
+    }
+
+    // 3. Fetch item with ownership check
+    const getItem = learningContainer.getGetRoadmapItemByIdUseCase();
+    const detail = await getItem.execute(roadmapId, itemId, user.id);
+
+    if (!detail) {
+      return { success: true, data: null };
+    }
+
+    // 4. Fetch resources for the item's topic
+    let resources: LearningResource[] = [];
+    if (detail.item.topic) {
+      try {
+        const getResources = learningContainer.getGetItemResourcesUseCase();
+        resources = await getResources.execute(itemId, detail.item.topic);
+      } catch (resourceError) {
+        // Resources are non-critical; log and continue
+        console.error("Failed to fetch resources:", resourceError);
+      }
+    }
+
+    return {
+      success: true,
+      data: { detail, resources },
+    };
+  } catch (error) {
+    console.error("Error in getRoadmapItemAction:", error);
+
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to load roadmap item",
     };
   }
 }

@@ -33,6 +33,12 @@ export interface DashboardDTO {
   completedTasks: number;
 
   /**
+   * Active roadmap ID (null if no roadmap generated yet)
+   * Used for linking to the roadmap overview page
+   */
+  roadmapId: string | null;
+
+  /**
    * Next task to work on (first PENDING or IN_PROGRESS item)
    * Null if no roadmap or all tasks completed
    */

@@ -4,6 +4,23 @@ import userEvent from "@testing-library/user-event";
 import { RoadmapTimeline } from "@interfaces/web/components/roadmap/RoadmapTimeline";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
 
+// Mock next/link to render as a simple anchor tag in tests
+vi.mock("next/link", () => ({
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 describe("RoadmapTimeline Component", () => {
   const mockRoadmap: RoadmapDTO = {
     id: "roadmap-001",
@@ -138,12 +155,11 @@ describe("RoadmapTimeline Component", () => {
       />,
     );
 
-    // Find the completed item title
+    // Find the completed item title (rendered as a Link/anchor)
     const completedTitle = screen.getByText("Learn TypeScript");
-    const titleParent = completedTitle.closest("h3");
 
-    // Check for line-through or opacity classes
-    const className = titleParent?.getAttribute("class") || "";
+    // Check for line-through or opacity classes on the link element
+    const className = completedTitle.getAttribute("class") || "";
     const hasStrikethrough =
       className.includes("line-through") || className.includes("opacity");
     expect(hasStrikethrough).toBe(true);

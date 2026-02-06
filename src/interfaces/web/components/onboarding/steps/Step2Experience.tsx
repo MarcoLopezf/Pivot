@@ -151,14 +151,13 @@ export function Step2Experience() {
                   <FormLabel>Current Job Title / Role</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="e.g., Marketing Manager, Software Developer, Student"
+                      placeholder="e.g., Accountant, Student, Retail Manager, Graphic Designer..."
                       {...field}
                       disabled={isLoading || isStudent}
                     />
                   </FormControl>
                   <FormDescription>
-                    What&apos;s your current role or the role you&apos;re
-                    preparing for?
+                    What&apos;s your current role? (Any background is welcome!)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

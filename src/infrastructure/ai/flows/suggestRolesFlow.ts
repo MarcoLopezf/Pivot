@@ -4,6 +4,7 @@ import {
   IRoleRecommender,
   RoleRecommendation,
 } from "@domain/learning/services/IRoleRecommender";
+import { IJobRoleRepository } from "@domain/learning/repositories/IJobRoleRepository";
 
 /**
  * Interface for AI response structure
@@ -21,14 +22,26 @@ interface RoleSuggestionResponse {
  *
  * Infrastructure adapter that implements IRoleRecommender using Google Genkit and Gemini.
  * This keeps AI implementation details isolated from the domain layer.
+ *
+ * Grounding: Suggestions are constrained to valid JobRole entities from the database.
  */
 export class GenkitRoleRecommender implements IRoleRecommender {
+  constructor(private readonly jobRoleRepository: IJobRoleRepository) {}
+
   async suggestRoles(
     interests: string,
     resumeText?: string,
   ): Promise<RoleRecommendation[]> {
     try {
-      const prompt = this.buildPrompt(interests, resumeText);
+      // Fetch valid job roles from database to ground AI suggestions
+      const validRoles = await this.jobRoleRepository.findEnabled();
+      const validRoleNames = validRoles.map((role) => role.name);
+
+      if (validRoleNames.length === 0) {
+        throw new Error("No valid job roles found in the database");
+      }
+
+      const prompt = this.buildPrompt(interests, resumeText, validRoleNames);
 
       const { text } = await ai.generate({
         model: openAI.model("gpt-4o-mini"),
@@ -45,7 +58,24 @@ export class GenkitRoleRecommender implements IRoleRecommender {
         throw new Error("No recommendations received from AI model");
       }
 
-      // Return top 3 recommendations
+      // Validate that AI returned exact matches from valid roles list
+      const validRoleSet = new Set(validRoleNames);
+      const invalidRoles = response.recommendations.filter(
+        (rec) => !validRoleSet.has(rec.role),
+      );
+
+      if (invalidRoles.length > 0) {
+        console.warn(
+          "AI returned invalid role names:",
+          invalidRoles.map((r) => r.role),
+        );
+        console.warn("Valid roles:", validRoleNames);
+        throw new Error(
+          "AI suggested roles not in database. This indicates a grounding failure.",
+        );
+      }
+
+      // Return top 3 recommendations (all guaranteed to match database entries)
       return response.recommendations.slice(0, 3);
     } catch (error) {
       console.error("Error generating role suggestions:", error);
@@ -55,8 +85,15 @@ export class GenkitRoleRecommender implements IRoleRecommender {
 
   /**
    * Build the prompt for the AI model
+   * @param interests - User's stated interests
+   * @param resumeText - Optional resume/CV text
+   * @param validRoleNames - List of valid job role names from database
    */
-  private buildPrompt(interests: string, resumeText?: string): string {
+  private buildPrompt(
+    interests: string,
+    resumeText: string | undefined,
+    validRoleNames: string[],
+  ): string {
     // Build context section with optional resume
     let contextSection = `User Interests: ${interests}`;
 
@@ -67,12 +104,17 @@ Resume/CV Context:
 ${resumeText.substring(0, 3000)}`;
     }
 
-    return `You are a career advisor for tech professionals. Based on the user's interests${resumeText ? " and resume" : ""}, suggest 3 alternative tech career roles they could pursue.
+    return `You are a career advisor for tech professionals. Based on the user's interests${resumeText ? " and resume" : ""}, recommend the top 3 matches from the provided "Valid Job Roles" list.
+
+CRITICAL CONSTRAINT: You MUST suggest roles STRICTLY from this list. DO NOT invent new titles or variations.
+
+Valid Job Roles:
+${validRoleNames.join(", ")}
 
 ${contextSection}
 
 For each suggested role, provide:
-1. The role name (clear and specific, e.g., "Frontend Developer", "DevOps Engineer")
+1. The role name - MUST be an EXACT MATCH from the "Valid Job Roles" list above (case-sensitive)
 2. A match percentage (0-100) indicating how well their interests${resumeText ? " and background" : ""} align with this role
 3. A brief reasoning (2-3 sentences) explaining why this role is a good fit${resumeText ? " based on their experience" : ""} and what skills they should develop
 
@@ -82,13 +124,14 @@ Return ONLY a JSON object with this exact structure (no markdown, no code blocks
 {
   "recommendations": [
     {
-      "role": "Role Name",
+      "role": "Exact Role Name From List",
       "matchPercentage": 85,
       "reasoning": "Brief explanation..."
     }
   ]
 }
 
-Return exactly 3 recommendations, ordered by match percentage (highest first).`;
+Return exactly 3 recommendations, ordered by match percentage (highest first).
+REMINDER: Each "role" value MUST be an exact match from the Valid Job Roles list.`;
   }
 }

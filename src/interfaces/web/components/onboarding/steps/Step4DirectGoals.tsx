@@ -14,7 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { RoleCombobox } from "@/components/onboarding/RoleCombobox";
 
 /**
  * Step4DirectGoals - Onboarding Step 4: Direct Goals
@@ -99,14 +99,16 @@ export function Step4DirectGoals() {
                 <FormItem>
                   <FormLabel>Target Role</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="e.g., Full Stack Developer, Data Analyst, UX Designer"
-                      {...field}
+                    <RoleCombobox
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select a tech role..."
                       disabled={isLoading}
                     />
                   </FormControl>
                   <FormDescription>
-                    What specific role do you want to achieve?
+                    Select the tech role you want to achieve (required for
+                    roadmap generation).
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

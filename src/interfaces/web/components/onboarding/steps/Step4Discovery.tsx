@@ -161,6 +161,9 @@ export function Step4Discovery() {
       toast.error("Something went wrong", {
         description: "Please check your connection and try again",
       });
+      // Reset suggestions UI to allow retry
+      setShowSuggestions(false);
+      setSuggestions([]);
     } finally {
       setIsAnalyzing(false);
     }
@@ -184,6 +187,7 @@ export function Step4Discovery() {
   const onSubmit = async (values: DiscoveryGoalsFormValues): Promise<void> => {
     try {
       // Update store with form data (excluding cvFile which is already saved if uploaded)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { cvFile, ...dataToSave } = values;
 
       // If a role was selected from suggestions, include it
@@ -221,17 +225,12 @@ export function Step4Discovery() {
           description="Help us understand what excites you so we can suggest the best career paths."
           onNext={form.handleSubmit(onSubmit)}
           onBack={previousStep}
-          isNextDisabled={
-            !form.formState.isValid ||
-            (showSuggestions && suggestions.length > 0 && !selectedRole)
-          }
+          isNextDisabled={!selectedRole}
           isLoading={isLoading}
           nextLabel={
             selectedRole
               ? "Continue with this role"
-              : showSuggestions && suggestions.length > 0
-                ? "Skip suggestions"
-                : "Discover My Path"
+              : "Select a role to continue"
           }
         >
           <div className="space-y-6">
@@ -264,6 +263,7 @@ export function Step4Discovery() {
             <FormField
               control={form.control}
               name="cvFile"
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
               render={({ field: { onChange, value, ...fieldProps } }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">

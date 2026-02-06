@@ -1,7 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { PrismaClient } from "@prisma/client";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { config } from "dotenv";
 
-const prisma = new PrismaClient();
+// Load environment variables
+config();
+
+// Configure PrismaClient with pg adapter (same as infrastructure)
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({
+  adapter,
+  log: ["error"],
+});
 
 /**
  * Prisma Seed Script
@@ -289,6 +302,415 @@ async function main() {
   });
 
   console.log("✅ Created onboarding progress");
+
+  // Create Job Roles
+  console.log("💼 Creating job roles...");
+
+  await prisma.jobRole.createMany({
+    data: [
+      // Frontend (popularity: 80-95)
+      {
+        name: "Frontend Developer",
+        category: "Frontend",
+        popularity: 90,
+        isEnabled: true,
+      },
+      {
+        name: "React Developer",
+        category: "Frontend",
+        popularity: 95,
+        isEnabled: true,
+      },
+      {
+        name: "Vue.js Developer",
+        category: "Frontend",
+        popularity: 75,
+        isEnabled: true,
+      },
+      {
+        name: "Angular Developer",
+        category: "Frontend",
+        popularity: 70,
+        isEnabled: true,
+      },
+      {
+        name: "UI Developer",
+        category: "Frontend",
+        popularity: 80,
+        isEnabled: true,
+      },
+
+      // Backend (popularity: 85-95)
+      {
+        name: "Backend Developer",
+        category: "Backend",
+        popularity: 90,
+        isEnabled: true,
+      },
+      {
+        name: "Node.js Developer",
+        category: "Backend",
+        popularity: 88,
+        isEnabled: true,
+      },
+      {
+        name: "Python Developer",
+        category: "Backend",
+        popularity: 92,
+        isEnabled: true,
+      },
+      {
+        name: "Java Developer",
+        category: "Backend",
+        popularity: 85,
+        isEnabled: true,
+      },
+      {
+        name: "Go Developer",
+        category: "Backend",
+        popularity: 78,
+        isEnabled: true,
+      },
+      {
+        name: ".NET Developer",
+        category: "Backend",
+        popularity: 75,
+        isEnabled: true,
+      },
+      {
+        name: "Ruby Developer",
+        category: "Backend",
+        popularity: 65,
+        isEnabled: true,
+      },
+
+      // Full Stack (popularity: 90-98)
+      {
+        name: "Full Stack Developer",
+        category: "Full Stack",
+        popularity: 98,
+        isEnabled: true,
+      },
+      {
+        name: "MERN Stack Developer",
+        category: "Full Stack",
+        popularity: 85,
+        isEnabled: true,
+      },
+      {
+        name: "MEAN Stack Developer",
+        category: "Full Stack",
+        popularity: 70,
+        isEnabled: true,
+      },
+      {
+        name: "Software Engineer",
+        category: "Full Stack",
+        popularity: 95,
+        isEnabled: true,
+      },
+
+      // Data (popularity: 85-95)
+      {
+        name: "Data Scientist",
+        category: "Data",
+        popularity: 95,
+        isEnabled: true,
+      },
+      {
+        name: "Data Engineer",
+        category: "Data",
+        popularity: 90,
+        isEnabled: true,
+      },
+      {
+        name: "Machine Learning Engineer",
+        category: "Data",
+        popularity: 92,
+        isEnabled: true,
+      },
+      {
+        name: "Data Analyst",
+        category: "Data",
+        popularity: 85,
+        isEnabled: true,
+      },
+      {
+        name: "AI Engineer",
+        category: "Data",
+        popularity: 94,
+        isEnabled: true,
+      },
+
+      // DevOps (popularity: 80-92)
+      {
+        name: "DevOps Engineer",
+        category: "DevOps",
+        popularity: 92,
+        isEnabled: true,
+      },
+      {
+        name: "Site Reliability Engineer",
+        category: "DevOps",
+        popularity: 88,
+        isEnabled: true,
+      },
+      {
+        name: "Cloud Engineer",
+        category: "DevOps",
+        popularity: 90,
+        isEnabled: true,
+      },
+      {
+        name: "Platform Engineer",
+        category: "DevOps",
+        popularity: 85,
+        isEnabled: true,
+      },
+      {
+        name: "Infrastructure Engineer",
+        category: "DevOps",
+        popularity: 80,
+        isEnabled: true,
+      },
+
+      // Mobile (popularity: 75-88)
+      {
+        name: "Mobile Developer",
+        category: "Mobile",
+        popularity: 85,
+        isEnabled: true,
+      },
+      {
+        name: "iOS Developer",
+        category: "Mobile",
+        popularity: 82,
+        isEnabled: true,
+      },
+      {
+        name: "Android Developer",
+        category: "Mobile",
+        popularity: 80,
+        isEnabled: true,
+      },
+      {
+        name: "React Native Developer",
+        category: "Mobile",
+        popularity: 88,
+        isEnabled: true,
+      },
+      {
+        name: "Flutter Developer",
+        category: "Mobile",
+        popularity: 85,
+        isEnabled: true,
+      },
+
+      // Security (popularity: 80-90)
+      {
+        name: "Security Engineer",
+        category: "Security",
+        popularity: 90,
+        isEnabled: true,
+      },
+      {
+        name: "Cybersecurity Analyst",
+        category: "Security",
+        popularity: 85,
+        isEnabled: true,
+      },
+      {
+        name: "Penetration Tester",
+        category: "Security",
+        popularity: 80,
+        isEnabled: true,
+      },
+      {
+        name: "Security Architect",
+        category: "Security",
+        popularity: 82,
+        isEnabled: true,
+      },
+
+      // Quality (popularity: 70-82)
+      {
+        name: "QA Engineer",
+        category: "Quality",
+        popularity: 78,
+        isEnabled: true,
+      },
+      {
+        name: "Test Automation Engineer",
+        category: "Quality",
+        popularity: 82,
+        isEnabled: true,
+      },
+      { name: "SDET", category: "Quality", popularity: 80, isEnabled: true },
+
+      // Design (popularity: 75-88)
+      {
+        name: "UX Designer",
+        category: "Design",
+        popularity: 85,
+        isEnabled: true,
+      },
+      {
+        name: "UI Designer",
+        category: "Design",
+        popularity: 82,
+        isEnabled: true,
+      },
+      {
+        name: "Product Designer",
+        category: "Design",
+        popularity: 88,
+        isEnabled: true,
+      },
+      {
+        name: "UX Researcher",
+        category: "Design",
+        popularity: 75,
+        isEnabled: true,
+      },
+
+      // Leadership & Other (popularity: 70-90)
+      {
+        name: "Engineering Manager",
+        category: "Leadership",
+        popularity: 85,
+        isEnabled: true,
+      },
+      {
+        name: "Technical Lead",
+        category: "Leadership",
+        popularity: 88,
+        isEnabled: true,
+      },
+      {
+        name: "Solution Architect",
+        category: "Architecture",
+        popularity: 90,
+        isEnabled: true,
+      },
+      {
+        name: "Software Architect",
+        category: "Architecture",
+        popularity: 88,
+        isEnabled: true,
+      },
+      {
+        name: "Product Manager",
+        category: "Product",
+        popularity: 87,
+        isEnabled: true,
+      },
+      {
+        name: "Technical Writer",
+        category: "Other",
+        popularity: 70,
+        isEnabled: true,
+      },
+      {
+        name: "Developer Advocate",
+        category: "Other",
+        popularity: 75,
+        isEnabled: true,
+      },
+      {
+        name: "Blockchain Developer",
+        category: "Blockchain",
+        popularity: 82,
+        isEnabled: true,
+      },
+      {
+        "name": "Smart Contract Developer",
+        "category": "Blockchain",
+        "popularity": 78,
+        "isEnabled": true
+      },
+      {
+        name: "Web3 Developer",
+        category: "Blockchain",
+        popularity: 80,
+        isEnabled: true,
+      },
+      {
+        name: "PHP Developer",
+        category: "Backend",
+        popularity: 82,
+        isEnabled: true,
+      },
+      {
+        name: "Rust Developer",
+        category: "Backend",
+        popularity: 73,
+        isEnabled: true,
+      },
+      {
+        name: "Game Developer",
+        category: "Gaming",
+        popularity: 78,
+        isEnabled: true,
+      },
+      {
+        name: "Unity Developer",
+        category: "Gaming",
+        popularity: 75,
+        isEnabled: true,
+      },
+      {
+        name: "Unreal Engine Developer",
+        category: "Gaming",
+        popularity: 72,
+        isEnabled: true,
+      },
+      {
+        name: "MLOps Engineer",
+        category: "Data",
+        popularity: 88,
+        isEnabled: true,
+      },
+      {
+        name: "AWS Cloud Engineer",
+        category: "DevOps",
+        popularity: 93,
+        isEnabled: true,
+      },
+      {
+        name: "Azure Cloud Engineer",
+        category: "DevOps",
+        popularity: 88,
+        isEnabled: true,
+      },
+      {
+        name: "Google Cloud Engineer",
+        category: "DevOps",
+        popularity: 85,
+        isEnabled: true,
+      },
+      {
+        name: "DevSecOps Engineer",
+        category: "DevOps",
+        popularity: 87,
+        isEnabled: true,
+      },
+      {
+        name: "Database Engineer",
+        category: "Backend",
+        popularity: 78,
+        isEnabled: true,
+      },
+      {
+        name: "Embedded Systems Engineer",
+        category: "Specialized",
+        popularity: 72,
+        isEnabled: true,
+      },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log("✅ Created job roles");
 
   console.log("🎉 Seed completed successfully!");
 }

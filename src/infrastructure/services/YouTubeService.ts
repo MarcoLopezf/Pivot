@@ -66,7 +66,6 @@ export class YouTubeService {
     try {
       // Build contextualized search query based on difficulty
       const query = this.buildQuery(tags, difficulty);
-      console.log("query", query);
       // Call YouTube API (with 10s timeout)
       const response = await axios.get<YouTubeSearchResponse>(this.baseUrl, {
         params: {

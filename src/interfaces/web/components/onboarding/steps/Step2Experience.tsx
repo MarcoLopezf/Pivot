@@ -114,7 +114,7 @@ export function Step2Experience() {
           description="Help us understand where you are in your career journey."
           onNext={form.handleSubmit(onSubmit)}
           onBack={previousStep}
-          isNextDisabled={!form.formState.isValid}
+          isNextDisabled={!form.formState.isValid && !isStudent}
           isLoading={isLoading}
           nextLabel="Continue"
         >

@@ -60,32 +60,23 @@ export function Step5Import() {
     setError(null);
 
     try {
-      console.log("1. Starting file upload...");
       // Create FormData and append file
       const formData = new FormData();
       formData.append("file", file);
 
       // Call server action
-      console.log("2. Calling uploadResumeAction...");
       const result = await uploadResumeAction(formData);
-      console.log("3. Upload result:", result);
 
       if (!result.success) {
         throw new Error(result.error || "Failed to upload file");
       }
 
       // Update store with both extracted text and filename
-      console.log("4. Updating store with extracted text...");
+      // (will be saved to server when user clicks "Generate Roadmap")
       updateData({
         resumeText: result.extractedText,
         resumeFileName: result.fileName,
       });
-
-      // Save to server with all current data
-      console.log("5. Saving current step to server...");
-      await saveCurrentStep();
-      console.log("6. Save completed successfully");
-      console.log("7. Upload complete!");
     } catch (err) {
       console.error("Error uploading file:", err);
       setError(err instanceof Error ? err.message : "Failed to upload file");

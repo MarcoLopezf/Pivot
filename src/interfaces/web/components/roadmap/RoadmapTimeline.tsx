@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   RoadmapDTO,
   RoadmapItemStatus,
@@ -160,13 +161,14 @@ function RoadmapItem({
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h3
-              className={`text-sm font-semibold ${
+            <Link
+              href={`/roadmap/${roadmapId}/item/${item.id}`}
+              className={`text-sm font-semibold hover:underline ${
                 item.status === "completed" ? "line-through opacity-60" : ""
               }`}
             >
               {item.title}
-            </h3>
+            </Link>
             <p className="text-xs text-gray-500 mt-1">
               Step {index + 1} of {totalItems}
             </p>

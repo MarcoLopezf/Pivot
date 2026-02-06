@@ -12,6 +12,7 @@ import { RoadmapItemDTO } from "@application/dtos/learning/RoadmapDTO";
 
 interface NextMissionCardProps {
   nextTask: RoadmapItemDTO | null;
+  roadmapId?: string | null;
 }
 
 /**
@@ -22,6 +23,7 @@ interface NextMissionCardProps {
  */
 export function NextMissionCard({
   nextTask,
+  roadmapId,
 }: NextMissionCardProps): React.ReactElement {
   if (!nextTask) {
     return (
@@ -34,7 +36,9 @@ export function NextMissionCard({
           <p className="text-sm text-muted-foreground">
             No active tasks at the moment. Great job!
           </p>
-          <Link href="/onboarding/roadmap">
+          <Link
+            href={roadmapId ? `/roadmap/${roadmapId}` : "/onboarding/roadmap"}
+          >
             <Button variant="outline" className="w-full">
               View Full Roadmap
             </Button>
@@ -66,7 +70,9 @@ export function NextMissionCard({
             {nextTask.description}
           </p>
         </div>
-        <Link href="/onboarding/roadmap">
+        <Link
+          href={roadmapId ? `/roadmap/${roadmapId}` : "/onboarding/roadmap"}
+        >
           <Button className="w-full">
             {nextTask.status === "in_progress"
               ? "Continue Learning"

@@ -94,6 +94,7 @@ export class GetUserDashboard {
       progress,
       totalTasks,
       completedTasks,
+      roadmapId: roadmap ? roadmap.id.value : null,
       nextTask,
     };
   }

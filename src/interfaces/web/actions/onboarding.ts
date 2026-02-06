@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@infrastructure/auth/supabase/server";
 import { onboardingContainer } from "@infrastructure/di/OnboardingContainer";
 import { prisma } from "@infrastructure/database/PrismaClient";
@@ -180,6 +181,10 @@ export async function completeOnboardingAction(): Promise<{
   try {
     // Resolve from container
     await onboardingContainer.completeOnboarding.execute(user.id);
+
+    // Invalidate cached layout so SiteHeader re-fetches roadmaps list
+    revalidatePath("/", "layout");
+
     return { success: true, redirectUrl: "/" };
   } catch (error) {
     console.error("Onboarding completion failed:", error);

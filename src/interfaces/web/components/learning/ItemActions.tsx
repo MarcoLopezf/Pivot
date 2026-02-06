@@ -128,17 +128,31 @@ export function ItemActions({
 
       {/* Take Quiz button (theory items only) */}
       {itemType === "theory" && (
-        <Link href={`/quiz/${roadmapId}/${itemId}`}>
-          <Button
-            variant="outline"
-            className="w-full gap-2"
-            size="lg"
-            disabled={status === "pending"}
-          >
-            <BookOpen className="h-4 w-4" />
-            Take Quiz
-          </Button>
-        </Link>
+        <>
+          {status === "pending" ? (
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              size="lg"
+              disabled
+            >
+              <BookOpen className="h-4 w-4" />
+              Take Quiz
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              size="lg"
+              asChild
+            >
+              <Link href={`/quiz/${roadmapId}/${itemId}`}>
+                <BookOpen className="h-4 w-4" />
+                Take Quiz
+              </Link>
+            </Button>
+          )}
+        </>
       )}
     </div>
   );

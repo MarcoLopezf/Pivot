@@ -95,14 +95,14 @@ export default async function RoadmapOverviewPage({
                 <p className="text-sm text-blue-700 mb-3">
                   Pick up where you left off with your next module.
                 </p>
-                <Link
-                  href={`/roadmap/${roadmap.id}/item/${firstIncompleteItem.id}`}
-                >
-                  <Button className="w-full gap-2">
+                <Button className="w-full gap-2" asChild>
+                  <Link
+                    href={`/roadmap/${roadmap.id}/item/${firstIncompleteItem.id}`}
+                  >
                     Continue Learning
                     <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           )}

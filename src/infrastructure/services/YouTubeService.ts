@@ -71,6 +71,7 @@ export class YouTubeService {
           maxResults: 4,
           videoDefinition: "any",
           safeSearch: "strict",
+          order: "rating",
         },
         timeout: 10000, // 10 seconds
       });

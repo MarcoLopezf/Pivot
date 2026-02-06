@@ -100,6 +100,20 @@ export class PrismaRoadmapRepository implements IRoadmapRepository {
     return RoadmapMapper.toDomain(prismaRoadmap);
   }
 
+  async findAllByUserId(userId: UserId): Promise<Roadmap[]> {
+    const prismaRoadmaps = await this.db.roadmap.findMany({
+      where: {
+        goal: {
+          userId: userId.value,
+        },
+      },
+      include: { items: { orderBy: { order: "asc" } } },
+      orderBy: { updatedAt: "desc" },
+    });
+
+    return prismaRoadmaps.map((r) => RoadmapMapper.toDomain(r));
+  }
+
   /**
    * Find the owner user ID for a roadmap
    * Navigates: Roadmap -> CareerGoal -> User

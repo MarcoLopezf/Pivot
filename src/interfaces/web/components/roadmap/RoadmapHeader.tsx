@@ -1,7 +1,6 @@
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Target, ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { Target } from "lucide-react";
 
 interface RoadmapHeaderProps {
   title: string;
@@ -26,15 +25,6 @@ export function RoadmapHeader({
 }: RoadmapHeaderProps): React.ReactElement {
   return (
     <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 p-6 md:p-8 text-white">
-      {/* Back Navigation */}
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-1.5 text-blue-200 hover:text-white text-sm mb-4 transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Dashboard
-      </Link>
-
       {/* Title Section */}
       <div className="flex items-start gap-4 mb-6">
         <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">

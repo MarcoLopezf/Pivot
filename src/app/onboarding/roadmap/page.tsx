@@ -139,10 +139,11 @@ export default function OnboardingRoadmapPage(): React.ReactElement {
 
           {/* Continue Button */}
           <div className="flex justify-end pt-4 border-t">
-            <Button onClick={() => router.push("/dashboard")} className="gap-2">
-              {roadmap.progress > 0
-                ? "Continue to Dashboard"
-                : "Explore Dashboard"}
+            <Button
+              onClick={() => router.push(`/roadmap/${roadmap.id}`)}
+              className="gap-2"
+            >
+              {roadmap.progress > 0 ? "Continue to Roadmap" : "Explore Roadmap"}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

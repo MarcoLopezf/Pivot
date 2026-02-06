@@ -180,7 +180,7 @@ export async function completeOnboardingAction(): Promise<{
   try {
     // Resolve from container
     await onboardingContainer.completeOnboarding.execute(user.id);
-    return { success: true, redirectUrl: "/dashboard" };
+    return { success: true, redirectUrl: "/" };
   } catch (error) {
     console.error("Onboarding completion failed:", error);
     return { success: false, error: "Failed to generate roadmap" };

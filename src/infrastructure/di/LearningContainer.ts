@@ -17,6 +17,8 @@ import { GetItemResources } from "@application/use-cases/learning/GetItemResourc
 import { GetJobRoles } from "@application/use-cases/learning/GetJobRoles";
 import { GetRoadmapById } from "@application/use-cases/learning/GetRoadmapById";
 import { GetRoadmapItemById } from "@application/use-cases/learning/GetRoadmapItemById";
+import { GetUserRoadmaps } from "@application/use-cases/learning/GetUserRoadmaps";
+import { GetLastActiveRoadmap } from "@application/use-cases/learning/GetLastActiveRoadmap";
 
 /**
  * LearningContainer - Dependency Injection Container for Learning bounded context
@@ -116,6 +118,23 @@ class LearningContainer {
    */
   getGetItemResourcesUseCase(): GetItemResources {
     return new GetItemResources(this.resourceRepository, this.youtubeService);
+  }
+
+  /**
+   * Returns an initialized GetUserRoadmaps use case with all dependencies injected
+   */
+  getGetUserRoadmapsUseCase(): GetUserRoadmaps {
+    return new GetUserRoadmaps(
+      this.roadmapRepository,
+      this.careerGoalRepository,
+    );
+  }
+
+  /**
+   * Returns an initialized GetLastActiveRoadmap use case with all dependencies injected
+   */
+  getGetLastActiveRoadmapUseCase(): GetLastActiveRoadmap {
+    return new GetLastActiveRoadmap(this.roadmapRepository);
   }
 
   /**

@@ -37,6 +37,7 @@ describe("GetUserDashboard Use Case", () => {
       findById: vi.fn(),
       findByGoalId: vi.fn(),
       findLatestByUserId: vi.fn(),
+      findAllByUserId: vi.fn(),
       findOwnerUserId: vi.fn(),
     };
 

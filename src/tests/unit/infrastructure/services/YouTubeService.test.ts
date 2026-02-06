@@ -144,22 +144,98 @@ describe("YouTubeService", () => {
       expect(axios.get).not.toHaveBeenCalled();
     });
 
-    it("should build correct search query from tags", async () => {
+    it("should build correct search query from tags without difficulty", async () => {
       const mockResponse: YouTubeSearchResponse = { items: [] };
       vi.mocked(axios.get).mockResolvedValue({ data: mockResponse });
 
       const service = new YouTubeService();
-      await service.searchVideos(["react", "hooks", "tutorial"]);
+      await service.searchVideos(["react", "hooks"]);
 
       expect(axios.get).toHaveBeenCalledWith(
-        expect.stringContaining("https://www.googleapis.com/youtube/v3/search"),
+        "https://www.googleapis.com/youtube/v3/search",
         expect.objectContaining({
           params: expect.objectContaining({
-            q: "react hooks tutorial",
+            q: "react hooks tutorial guide -shorts -song -music",
             part: "snippet",
             type: "video",
             maxResults: 4,
+            videoDefinition: "any",
+            safeSearch: "strict",
+            order: "rating",
           }),
+          timeout: 10000,
+        }),
+      );
+    });
+
+    it("should build beginner-contextualized query with medium duration", async () => {
+      const mockResponse: YouTubeSearchResponse = { items: [] };
+      vi.mocked(axios.get).mockResolvedValue({ data: mockResponse });
+
+      const service = new YouTubeService();
+      await service.searchVideos(["variables"], "beginner");
+
+      expect(axios.get).toHaveBeenCalledWith(
+        "https://www.googleapis.com/youtube/v3/search",
+        expect.objectContaining({
+          params: expect.objectContaining({
+            q: "variables tutorial for beginners basics -shorts -song -music",
+            part: "snippet",
+            type: "video",
+            maxResults: 4,
+            videoDefinition: "any",
+            safeSearch: "strict",
+            order: "rating",
+          }),
+          timeout: 10000,
+        }),
+      );
+    });
+
+    it("should build intermediate-contextualized query with medium duration", async () => {
+      const mockResponse: YouTubeSearchResponse = { items: [] };
+      vi.mocked(axios.get).mockResolvedValue({ data: mockResponse });
+
+      const service = new YouTubeService();
+      await service.searchVideos(["react", "hooks"], "intermediate");
+
+      expect(axios.get).toHaveBeenCalledWith(
+        "https://www.googleapis.com/youtube/v3/search",
+        expect.objectContaining({
+          params: expect.objectContaining({
+            q: "react hooks intermediate guide in depth -shorts -song -music",
+            part: "snippet",
+            type: "video",
+            maxResults: 4,
+            videoDefinition: "any",
+            safeSearch: "strict",
+            order: "rating",
+          }),
+          timeout: 10000,
+        }),
+      );
+    });
+
+    it("should build advanced-contextualized query with long duration", async () => {
+      const mockResponse: YouTubeSearchResponse = { items: [] };
+      vi.mocked(axios.get).mockResolvedValue({ data: mockResponse });
+
+      const service = new YouTubeService();
+      await service.searchVideos(["memory", "management"], "advanced");
+
+      expect(axios.get).toHaveBeenCalledWith(
+        "https://www.googleapis.com/youtube/v3/search",
+        expect.objectContaining({
+          params: expect.objectContaining({
+            q: "memory management advanced deep dive architecture -shorts -song -music",
+            part: "snippet",
+            type: "video",
+            maxResults: 4,
+            videoDefinition: "any",
+            safeSearch: "strict",
+            order: "rating",
+          }),
+          timeout: 10000,
         }),
       );
     });

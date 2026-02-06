@@ -144,15 +144,44 @@ describe("GetItemResources Use Case", () => {
       // Assert: Repository was called first
       expect(mockRepository.findByTags).toHaveBeenCalledWith(["typescript"]);
 
-      // Assert: YouTube API WAS called (cache miss)
+      // Assert: YouTube API WAS called (cache miss) without difficulty
       expect(mockYouTubeService.searchVideos).toHaveBeenCalledOnce();
-      expect(mockYouTubeService.searchVideos).toHaveBeenCalledWith([
-        "typescript",
-      ]);
+      expect(mockYouTubeService.searchVideos).toHaveBeenCalledWith(
+        ["typescript"],
+        undefined,
+      );
 
       // Assert: Results were saved to DB
       expect(mockRepository.saveMany).toHaveBeenCalledOnce();
       expect(mockRepository.saveMany).toHaveBeenCalledWith(mockApiResources);
+    });
+
+    it("should pass difficulty parameter to YouTube API for contextualized search", async () => {
+      const mockApiResources: LearningResource[] = [
+        {
+          title: "Advanced TypeScript Patterns",
+          url: "https://www.youtube.com/watch?v=adv123",
+          thumbnailUrl: "https://i.ytimg.com/vi/adv123/maxresdefault.jpg",
+          channelName: "Total TypeScript",
+          duration: "45:00",
+          type: "video",
+          tags: ["typescript"],
+        },
+      ];
+
+      vi.mocked(mockRepository.findByTags).mockResolvedValue([]);
+      vi.mocked(mockYouTubeService.searchVideos).mockResolvedValue(
+        mockApiResources,
+      );
+      vi.mocked(mockRepository.saveMany).mockResolvedValue(undefined);
+
+      await useCase.execute("item-002", "TypeScript", "advanced");
+
+      // Assert: YouTube API called with difficulty parameter
+      expect(mockYouTubeService.searchVideos).toHaveBeenCalledWith(
+        ["typescript"],
+        "advanced",
+      );
     });
 
     it("should handle multiple normalized tags from topic", async () => {
@@ -166,10 +195,10 @@ describe("GetItemResources Use Case", () => {
         "next",
         "typescript",
       ]);
-      expect(mockYouTubeService.searchVideos).toHaveBeenCalledWith([
-        "next",
-        "typescript",
-      ]);
+      expect(mockYouTubeService.searchVideos).toHaveBeenCalledWith(
+        ["next", "typescript"],
+        undefined,
+      );
     });
   });
 
@@ -188,7 +217,10 @@ describe("GetItemResources Use Case", () => {
 
       // Assert: Both DB and API were attempted
       expect(mockRepository.findByTags).toHaveBeenCalledWith(["node"]);
-      expect(mockYouTubeService.searchVideos).toHaveBeenCalledWith(["node"]);
+      expect(mockYouTubeService.searchVideos).toHaveBeenCalledWith(
+        ["node"],
+        undefined,
+      );
 
       // Assert: saveMany was NOT called (no data to save)
       expect(mockRepository.saveMany).not.toHaveBeenCalled();

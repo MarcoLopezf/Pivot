@@ -17,6 +17,7 @@ describe("UpdateRoadmapItemStatus Use Case", () => {
       findById: vi.fn(),
       findByGoalId: vi.fn(),
       findLatestByUserId: vi.fn(),
+      findAllByUserId: vi.fn(),
       findOwnerUserId: vi.fn(),
     };
     useCase = new UpdateRoadmapItemStatus(mockRepository);

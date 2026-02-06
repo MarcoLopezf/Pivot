@@ -32,6 +32,11 @@ export interface IRoadmapRepository {
   findLatestByUserId(userId: UserId): Promise<Roadmap | null>;
 
   /**
+   * Find all roadmaps for a user, ordered by updatedAt desc
+   */
+  findAllByUserId(userId: UserId): Promise<Roadmap[]>;
+
+  /**
    * Find the owner user ID for a roadmap
    */
   findOwnerUserId(roadmapId: RoadmapId): Promise<UserId | null>;

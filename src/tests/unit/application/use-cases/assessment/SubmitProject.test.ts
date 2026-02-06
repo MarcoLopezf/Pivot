@@ -44,6 +44,7 @@ describe("SubmitProject Use Case", () => {
       findByGoalId: vi.fn(),
       findOwnerUserId: vi.fn(),
       findLatestByUserId: vi.fn(),
+      findAllByUserId: vi.fn(),
     };
 
     // Mock GitHubService

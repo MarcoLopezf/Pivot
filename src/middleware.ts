@@ -6,12 +6,12 @@ import { updateSession } from "@/infrastructure/auth/supabase/middleware";
  *
  * Responsibilities:
  * 1. Refreshes Supabase auth session on every request
- * 2. Protects authenticated routes (/dashboard/*, /onboarding/*)
+ * 2. Protects authenticated routes (/roadmap/*, /onboarding/*)
  * 3. Redirects authenticated users away from auth pages (/login, /register)
  *
  * Route Protection Rules:
- * - Unauthenticated users trying to access /dashboard/* or /onboarding/* → redirect to /login
- * - Authenticated users trying to access /login or /register → redirect to /dashboard
+ * - Unauthenticated users trying to access /roadmap/* or /onboarding/* → redirect to /login
+ * - Authenticated users trying to access /login or /register → redirect to /
  */
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { response, user } = await updateSession(request);
@@ -20,7 +20,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   // Protected routes that require authentication
   const isProtectedRoute =
-    pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding");
+    pathname.startsWith("/roadmap") || pathname.startsWith("/onboarding");
 
   // Auth pages that authenticated users shouldn't access
   const isAuthPage = pathname === "/login" || pathname === "/register";
@@ -42,9 +42,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   // If user is authenticated and tries to access auth pages
   if (user && isAuthPage) {
-    const redirectResponse = NextResponse.redirect(
-      new URL("/dashboard", request.url),
-    );
+    const redirectResponse = NextResponse.redirect(new URL("/", request.url));
 
     // Copy cookies from updateSession response to preserve refreshed session
     response.cookies.getAll().forEach((cookie) => {

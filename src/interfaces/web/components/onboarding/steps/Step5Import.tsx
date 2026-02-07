@@ -172,7 +172,7 @@ export function Step5Import() {
       onNext={uploadedFile ? handleNext : handleSkip}
       onBack={previousStep}
       isLoading={isUploading}
-      nextLabel={uploadedFile ? "Generate Roadmap" : "Skip for Now"}
+      nextLabel={uploadedFile ? "Continue" : "Skip for Now"}
     >
       <div className="space-y-6">
         {/* Success Card - CV Already Uploaded from Step 4 */}
@@ -196,7 +196,7 @@ export function Step5Import() {
                 </p>
               </div>
 
-              {/* Primary Action - Generate Roadmap */}
+              {/* Primary Action - Continue to Review */}
               <Button
                 type="button"
                 onClick={handleNext}
@@ -205,7 +205,7 @@ export function Step5Import() {
                 size="lg"
               >
                 <CheckCircle className="h-5 w-5" />
-                Generate My Roadmap
+                Continue
               </Button>
 
               {/* Secondary Action - Upload Different File */}

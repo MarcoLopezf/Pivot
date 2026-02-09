@@ -5,7 +5,15 @@ import { StepContainer } from "../StepContainer";
 import { useOnboardingStore } from "@interfaces/web/stores/useOnboardingStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, MapPin, Briefcase, Target, Compass, Pencil } from "lucide-react";
+import {
+  User,
+  MapPin,
+  Briefcase,
+  Target,
+  Compass,
+  Pencil,
+  FileText,
+} from "lucide-react";
 
 /**
  * StepReview - Summary/Confirmation Step before roadmap generation
@@ -35,12 +43,14 @@ export function StepReview(): React.ReactElement {
     }
   };
 
-  const handleEdit = (): void => {
-    goToStep(1);
-  };
-
   const experienceLabel = formatExperience(data.yearsExperience);
   const isDirectPath = data.path === "DIRECT";
+  const resumePreview =
+    data.resumeText && typeof data.resumeText === "string"
+      ? data.resumeText.length > 200
+        ? `${data.resumeText.slice(0, 200)}...`
+        : data.resumeText
+      : undefined;
 
   return (
     <StepContainer
@@ -55,77 +65,79 @@ export function StepReview(): React.ReactElement {
         {/* Summary Card */}
         <Card className="border-2">
           <CardContent className="space-y-5 pt-6">
-            {/* Name & Region */}
-            <SummaryRow
-              icon={<User className="h-5 w-5 text-blue-600" />}
-              label="Name"
-              value={data.name as string | undefined}
-            />
-            <SummaryRow
-              icon={<MapPin className="h-5 w-5 text-blue-600" />}
-              label="Region"
-              value={data.region as string | undefined}
-            />
+            {/* Name & Region → Step 1 */}
+            <SummarySection onEdit={() => goToStep(1)}>
+              <SummaryRow
+                icon={<User className="h-5 w-5 text-blue-600" />}
+                label="Name"
+                value={data.name as string | undefined}
+              />
+              <SummaryRow
+                icon={<MapPin className="h-5 w-5 text-blue-600" />}
+                label="Region"
+                value={data.region as string | undefined}
+              />
+            </SummarySection>
 
             <div className="border-t" />
 
-            {/* Target Role */}
-            <SummaryRow
-              icon={<Target className="h-5 w-5 text-purple-600" />}
-              label="Target Role"
-              value={data.targetRole as string | undefined}
-              highlight
-            />
-
-            {/* Experience */}
-            <SummaryRow
-              icon={<Briefcase className="h-5 w-5 text-green-600" />}
-              label="Experience"
-              value={
-                data.currentRole
-                  ? `${data.currentRole as string}${experienceLabel ? ` (${experienceLabel})` : ""}`
-                  : experienceLabel || undefined
-              }
-            />
-
-            {/* Career Goal / Path Info */}
-            {isDirectPath && data.targetSeniority && (
-              <>
-                <div className="border-t" />
+            {/* Target Role → Step 4 */}
+            <SummarySection onEdit={() => goToStep(4)}>
+              <SummaryRow
+                icon={<Target className="h-5 w-5 text-purple-600" />}
+                label="Target Role"
+                value={data.targetRole as string | undefined}
+                highlight
+              />
+              {isDirectPath && data.targetSeniority && (
                 <SummaryRow
                   icon={<Compass className="h-5 w-5 text-amber-600" />}
                   label="Target Level"
                   value={data.targetSeniority as string}
                 />
-              </>
-            )}
-
-            {!isDirectPath && data.interests && (
-              <>
-                <div className="border-t" />
+              )}
+              {!isDirectPath && data.interests && (
                 <SummaryRow
                   icon={<Compass className="h-5 w-5 text-amber-600" />}
                   label="Interests"
                   value={data.interests as string}
                 />
+              )}
+            </SummarySection>
+
+            <div className="border-t" />
+
+            {/* Experience → Step 2 */}
+            <SummarySection onEdit={() => goToStep(2)}>
+              <SummaryRow
+                icon={<Briefcase className="h-5 w-5 text-green-600" />}
+                label="Experience"
+                value={
+                  data.currentRole
+                    ? `${data.currentRole as string}${experienceLabel ? ` (${experienceLabel})` : ""}`
+                    : experienceLabel || undefined
+                }
+              />
+            </SummarySection>
+
+            {/* Resume → Step 5 */}
+            {resumePreview && (
+              <>
+                <div className="border-t" />
+                <SummarySection onEdit={() => goToStep(5)}>
+                  <SummaryRow
+                    icon={<FileText className="h-5 w-5 text-cyan-600" />}
+                    label="Resume"
+                    value={data.resumeFileName as string | undefined}
+                  />
+                  <p className="ml-12 text-xs leading-relaxed text-muted-foreground">
+                    {resumePreview}
+                  </p>
+                </SummarySection>
               </>
             )}
           </CardContent>
         </Card>
-
-        {/* Edit Button */}
-        <div className="flex justify-center">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleEdit}
-            className="gap-2 text-muted-foreground"
-          >
-            <Pencil className="h-4 w-4" />
-            Edit from the beginning
-          </Button>
-        </div>
 
         {/* Error State */}
         {error && (
@@ -147,6 +159,32 @@ function formatExperience(years: unknown): string | undefined {
   if (num === 0) return "Student / No experience";
   if (num === 1) return "1 year";
   return `${num} years`;
+}
+
+/**
+ * Wraps a group of summary rows with an inline edit (pencil) button
+ */
+function SummarySection({
+  children,
+  onEdit,
+}: {
+  children: React.ReactNode;
+  onEdit: () => void;
+}): React.ReactElement {
+  return (
+    <div className="flex items-start gap-2">
+      <div className="min-w-0 flex-1 space-y-3">{children}</div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={onEdit}
+        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+      >
+        <Pencil className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
 }
 
 /**

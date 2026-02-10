@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import { PlayCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -38,6 +42,7 @@ export function VideoPlayer({
   videoUrl,
   title,
 }: VideoPlayerProps): React.ReactElement {
+  const [isLoaded, setIsLoaded] = useState(false);
   const videoId = extractYouTubeId(videoUrl);
 
   if (!videoId) {
@@ -51,13 +56,17 @@ export function VideoPlayer({
   }
 
   return (
-    <div className="aspect-video rounded-lg overflow-hidden bg-black">
+    <div className="aspect-video rounded-lg overflow-hidden bg-black relative">
+      {!isLoaded && (
+        <Skeleton className="absolute inset-0 w-full h-full rounded-lg" />
+      )}
       <iframe
         src={`https://www.youtube.com/embed/${videoId}?rel=0`}
         title={title}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
-        className="w-full h-full"
+        className={`w-full h-full transition-opacity duration-500 ${isLoaded ? "opacity-100" : "opacity-0"}`}
+        onLoad={() => setIsLoaded(true)}
       />
     </div>
   );

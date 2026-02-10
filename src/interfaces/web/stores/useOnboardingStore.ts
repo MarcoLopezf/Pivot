@@ -25,6 +25,7 @@ export type OnboardingStep =
   | "GOALS_DIRECT"
   | "GOALS_DISCOVERY"
   | "IMPORT"
+  | "REVIEW"
   | "ROADMAP_PREVIEW";
 
 export type OnboardingPath = "DIRECT" | "DISCOVERY";
@@ -92,7 +93,8 @@ const STEP_MAP: Record<number, OnboardingStep> = {
   3: "PATH_SELECTION",
   4: "GOALS_DIRECT", // or GOALS_DISCOVERY (depends on path)
   5: "IMPORT",
-  6: "ROADMAP_PREVIEW",
+  6: "REVIEW",
+  7: "ROADMAP_PREVIEW",
 };
 
 const REVERSE_STEP_MAP: Record<OnboardingStep, number> = {
@@ -102,7 +104,8 @@ const REVERSE_STEP_MAP: Record<OnboardingStep, number> = {
   GOALS_DIRECT: 4,
   GOALS_DISCOVERY: 4, // Same step number (branching)
   IMPORT: 5,
-  ROADMAP_PREVIEW: 6,
+  REVIEW: 6,
+  ROADMAP_PREVIEW: 7,
 };
 
 /**
@@ -125,7 +128,7 @@ const REVERSE_STEP_MAP: Record<OnboardingStep, number> = {
 export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
   // Initial state
   currentStep: 1,
-  totalSteps: 6,
+  totalSteps: 7,
   step: "PROFILE",
   data: {},
   isLoading: false,

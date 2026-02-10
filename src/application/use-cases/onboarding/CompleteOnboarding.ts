@@ -129,7 +129,7 @@ export class CompleteOnboarding {
     console.log("✅ CompleteOnboarding: Roadmap generated successfully");
 
     // 8. Clean up onboarding session
-    // await this.onboardingRepository.delete(userId);
+    await this.onboardingRepository.delete(userId);
   }
 
   /**

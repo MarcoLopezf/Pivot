@@ -14,6 +14,7 @@ export class User {
   private _onboardingCompleted: boolean;
   private _onboardingCompletedAt: Date | null;
   private _location: string | null;
+  private _bio: string | null;
   private _isEntryLevel: boolean;
   private _currentSeniority: string | null;
   private _yearsExperience: number | null;
@@ -27,6 +28,7 @@ export class User {
     onboardingCompleted: boolean = false,
     onboardingCompletedAt: Date | null = null,
     location: string | null = null,
+    bio: string | null = null,
     isEntryLevel: boolean = false,
     currentSeniority: string | null = null,
     yearsExperience: number | null = null,
@@ -40,6 +42,7 @@ export class User {
     this._onboardingCompleted = onboardingCompleted;
     this._onboardingCompletedAt = onboardingCompletedAt;
     this._location = location;
+    this._bio = bio;
     this._isEntryLevel = isEntryLevel;
     this._currentSeniority = currentSeniority;
     this._yearsExperience = yearsExperience;
@@ -63,6 +66,7 @@ export class User {
     onboardingCompleted: boolean = false,
     onboardingCompletedAt: Date | null = null,
     location: string | null = null,
+    bio: string | null = null,
     isEntryLevel: boolean = false,
     currentSeniority: string | null = null,
     yearsExperience: number | null = null,
@@ -76,6 +80,7 @@ export class User {
       onboardingCompleted,
       onboardingCompletedAt,
       location,
+      bio,
       isEntryLevel,
       currentSeniority,
       yearsExperience,
@@ -120,6 +125,10 @@ export class User {
     return this._location;
   }
 
+  public get bio(): string | null {
+    return this._bio;
+  }
+
   public get isEntryLevel(): boolean {
     return this._isEntryLevel;
   }
@@ -137,6 +146,22 @@ export class User {
       throw new Error("User name cannot be empty");
     }
     this._name = name;
+    this._updatedAt = new Date();
+  }
+
+  /**
+   * Update basic profile fields (name, location, bio)
+   */
+  public updateProfile(
+    name: string,
+    location: string | null,
+    bio: string | null,
+  ): void {
+    if (name.trim().length > 0) {
+      this._name = name;
+    }
+    this._location = location;
+    this._bio = bio;
     this._updatedAt = new Date();
   }
 

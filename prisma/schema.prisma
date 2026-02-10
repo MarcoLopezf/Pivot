@@ -26,6 +26,7 @@ model User {
 
   // Location for market research
   location              String?
+  bio                   String?
 
   // Entry level flags & experience
   isEntryLevel          Boolean             @default(false)

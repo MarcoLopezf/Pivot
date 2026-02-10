@@ -59,19 +59,11 @@ export function Step6Generating() {
       // Step 4: Complete
       setStatus("complete");
       await new Promise((resolve) => setTimeout(resolve, 500));
-      console.log("===================");
-      console.log("===================");
-      console.log("===================");
-      console.log("Onboarding completed successfully", result);
-      console.log("===================");
-      console.log("===================");
-      console.log("===================");
-      console.log("===================");
-      console.log("===================");
-      console.log("===================");
 
-      // Redirect to dashboard
+      // Redirect — router.refresh() forces Server Components to re-render
+      // so SiteHeader picks up the newly created roadmap
       if (result.redirectUrl) {
+        router.refresh();
         router.push(result.redirectUrl);
       }
     } catch (err) {

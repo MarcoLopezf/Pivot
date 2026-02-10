@@ -22,6 +22,7 @@ export class UserMapper {
       prismaUser.onboardingCompleted,
       prismaUser.onboardingCompletedAt,
       prismaUser.location,
+      prismaUser.bio,
       prismaUser.isEntryLevel,
       prismaUser.currentSeniority,
       prismaUser.yearsExperience,
@@ -38,6 +39,7 @@ export class UserMapper {
     onboardingCompleted: boolean;
     onboardingCompletedAt: Date | null;
     location: string | null;
+    bio: string | null;
     isEntryLevel: boolean;
     currentSeniority: string | null;
     yearsExperience: number | null;
@@ -52,6 +54,7 @@ export class UserMapper {
       onboardingCompleted: domainUser.onboardingCompleted,
       onboardingCompletedAt: domainUser.onboardingCompletedAt,
       location: domainUser.location,
+      bio: domainUser.bio,
       isEntryLevel: domainUser.isEntryLevel,
       currentSeniority: domainUser.currentSeniority,
       yearsExperience: domainUser.yearsExperience,

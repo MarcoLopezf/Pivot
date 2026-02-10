@@ -37,9 +37,11 @@ class OnboardingContainer {
     // Initialize use cases with injected dependencies
     this._saveOnboardingStep = new SaveOnboardingStep(
       this._onboardingRepository,
+      profileContainer.getUserRepository(),
     );
     this._getOnboardingStatus = new GetOnboardingStatus(
       this._onboardingRepository,
+      profileContainer.getUserRepository(),
     );
     this._completeOnboarding = new CompleteOnboarding(
       profileContainer.getUserRepository(),

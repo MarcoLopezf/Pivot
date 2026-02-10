@@ -88,7 +88,7 @@ export function Step4DirectGoals() {
           onBack={previousStep}
           isNextDisabled={!form.formState.isValid}
           isLoading={isLoading}
-          nextLabel="Generate Roadmap"
+          nextLabel="Continue"
         >
           <div className="space-y-6">
             {/* Target Role Field */}

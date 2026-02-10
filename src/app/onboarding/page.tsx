@@ -9,6 +9,7 @@ import { Step3Path } from "@/interfaces/web/components/onboarding/steps/Step3Pat
 import { Step4DirectGoals } from "@/interfaces/web/components/onboarding/steps/Step4DirectGoals";
 import { Step4Discovery } from "@/interfaces/web/components/onboarding/steps/Step4Discovery";
 import { Step5Import } from "@/interfaces/web/components/onboarding/steps/Step5Import";
+import { StepReview } from "@/interfaces/web/components/onboarding/steps/StepReview";
 import { Step6Generating } from "@/interfaces/web/components/onboarding/steps/Step6Generating";
 import { useOnboardingStore } from "@/interfaces/web/stores/useOnboardingStore";
 
@@ -67,6 +68,9 @@ export default function OnboardingPage() {
 
       case "IMPORT":
         return <Step5Import />;
+
+      case "REVIEW":
+        return <StepReview />;
 
       case "ROADMAP_PREVIEW":
         return <Step6Generating />;

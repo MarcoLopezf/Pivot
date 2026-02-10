@@ -14,6 +14,17 @@ import { UserId } from "@domain/profile/value-objects/UserId";
 import { Email } from "@domain/profile/value-objects/Email";
 import { UserRole } from "@domain/profile/entities/UserRole";
 import { OnboardingSession } from "@domain/onboarding/entities/OnboardingSession";
+import type { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
+
+const mockRoadmapDTO: RoadmapDTO = {
+  id: "roadmap-1",
+  goalId: "goal-1",
+  title: "Test Roadmap",
+  progress: 0,
+  items: [],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
 
 describe("CompleteOnboarding Use Case", () => {
   let mockUserRepo: IUserRepository;
@@ -102,7 +113,7 @@ describe("CompleteOnboarding Use Case", () => {
     vi.mocked(mockOnboardingRepo.findByUserId).mockResolvedValue(session);
     vi.mocked(mockUserRepo.save).mockResolvedValue(undefined);
     vi.mocked(mockGoalRepo.save).mockResolvedValue(undefined);
-    vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(undefined);
+    vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(mockRoadmapDTO);
     vi.mocked(mockOnboardingRepo.delete).mockResolvedValue(undefined);
 
     await useCase.execute("user-1");
@@ -149,7 +160,7 @@ describe("CompleteOnboarding Use Case", () => {
       vi.mocked(mockOnboardingRepo.findByUserId).mockResolvedValue(session);
       vi.mocked(mockUserRepo.save).mockResolvedValue(undefined);
       vi.mocked(mockGoalRepo.save).mockResolvedValue(undefined);
-      vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(undefined);
+      vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(mockRoadmapDTO);
       vi.mocked(mockOnboardingRepo.delete).mockResolvedValue(undefined);
 
       await useCase.execute("user-1");
@@ -172,7 +183,7 @@ describe("CompleteOnboarding Use Case", () => {
     vi.mocked(mockOnboardingRepo.findByUserId).mockResolvedValue(session);
     vi.mocked(mockUserRepo.save).mockResolvedValue(undefined);
     vi.mocked(mockGoalRepo.save).mockResolvedValue(undefined);
-    vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(undefined);
+    vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(mockRoadmapDTO);
     vi.mocked(mockOnboardingRepo.delete).mockResolvedValue(undefined);
 
     await useCase.execute("user-1");
@@ -195,7 +206,7 @@ describe("CompleteOnboarding Use Case", () => {
     vi.mocked(mockOnboardingRepo.findByUserId).mockResolvedValue(session);
     vi.mocked(mockUserRepo.save).mockResolvedValue(undefined);
     vi.mocked(mockGoalRepo.save).mockResolvedValue(undefined);
-    vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(undefined);
+    vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(mockRoadmapDTO);
     vi.mocked(mockOnboardingRepo.delete).mockResolvedValue(undefined);
 
     await useCase.execute("user-1");
@@ -221,7 +232,7 @@ describe("CompleteOnboarding Use Case", () => {
     vi.mocked(mockOnboardingRepo.findByUserId).mockResolvedValue(session);
     vi.mocked(mockUserRepo.save).mockResolvedValue(undefined);
     vi.mocked(mockGoalRepo.save).mockResolvedValue(undefined);
-    vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(undefined);
+    vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(mockRoadmapDTO);
     vi.mocked(mockOnboardingRepo.delete).mockResolvedValue(undefined);
 
     await useCase.execute("user-1");
@@ -244,7 +255,7 @@ describe("CompleteOnboarding Use Case", () => {
     vi.mocked(mockOnboardingRepo.findByUserId).mockResolvedValue(session);
     vi.mocked(mockUserRepo.save).mockResolvedValue(undefined);
     vi.mocked(mockGoalRepo.save).mockResolvedValue(undefined);
-    vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(undefined);
+    vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(mockRoadmapDTO);
     vi.mocked(mockOnboardingRepo.delete).mockResolvedValue(undefined);
 
     await useCase.execute("user-1");

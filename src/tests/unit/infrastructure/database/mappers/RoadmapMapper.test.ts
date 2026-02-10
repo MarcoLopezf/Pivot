@@ -5,6 +5,10 @@ import { RoadmapItem } from "@domain/learning/entities/RoadmapItem";
 import { RoadmapId } from "@domain/learning/value-objects/RoadmapId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
 import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
+import type {
+  RoadmapItemStatus as PrismaRoadmapItemStatus,
+  RoadmapItemType as PrismaRoadmapItemType,
+} from "@prisma/client";
 
 describe("RoadmapMapper", () => {
   const now = new Date("2024-01-01");
@@ -25,8 +29,8 @@ describe("RoadmapMapper", () => {
             title: "Advanced Types",
             description: "Learn advanced TS types",
             order: 2,
-            status: "COMPLETED",
-            type: "THEORY",
+            status: "COMPLETED" as PrismaRoadmapItemStatus,
+            type: "THEORY" as PrismaRoadmapItemType,
             topic: "typescript",
             difficulty: "intermediate",
             submissionUrl: null,
@@ -39,8 +43,8 @@ describe("RoadmapMapper", () => {
             title: "Basics",
             description: "Learn TS basics",
             order: 1,
-            status: "PENDING",
-            type: "PROJECT",
+            status: "PENDING" as PrismaRoadmapItemStatus,
+            type: "PROJECT" as PrismaRoadmapItemType,
             topic: "typescript",
             difficulty: "beginner",
             submissionUrl: "https://github.com/user/repo",
@@ -83,8 +87,8 @@ describe("RoadmapMapper", () => {
             title: "Item",
             description: "desc",
             order: 1,
-            status: "UNKNOWN",
-            type: "UNKNOWN",
+            status: "UNKNOWN" as PrismaRoadmapItemStatus,
+            type: "UNKNOWN" as PrismaRoadmapItemType,
             topic: "",
             difficulty: "beginner",
             submissionUrl: null,
@@ -114,8 +118,8 @@ describe("RoadmapMapper", () => {
             title: "Item",
             description: "desc",
             order: 1,
-            status: "IN_PROGRESS",
-            type: "THEORY",
+            status: "IN_PROGRESS" as PrismaRoadmapItemStatus,
+            type: "THEORY" as PrismaRoadmapItemType,
             topic: "",
             difficulty: "beginner",
             submissionUrl: null,

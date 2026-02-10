@@ -7,6 +7,7 @@ import {
 import { ProjectSubmissionId } from "@domain/assessment/value-objects/ProjectSubmissionId";
 import { UserId } from "@domain/profile/value-objects/UserId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
+import type { ProjectSubmissionStatus as PrismaProjectSubmissionStatus } from "@prisma/client";
 
 describe("ProjectSubmissionMapper", () => {
   const now = new Date("2024-01-01");
@@ -21,7 +22,7 @@ describe("ProjectSubmissionMapper", () => {
         repoUrl: "https://github.com/user/repo",
         score: null,
         feedback: null,
-        status: "PENDING",
+        status: "PENDING" as PrismaProjectSubmissionStatus,
         createdAt: now,
         updatedAt: later,
       };
@@ -41,7 +42,7 @@ describe("ProjectSubmissionMapper", () => {
         repoUrl: "https://github.com/user/repo",
         score: 85,
         feedback: "Good work",
-        status: "COMPLETED",
+        status: "COMPLETED" as PrismaProjectSubmissionStatus,
         createdAt: now,
         updatedAt: later,
       };
@@ -61,7 +62,7 @@ describe("ProjectSubmissionMapper", () => {
         repoUrl: "https://github.com/user/repo",
         score: null,
         feedback: null,
-        status: "ANALYZING",
+        status: "ANALYZING" as PrismaProjectSubmissionStatus,
         createdAt: now,
         updatedAt: later,
       };
@@ -78,7 +79,7 @@ describe("ProjectSubmissionMapper", () => {
         repoUrl: "https://github.com/user/repo",
         score: null,
         feedback: "Repo not found",
-        status: "FAILED",
+        status: "FAILED" as PrismaProjectSubmissionStatus,
         createdAt: now,
         updatedAt: later,
       };
@@ -95,7 +96,7 @@ describe("ProjectSubmissionMapper", () => {
         repoUrl: "https://github.com/user/repo",
         score: null,
         feedback: null,
-        status: "UNKNOWN_STATUS",
+        status: "UNKNOWN_STATUS" as PrismaProjectSubmissionStatus,
         createdAt: now,
         updatedAt: later,
       };

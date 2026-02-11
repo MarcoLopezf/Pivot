@@ -42,6 +42,22 @@ export async function createClient(): Promise<
           }
         },
       },
+      auth: {
+        // Increase timeout for auth requests to handle slow connections
+        // Default is 10s, we increase to 20s
+        detectSessionInUrl: false,
+        flowType: "pkce",
+      },
+      global: {
+        // Add fetch options to increase timeout
+        fetch: (url, options = {}) => {
+          return fetch(url, {
+            ...options,
+            // Increase timeout to 20 seconds for slow connections
+            signal: AbortSignal.timeout(20000),
+          });
+        },
+      },
     },
   );
 }

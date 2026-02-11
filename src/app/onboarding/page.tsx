@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { OnboardingLayout } from "@/interfaces/web/layouts/OnboardingLayout";
-import { OnboardingProgress } from "@/interfaces/web/components/onboarding/OnboardingProgress";
 import { Step1Profile } from "@/interfaces/web/components/onboarding/steps/Step1Profile";
 import { Step2Experience } from "@/interfaces/web/components/onboarding/steps/Step2Experience";
 import { Step3Path } from "@/interfaces/web/components/onboarding/steps/Step3Path";
@@ -10,7 +9,7 @@ import { Step4DirectGoals } from "@/interfaces/web/components/onboarding/steps/S
 import { Step4Discovery } from "@/interfaces/web/components/onboarding/steps/Step4Discovery";
 import { Step5Import } from "@/interfaces/web/components/onboarding/steps/Step5Import";
 import { StepReview } from "@/interfaces/web/components/onboarding/steps/StepReview";
-import { Step6Generating } from "@/interfaces/web/components/onboarding/steps/Step6Generating";
+import { Step7Generating } from "@/interfaces/web/components/onboarding/steps/Step7Generating";
 import { useOnboardingStore } from "@/interfaces/web/stores/useOnboardingStore";
 
 /**
@@ -73,7 +72,7 @@ export default function OnboardingPage() {
         return <StepReview />;
 
       case "ROADMAP_PREVIEW":
-        return <Step6Generating />;
+        return <Step7Generating />;
 
       default:
         // Safety fallback - render profile step if unknown step
@@ -86,25 +85,22 @@ export default function OnboardingPage() {
 
   return (
     <OnboardingLayout>
-      <div className="space-y-8">
-        {/* Progress Indicator */}
-        <OnboardingProgress />
-
-        {/* Loading State - Show skeleton while syncing with server */}
-        {isLoading ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-8">
+      {/* Loading State - Show skeleton while syncing with server */}
+      {isLoading ? (
+        <div className="flex min-h-screen items-center justify-center bg-slate-50">
+          <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-lg">
             <div className="animate-pulse space-y-4">
-              <div className="h-8 w-3/4 rounded bg-gray-200"></div>
-              <div className="h-4 w-full rounded bg-gray-200"></div>
-              <div className="h-4 w-5/6 rounded bg-gray-200"></div>
-              <div className="mt-6 h-10 w-32 rounded bg-gray-200"></div>
+              <div className="h-8 w-64 rounded bg-slate-200"></div>
+              <div className="h-4 w-full rounded bg-slate-200"></div>
+              <div className="h-4 w-5/6 rounded bg-slate-200"></div>
+              <div className="mt-6 h-10 w-32 rounded bg-slate-200"></div>
             </div>
           </div>
-        ) : (
-          /* Current Step Component */
-          renderStep()
-        )}
-      </div>
+        </div>
+      ) : (
+        /* Current Step Component */
+        renderStep()
+      )}
     </OnboardingLayout>
   );
 }

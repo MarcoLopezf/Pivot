@@ -18,6 +18,9 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   const { pathname } = request.nextUrl;
 
+  // Add pathname to headers for layout detection
+  response.headers.set("x-pathname", pathname);
+
   // Protected routes that require authentication
   const isProtectedRoute =
     pathname.startsWith("/roadmap") || pathname.startsWith("/onboarding");

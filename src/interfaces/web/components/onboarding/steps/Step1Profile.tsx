@@ -14,15 +14,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+  OnboardingInput,
+  OnboardingTextarea,
+  OnboardingSelect,
+  OnboardingSelectTrigger,
+  OnboardingSelectValue,
+  OnboardingSelectContent,
+  OnboardingSelectItem,
+} from "@/interfaces/web/components/onboarding/OnboardingFormComponents";
 
 /**
  * Step1Profile - Onboarding Step 1: Profile Information
@@ -89,8 +89,12 @@ export function Step1Profile() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <StepContainer
+          currentStep={1}
           title="Let's start with your profile"
           description="Tell us a bit about yourself so we can personalize your experience."
+          quote="The only way to do great work is to love what you do."
+          quoteAuthor="STEVE JOBS"
+          leftPanelFooter="YOUR JOURNEY BEGINS"
           onNext={form.handleSubmit(onSubmit)}
           isNextDisabled={!form.formState.isValid}
           isLoading={isLoading}
@@ -105,7 +109,7 @@ export function Step1Profile() {
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input
+                    <OnboardingInput
                       placeholder="John Doe"
                       {...field}
                       disabled={isLoading}
@@ -126,27 +130,37 @@ export function Step1Profile() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Region / Location</FormLabel>
-                  <Select
+                  <OnboardingSelect
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                     disabled={isLoading}
                   >
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your region" />
-                      </SelectTrigger>
+                      <OnboardingSelectTrigger>
+                        <OnboardingSelectValue placeholder="Select your region" />
+                      </OnboardingSelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="north-america">
+                    <OnboardingSelectContent>
+                      <OnboardingSelectItem value="north-america">
                         North America
-                      </SelectItem>
-                      <SelectItem value="europe">Europe</SelectItem>
-                      <SelectItem value="latam">LATAM</SelectItem>
-                      <SelectItem value="asia">Asia</SelectItem>
-                      <SelectItem value="argentina">Argentina</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      </OnboardingSelectItem>
+                      <OnboardingSelectItem value="europe">
+                        Europe
+                      </OnboardingSelectItem>
+                      <OnboardingSelectItem value="latam">
+                        LATAM
+                      </OnboardingSelectItem>
+                      <OnboardingSelectItem value="asia">
+                        Asia
+                      </OnboardingSelectItem>
+                      <OnboardingSelectItem value="argentina">
+                        Argentina
+                      </OnboardingSelectItem>
+                      <OnboardingSelectItem value="other">
+                        Other
+                      </OnboardingSelectItem>
+                    </OnboardingSelectContent>
+                  </OnboardingSelect>
                   <FormDescription>
                     Helps us provide relevant job market insights for your area.
                   </FormDescription>
@@ -163,9 +177,8 @@ export function Step1Profile() {
                 <FormItem>
                   <FormLabel>Short Bio (Optional)</FormLabel>
                   <FormControl>
-                    <Textarea
+                    <OnboardingTextarea
                       placeholder="Tell us about your background, interests, or goals..."
-                      className="resize-none"
                       rows={4}
                       {...field}
                       disabled={isLoading}

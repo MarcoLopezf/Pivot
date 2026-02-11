@@ -2,16 +2,18 @@
 
 import { useState, useRef } from "react";
 import { StepContainer } from "../StepContainer";
+import { InfoBox } from "../InfoBox";
 import { useOnboardingStore } from "@interfaces/web/stores/useOnboardingStore";
 import { uploadResumeAction } from "@interfaces/web/actions/documentActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Upload,
+  CloudUpload,
   FileText,
   CheckCircle,
   AlertCircle,
-  FileCheck,
+  Trash2,
+  Info,
 } from "lucide-react";
 
 /**
@@ -27,6 +29,10 @@ import {
  * - Success/error feedback
  * - Skip option for manual entry
  *
+ * TECHNICAL DEBT:
+ * - TODO: Add manual input form for users who want to enter details manually
+ *   instead of uploading CV (currently just a link button)
+ *
  * @layer Interface (Web)
  */
 export function Step5Import() {
@@ -37,20 +43,8 @@ export function Step5Import() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check if CV was already uploaded in Step 4 (Discovery)
-  const hasResumeFromStep4 = Boolean(data.resumeText && data.resumeFileName);
+  // Check if file was uploaded
   const uploadedFile = data.resumeFileName as string | undefined;
-
-  console.log(
-    "Step5Import rendering - hasResumeFromStep4:",
-    hasResumeFromStep4,
-    "uploadedFile:",
-    uploadedFile,
-    "isUploading:",
-    isUploading,
-    "error:",
-    error,
-  );
 
   /**
    * Handles file upload and parsing
@@ -151,9 +145,7 @@ export function Step5Import() {
    */
   const handleNext = async () => {
     try {
-      console.log("handleNext: Saving step before advancing...");
       await saveCurrentStep();
-      console.log("handleNext: Save complete, advancing to next step");
       nextStep();
     } catch (err) {
       console.error("Error proceeding to next step:", err);
@@ -163,108 +155,55 @@ export function Step5Import() {
 
   return (
     <StepContainer
-      title={hasResumeFromStep4 ? "Confirm Your CV" : "Import Your Experience"}
-      description={
-        hasResumeFromStep4
-          ? "We have your CV context from the previous step"
-          : "Upload your CV or LinkedIn PDF export to personalize your learning path (optional)"
-      }
+      currentStep={5}
+      totalSteps={7}
+      title="Import Your Experience"
+      description="Upload your CV or LinkedIn PDF export to personalize your learning path (optional)."
+      quote="Success is where preparation and opportunity meet."
+      quoteAuthor="Bobby Unser"
       onNext={uploadedFile ? handleNext : handleSkip}
       onBack={previousStep}
       isLoading={isUploading}
       nextLabel={uploadedFile ? "Continue" : "Skip for Now"}
     >
       <div className="space-y-6">
-        {/* Success Card - CV Already Uploaded from Step 4 */}
-        {hasResumeFromStep4 && !error && (
-          <div className="rounded-lg border-2 border-green-200 bg-green-50 p-8">
-            <div className="flex flex-col items-center justify-center gap-6">
-              {/* Icon */}
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-                <FileCheck className="h-10 w-10 text-green-600" />
-              </div>
-
-              {/* Text Content */}
-              <div className="text-center">
-                <h3 className="mb-2 text-xl font-bold text-green-900">
-                  CV Context Available
-                </h3>
-                <p className="mb-1 text-base text-green-700">{uploadedFile}</p>
-                <p className="text-sm text-green-600">
-                  We have your CV context from the previous step and will use it
-                  to personalize your learning roadmap.
-                </p>
-              </div>
-
-              {/* Primary Action - Continue to Review */}
-              <Button
-                type="button"
-                onClick={handleNext}
-                disabled={isUploading}
-                className="w-full gap-2 bg-green-600 hover:bg-green-700 sm:w-auto"
-                size="lg"
-              >
-                <CheckCircle className="h-5 w-5" />
-                Continue
-              </Button>
-
-              {/* Secondary Action - Upload Different File */}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  updateData({
-                    resumeFileName: undefined,
-                    resumeText: undefined,
-                  });
-                  setError(null);
-                }}
-                className="text-green-700 hover:text-green-900"
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                Upload Different File
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Upload Area - Only show if no CV from Step 4 */}
-        {!hasResumeFromStep4 && !uploadedFile && (
+        {/* Upload Area - Only show if no file uploaded yet */}
+        {!uploadedFile && (
           <div
             className={`relative rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
               isDragging
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 bg-gray-50 hover:border-gray-400"
+                ? "border-[#1E5F74] bg-slate-50"
+                : "border-slate-300 bg-white hover:border-slate-400"
             }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
             {/* Icon */}
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center">
               {isUploading ? (
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1E5F74] border-t-transparent"></div>
               ) : (
-                <Upload className="h-8 w-8 text-blue-600" />
+                <CloudUpload className="h-10 w-10 text-slate-400" />
               )}
             </div>
 
             {/* Text */}
-            <div className="mb-4">
-              <p className="mb-2 text-lg font-medium text-gray-900">
+            <div className="mb-6">
+              <p className="mb-2 text-base font-medium text-slate-900">
                 {isUploading ? "Parsing your CV..." : "Drop your PDF here"}
               </p>
-              <p className="text-sm text-gray-600">or click to browse</p>
+              <p className="text-sm text-slate-600">
+                or click to browse from your computer
+              </p>
             </div>
 
             {/* Browse Button */}
             <Button
               type="button"
-              variant="outline"
               onClick={handleBrowseClick}
               disabled={isUploading}
-              className="gap-2"
+              className="gap-2 bg-[#1D2D50] hover:bg-[#152340] text-white"
             >
               <FileText className="h-4 w-4" />
               Browse Files
@@ -281,90 +220,89 @@ export function Step5Import() {
             />
 
             {/* File Requirements */}
-            <p className="mt-4 text-xs text-gray-500">
+            <p className="mt-4 text-xs text-slate-500">
               PDF only • Max 5MB • Your data is private and secure
             </p>
           </div>
         )}
 
-        {/* Success State - Manual Upload in Step 5 */}
-        {!hasResumeFromStep4 && uploadedFile && !error && (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-green-900">
-                  CV Uploaded Successfully
-                </h3>
-                <p className="mt-1 text-sm text-green-700">{uploadedFile}</p>
-                <p className="mt-2 text-sm text-green-600">
-                  Your experience will be used to personalize your learning
-                  roadmap
-                </p>
+        {/* Success State - File Uploaded */}
+        {uploadedFile && !error && (
+          <>
+            {/* File Info Card */}
+            <div className="rounded-lg border border-slate-200 bg-white p-4">
+              <div className="flex items-center justify-between gap-4">
+                {/* File Icon + Info */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="flex-shrink-0">
+                    <div className="flex h-10 w-10 items-center justify-center rounded bg-red-50">
+                      <FileText className="h-5 w-5 text-red-500" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 truncate">
+                      {uploadedFile}
+                    </p>
+                    <p className="text-xs text-slate-600">2.4 MB</p>
+                  </div>
+                </div>
+
+                {/* Delete Button */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    updateData({
+                      resumeFileName: undefined,
+                      resumeText: undefined,
+                    });
+                    setError(null);
+                  }}
+                  className="flex-shrink-0 h-8 w-8 p-0 hover:bg-slate-100"
+                >
+                  <Trash2 className="h-4 w-4 text-slate-600" />
+                </Button>
               </div>
             </div>
 
-            {/* Option to re-upload */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                updateData({
-                  resumeFileName: undefined,
-                  resumeText: undefined,
-                });
-                setError(null);
-              }}
-              className="mt-4 gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              Upload Different File
-            </Button>
-          </div>
+            {/* Confirmation Card */}
+            <InfoBox variant="success" icon={CheckCircle}>
+              <p className="font-medium">
+                CV successfully uploaded and analyzed by AI!
+              </p>
+            </InfoBox>
+          </>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600" />
-              <div className="flex-1">
-                <h4 className="font-semibold text-red-900">Upload Failed</h4>
-                <p className="mt-1 text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-          </div>
+          <InfoBox icon={AlertCircle} title="Upload Failed">
+            <p>{error}</p>
+          </InfoBox>
         )}
 
-        {/* Info Box - Only show if no CV uploaded yet */}
-        {!hasResumeFromStep4 && !uploadedFile && (
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <h4 className="font-semibold text-blue-900">Why upload your CV?</h4>
-            <ul className="mt-2 space-y-1 text-sm text-blue-700">
-              <li>• Get a personalized roadmap based on your experience</li>
-              <li>• AI analyzes your skills to identify knowledge gaps</li>
-              <li>• Skip topics you already know</li>
-            </ul>
-          </div>
-        )}
+        {/* Info Box - Always visible */}
+        <InfoBox icon={Info} title="Why upload your CV?">
+          <ul className="space-y-1.5">
+            <li>• Get a personalized roadmap based on your experience</li>
+            <li>• AI analyzes your skills to identify knowledge gaps</li>
+            <li>• Skip topics you already know</li>
+          </ul>
+        </InfoBox>
 
-        {/* Skip Option - Only show if no CV uploaded yet */}
-        {!hasResumeFromStep4 && !uploadedFile && (
-          <div className="text-center">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleSkip}
-              disabled={isUploading}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              I&apos;ll enter details manually
-            </Button>
-          </div>
-        )}
+        {/* Manual Entry Link - Always visible */}
+        <div className="text-center">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleSkip}
+            disabled={isUploading}
+            className="text-slate-500 hover:text-slate-900 hover:bg-transparent text-sm"
+          >
+            I&apos;ll enter details manually instead
+          </Button>
+        </div>
       </div>
     </StepContainer>
   );

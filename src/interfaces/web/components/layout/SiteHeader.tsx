@@ -31,12 +31,21 @@ export async function SiteHeader({
   // Unauthenticated: show minimal header with logo + login
   if (!authUser) {
     return (
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-14 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-lg font-bold tracking-tight">PIVOT</span>
+      <header className="sticky top-0 z-50 w-full bg-[#1D2D50]">
+        <div className="container mx-auto flex h-16 items-center justify-between px-6">
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <span className="text-xl font-bold tracking-tight text-white">
+              PIVOT
+            </span>
           </Link>
-          <Button variant="outline" size="sm" asChild>
+          <Button
+            size="default"
+            asChild
+            className="bg-[#FCDAB7] text-slate-900 hover:bg-[#f5c9a0] transition-colors font-medium"
+          >
             <Link href="/login">Log in</Link>
           </Button>
         </div>
@@ -60,17 +69,22 @@ export async function SiteHeader({
   const roadmaps = roadmapsResult.success ? (roadmapsResult.data ?? []) : [];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-14 items-center justify-between px-4">
+    <header className="sticky top-0 z-50 w-full bg-[#1D2D50]">
+      <div className="container mx-auto flex h-16 items-center justify-between px-6">
         {/* Left: Logo + Context Switcher */}
         <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-lg font-bold tracking-tight">PIVOT</span>
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <span className="text-xl font-bold tracking-tight text-white">
+              PIVOT
+            </span>
           </Link>
 
           {roadmaps.length > 0 && (
             <>
-              <span className="text-muted-foreground/50">/</span>
+              <span className="text-slate-400">/</span>
               <RoadmapSwitcher
                 currentRoadmapId={currentRoadmapId}
                 roadmaps={roadmaps}

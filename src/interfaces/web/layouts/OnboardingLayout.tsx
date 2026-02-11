@@ -3,12 +3,12 @@ import { type ReactNode } from "react";
 /**
  * OnboardingLayout - Distraction-free layout for onboarding process
  *
- * Provides a clean, focused environment for users to complete
- * the onboarding wizard without navigation or other distractions.
+ * Provides a full-screen environment for the two-column onboarding wizard.
+ * The layout delegates all visual structure to StepContainer.
  *
  * Features:
- * - Centered content with max-width constraint
- * - Subtle background for visual comfort
+ * - Full viewport height (minus header)
+ * - No padding or constraints (handled by StepContainer)
  * - Uses the global SiteHeader from root layout
  *
  * @layer Interface (Web)
@@ -19,9 +19,5 @@ interface OnboardingLayoutProps {
 }
 
 export function OnboardingLayout({ children }: OnboardingLayoutProps) {
-  return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-muted/30 py-8">
-      <div className="w-full max-w-3xl px-4">{children}</div>
-    </div>
-  );
+  return <div className="min-h-[calc(100vh-4rem)]">{children}</div>;
 }

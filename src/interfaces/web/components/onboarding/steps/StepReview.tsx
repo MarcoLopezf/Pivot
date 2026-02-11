@@ -3,14 +3,12 @@
 import { useState } from "react";
 import { StepContainer } from "../StepContainer";
 import { useOnboardingStore } from "@interfaces/web/stores/useOnboardingStore";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   User,
   MapPin,
   Briefcase,
   Target,
-  Compass,
   Pencil,
   FileText,
 } from "lucide-react";
@@ -44,7 +42,6 @@ export function StepReview(): React.ReactElement {
   };
 
   const experienceLabel = formatExperience(data.yearsExperience);
-  const isDirectPath = data.path === "DIRECT";
   const resumePreview =
     data.resumeText && typeof data.resumeText === "string"
       ? data.resumeText.length > 200
@@ -54,90 +51,69 @@ export function StepReview(): React.ReactElement {
 
   return (
     <StepContainer
+      currentStep={6}
+      totalSteps={7}
       title="Ready to launch your career?"
       description="Review your details to ensure the AI builds the perfect path for you."
+      quote="Success is where preparation and opportunity meet."
+      quoteAuthor="Bobby Unser"
       onNext={handleGenerate}
       onBack={previousStep}
       isLoading={isLoading}
       nextLabel="Generate Roadmap"
     >
-      <div className="space-y-6">
-        {/* Summary Card */}
-        <Card className="border-2">
-          <CardContent className="space-y-5 pt-6">
-            {/* Name & Region → Step 1 */}
-            <SummarySection onEdit={() => goToStep(1)}>
-              <SummaryRow
-                icon={<User className="h-5 w-5 text-blue-600" />}
-                label="Name"
-                value={data.name as string | undefined}
-              />
-              <SummaryRow
-                icon={<MapPin className="h-5 w-5 text-blue-600" />}
-                label="Region"
-                value={data.region as string | undefined}
-              />
-            </SummarySection>
+      <div className="space-y-4">
+        {/* Name */}
+        <ReviewItem
+          icon={<User className="h-5 w-5 text-slate-600" />}
+          iconBg="bg-slate-100"
+          label="Name"
+          value={data.name as string | undefined}
+          onEdit={() => goToStep(1)}
+        />
 
-            <div className="border-t" />
+        {/* Region */}
+        <ReviewItem
+          icon={<MapPin className="h-5 w-5 text-slate-600" />}
+          iconBg="bg-slate-100"
+          label="Region"
+          value={data.region as string | undefined}
+          onEdit={() => goToStep(1)}
+        />
 
-            {/* Target Role → Step 4 */}
-            <SummarySection onEdit={() => goToStep(4)}>
-              <SummaryRow
-                icon={<Target className="h-5 w-5 text-purple-600" />}
-                label="Target Role"
-                value={data.targetRole as string | undefined}
-                highlight
-              />
-              {isDirectPath && data.targetSeniority && (
-                <SummaryRow
-                  icon={<Compass className="h-5 w-5 text-amber-600" />}
-                  label="Target Level"
-                  value={data.targetSeniority as string}
-                />
-              )}
-              {!isDirectPath && data.interests && (
-                <SummaryRow
-                  icon={<Compass className="h-5 w-5 text-amber-600" />}
-                  label="Interests"
-                  value={data.interests as string}
-                />
-              )}
-            </SummarySection>
+        {/* Role (Target Role) */}
+        <ReviewItem
+          icon={<Target className="h-5 w-5 text-slate-600" />}
+          iconBg="bg-slate-100"
+          label="Role"
+          value={data.targetRole as string | undefined}
+          onEdit={() => goToStep(4)}
+        />
 
-            <div className="border-t" />
+        {/* Experience (Current Role + Years) */}
+        <ReviewItem
+          icon={<Briefcase className="h-5 w-5 text-slate-600" />}
+          iconBg="bg-slate-100"
+          label="Experience"
+          value={
+            data.currentRole
+              ? `${data.currentRole as string}${experienceLabel ? ` (${experienceLabel})` : ""}`
+              : experienceLabel || undefined
+          }
+          onEdit={() => goToStep(2)}
+        />
 
-            {/* Experience → Step 2 */}
-            <SummarySection onEdit={() => goToStep(2)}>
-              <SummaryRow
-                icon={<Briefcase className="h-5 w-5 text-green-600" />}
-                label="Experience"
-                value={
-                  data.currentRole
-                    ? `${data.currentRole as string}${experienceLabel ? ` (${experienceLabel})` : ""}`
-                    : experienceLabel || undefined
-                }
-              />
-            </SummarySection>
-
-            {/* Resume → Step 5 */}
-            {resumePreview && (
-              <>
-                <div className="border-t" />
-                <SummarySection onEdit={() => goToStep(5)}>
-                  <SummaryRow
-                    icon={<FileText className="h-5 w-5 text-cyan-600" />}
-                    label="Resume"
-                    value={data.resumeFileName as string | undefined}
-                  />
-                  <p className="ml-12 text-xs leading-relaxed text-muted-foreground">
-                    {resumePreview}
-                  </p>
-                </SummarySection>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        {/* Resume */}
+        {data.resumeFileName && (
+          <ReviewItem
+            icon={<FileText className="h-5 w-5 text-slate-600" />}
+            iconBg="bg-slate-100"
+            label="Resume"
+            value={data.resumeFileName as string}
+            extraInfo={resumePreview}
+            onEdit={() => goToStep(5)}
+          />
+        )}
 
         {/* Error State */}
         {error && (
@@ -162,57 +138,61 @@ function formatExperience(years: unknown): string | undefined {
 }
 
 /**
- * Wraps a group of summary rows with an inline edit (pencil) button
+ * ReviewItem - Individual review card for each onboarding data point
  */
-function SummarySection({
-  children,
+function ReviewItem({
+  icon,
+  iconBg,
+  label,
+  value,
+  extraInfo,
   onEdit,
 }: {
-  children: React.ReactNode;
+  icon: React.ReactNode;
+  iconBg: string;
+  label: string;
+  value?: string;
+  extraInfo?: string;
   onEdit: () => void;
 }): React.ReactElement {
   return (
-    <div className="flex items-start gap-2">
-      <div className="min-w-0 flex-1 space-y-3">{children}</div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={onEdit}
-        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-      >
-        <Pencil className="h-3.5 w-3.5" />
-      </Button>
-    </div>
-  );
-}
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-start justify-between gap-4">
+        {/* Icon + Content */}
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          {/* Icon Circle */}
+          <div
+            className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${iconBg}`}
+          >
+            {icon}
+          </div>
 
-/**
- * Reusable row for the summary card
- */
-function SummaryRow({
-  icon,
-  label,
-  value,
-  highlight = false,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value?: string;
-  highlight?: boolean;
-}): React.ReactElement {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-        {icon}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p
-          className={`truncate ${highlight ? "text-base font-semibold" : "text-sm font-medium"}`}
+          {/* Label + Value */}
+          <div className="flex-1 min-w-0 pt-0.5">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
+              {label}
+            </p>
+            <p className="text-sm font-semibold text-slate-900 break-words">
+              {value || "Not provided"}
+            </p>
+            {extraInfo && (
+              <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+                {extraInfo}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Edit Button */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onEdit}
+          className="h-8 w-8 flex-shrink-0 text-slate-400 hover:text-slate-900 hover:bg-slate-100"
         >
-          {value || "Not provided"}
-        </p>
+          <Pencil className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

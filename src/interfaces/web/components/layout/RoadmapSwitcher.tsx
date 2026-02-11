@@ -35,20 +35,20 @@ export function RoadmapSwitcher({
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="flex items-center gap-2 px-3 py-2 h-auto max-w-[280px]"
+          className="flex items-center gap-2 px-3 py-2 h-auto max-w-[280px] hover:bg-[#133B5C] transition-colors"
         >
-          <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <MapPin className="h-4 w-4 shrink-0 text-[#FCDAB7]" />
           <div className="flex flex-col items-start text-left min-w-0">
-            <span className="text-sm font-medium truncate w-full">
+            <span className="text-sm font-medium truncate w-full text-white">
               {displayTitle}
             </span>
             {displayRole && (
-              <span className="text-xs text-muted-foreground truncate w-full">
+              <span className="text-xs text-slate-300 truncate w-full">
                 {displayRole}
               </span>
             )}
           </div>
-          <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <ChevronsUpDown className="h-4 w-4 shrink-0 text-slate-300" />
         </Button>
       </DropdownMenuTrigger>
 
@@ -99,7 +99,7 @@ export function RoadmapSwitcher({
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
-          className="flex items-center gap-2 cursor-pointer text-blue-600"
+          className="flex items-center gap-2 cursor-pointer text-primary hover:text-primary"
           onSelect={() => router.push("/onboarding")}
         >
           <Plus className="h-4 w-4 shrink-0" />

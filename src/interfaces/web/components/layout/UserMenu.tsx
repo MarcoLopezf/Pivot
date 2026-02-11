@@ -39,9 +39,9 @@ export function UserMenu({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+      <DropdownMenuTrigger className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-slate-300 hover:opacity-80 transition-opacity">
+        <Avatar className="h-9 w-9">
+          <AvatarFallback className="bg-slate-900 text-white text-sm font-medium">
             {getInitials(userName)}
           </AvatarFallback>
         </Avatar>
@@ -63,7 +63,7 @@ export function UserMenu({
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
-          className="gap-2 text-red-600 focus:text-red-600"
+          className="gap-2 text-destructive hover:text-destructive focus:text-destructive"
           onSelect={handleLogout}
         >
           <LogOut className="h-4 w-4" />

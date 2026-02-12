@@ -243,7 +243,6 @@ export function Step5Import() {
                     <p className="text-sm font-semibold text-slate-900 truncate">
                       {uploadedFile}
                     </p>
-                    <p className="text-xs text-slate-600">2.4 MB</p>
                   </div>
                 </div>
 

@@ -48,7 +48,7 @@ export function Step7Generating(): React.ReactElement {
   const [isFading, setIsFading] = useState(false);
   const hasRun = useRef(false);
 
-  const handleCompletion = useCallback(async () => {
+  const handleCompletion = useCallback(async (): Promise<void> => {
     try {
       // Step 1: Finalizing profile
       setStatus("initializing");

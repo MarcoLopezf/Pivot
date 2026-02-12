@@ -41,7 +41,24 @@ export function StepReview(): React.ReactElement {
     }
   };
 
+  // Validate and prepare all fields with type guards (no "as" casts)
+  const nameValue = typeof data.name === "string" ? data.name : undefined;
+  const regionValue = typeof data.region === "string" ? data.region : undefined;
+  const targetRoleValue =
+    typeof data.targetRole === "string" ? data.targetRole : undefined;
+  const currentRoleValue =
+    typeof data.currentRole === "string" ? data.currentRole : undefined;
+  const resumeFileNameValue =
+    typeof data.resumeFileName === "string" ? data.resumeFileName : undefined;
+
   const experienceLabel = formatExperience(data.yearsExperience);
+
+  // Compute experience display value
+  const experienceValue = currentRoleValue
+    ? `${currentRoleValue}${experienceLabel ? ` (${experienceLabel})` : ""}`
+    : experienceLabel || undefined;
+
+  // Compute resume preview
   const resumePreview =
     data.resumeText && typeof data.resumeText === "string"
       ? data.resumeText.length > 200
@@ -68,7 +85,7 @@ export function StepReview(): React.ReactElement {
           icon={<User className="h-5 w-5 text-slate-600" />}
           iconBg="bg-slate-100"
           label="Name"
-          value={data.name as string | undefined}
+          value={nameValue}
           onEdit={() => goToStep(1)}
         />
 
@@ -77,7 +94,7 @@ export function StepReview(): React.ReactElement {
           icon={<MapPin className="h-5 w-5 text-slate-600" />}
           iconBg="bg-slate-100"
           label="Region"
-          value={data.region as string | undefined}
+          value={regionValue}
           onEdit={() => goToStep(1)}
         />
 
@@ -86,7 +103,7 @@ export function StepReview(): React.ReactElement {
           icon={<Target className="h-5 w-5 text-slate-600" />}
           iconBg="bg-slate-100"
           label="Role"
-          value={data.targetRole as string | undefined}
+          value={targetRoleValue}
           onEdit={() => goToStep(4)}
         />
 
@@ -95,21 +112,17 @@ export function StepReview(): React.ReactElement {
           icon={<Briefcase className="h-5 w-5 text-slate-600" />}
           iconBg="bg-slate-100"
           label="Experience"
-          value={
-            data.currentRole
-              ? `${data.currentRole as string}${experienceLabel ? ` (${experienceLabel})` : ""}`
-              : experienceLabel || undefined
-          }
+          value={experienceValue}
           onEdit={() => goToStep(2)}
         />
 
         {/* Resume */}
-        {data.resumeFileName && (
+        {resumeFileNameValue && (
           <ReviewItem
             icon={<FileText className="h-5 w-5 text-slate-600" />}
             iconBg="bg-slate-100"
             label="Resume"
-            value={data.resumeFileName as string}
+            value={resumeFileNameValue}
             extraInfo={resumePreview}
             onEdit={() => goToStep(5)}
           />
@@ -190,6 +203,7 @@ function ReviewItem({
           size="icon"
           onClick={onEdit}
           className="h-8 w-8 flex-shrink-0 text-slate-400 hover:text-slate-900 hover:bg-slate-100"
+          aria-label={`Edit ${label}`}
         >
           <Pencil className="h-4 w-4" />
         </Button>

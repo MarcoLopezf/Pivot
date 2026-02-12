@@ -1,419 +1,212 @@
-"use client";
-
-import React, { useState } from "react";
 import Link from "next/link";
-import {
-  RoadmapDTO,
-  RoadmapItemStatus,
-} from "@application/dtos/learning/RoadmapDTO";
+import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import {
-  CheckCircle2,
-  Clock,
+  Check,
+  Play,
   Circle,
+  Clock,
   BookOpen,
-  PlayCircle,
-  Github,
-  FileText,
+  FlaskConical,
 } from "lucide-react";
-import { VideoCard } from "@/interfaces/web/components/learning/VideoCard";
-import { ProjectSubmissionForm } from "@/interfaces/web/components/learning/ProjectSubmissionForm";
-import { useItemResources } from "@/interfaces/web/hooks/useItemResources";
 
 export interface RoadmapTimelineProps {
   roadmap: RoadmapDTO;
-  onItemStatusChange: (itemId: string, newStatus: RoadmapItemStatus) => void;
-  onTakeQuiz?: (itemId: string) => void;
-  onProjectSubmitted?: () => void;
 }
 
-/**
- * RoadmapItem Sub-Component
- *
- * Individual roadmap item with collapsible sections:
- * - THEORY items: Resources + Quiz action buttons
- * - PROJECT items: Instructions + Submit Project action buttons
- * - Collapsed by default for cleaner UI
- */
-interface RoadmapItemProps {
+function getEstimatedTime(difficulty: string): string {
+  switch (difficulty) {
+    case "beginner":
+      return "2h 15m";
+    case "intermediate":
+      return "3h 30m";
+    case "advanced":
+      return "5h 00m";
+    default:
+      return "2h 00m";
+  }
+}
+
+interface RoadmapTimelineItemProps {
   item: RoadmapDTO["items"][0];
   roadmapId: string;
-  index: number;
-  totalItems: number;
   isLastItem: boolean;
-  onStatusChange: (itemId: string, newStatus: RoadmapItemStatus) => void;
-  onTakeQuiz?: (itemId: string) => void;
-  onProjectSubmitted?: () => void;
 }
 
-type ExpandedSection = "resources" | "instructions" | "submit" | null;
-
-function RoadmapItem({
+function RoadmapTimelineItem({
   item,
   roadmapId,
-  index,
-  totalItems,
   isLastItem,
-  onStatusChange,
-  onTakeQuiz,
-  onProjectSubmitted,
-}: RoadmapItemProps): React.ReactElement {
-  const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
-  const { resources, isLoading, error, hasFetched, fetchResources } =
-    useItemResources(item.id, item.topic, item.difficulty);
-
-  const getStatusIcon = (status: RoadmapItemStatus) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle2 className="h-3 w-3 text-green-600" />;
-      case "in_progress":
-        return <Clock className="h-3 w-3 text-blue-600 animate-spin" />;
-      case "pending":
-        return <Circle className="h-3 w-3 text-gray-400" />;
-    }
-  };
-
-  const getStatusBadge = (status: RoadmapItemStatus) => {
-    switch (status) {
-      case "completed":
-        return (
-          <Badge variant="default" className="bg-green-600">
-            Completed
-          </Badge>
-        );
-      case "in_progress":
-        return (
-          <Badge variant="default" className="bg-blue-600">
-            In Progress
-          </Badge>
-        );
-      case "pending":
-        return (
-          <Badge variant="outline" className="border-gray-300 text-gray-600">
-            Pending
-          </Badge>
-        );
-    }
-  };
-
-  const getNextStatus = (
-    currentStatus: RoadmapItemStatus,
-  ): RoadmapItemStatus => {
-    switch (currentStatus) {
-      case "pending":
-        return "in_progress";
-      case "in_progress":
-        return "completed";
-      case "completed":
-        return "in_progress";
-    }
-  };
-
-  const handleStatusChange = () => {
-    const nextStatus = getNextStatus(item.status);
-    onStatusChange(item.id, nextStatus);
-  };
-
-  const toggleSection = (section: ExpandedSection) => {
-    // If clicking same section, collapse it
-    if (expandedSection === section) {
-      setExpandedSection(null);
-      return;
-    }
-
-    // Expand new section
-    setExpandedSection(section);
-
-    // Fetch resources if expanding resources for first time
-    if (section === "resources" && !hasFetched) {
-      fetchResources();
-    }
-  };
+}: RoadmapTimelineItemProps): React.ReactElement {
+  const isCompleted = item.status === "completed";
+  const isInProgress = item.status === "in_progress";
+  const isUpcoming = item.status === "pending";
 
   return (
-    <div className="relative" data-testid={`roadmap-item-${item.id}`}>
-      {/* Connector Line (not on last item) */}
+    <div
+      className="relative flex gap-6 pb-10"
+      data-testid={`roadmap-item-${item.id}`}
+    >
+      {/* Vertical connecting line */}
       {!isLastItem && (
-        <div className="absolute left-6 top-12 w-0.5 h-8 border-l-2 border-dashed border-gray-300" />
+        <div
+          className={cn(
+            "absolute left-5 top-12 bottom-0 w-0.5",
+            isCompleted ? "bg-green-300" : "bg-slate-200",
+          )}
+        />
       )}
 
       {/* Status Icon */}
-      <div className="absolute left-2 top-4 z-10 flex items-center justify-center w-8 h-8 bg-white border-2 border-gray-200 rounded-full">
-        {getStatusIcon(item.status)}
+      <div className="relative z-10 flex-shrink-0">
+        {isCompleted && (
+          <div className="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
+            <Check className="h-5 w-5 text-white" />
+          </div>
+        )}
+        {isInProgress && (
+          <div className="h-10 w-10 rounded-full bg-[#1E5F74] flex items-center justify-center shadow-sm">
+            <Play className="h-5 w-5 text-white fill-white" />
+          </div>
+        )}
+        {isUpcoming && (
+          <div className="h-10 w-10 rounded-full bg-slate-100 border-2 border-slate-300 flex items-center justify-center">
+            <Circle className="h-4 w-4 text-slate-400" />
+          </div>
+        )}
       </div>
 
       {/* Card */}
-      <Card
-        className="ml-16 p-4 border-l-4"
-        style={{
-          borderLeftColor:
-            item.status === "completed"
-              ? "#22c55e"
-              : item.status === "in_progress"
-                ? "#3b82f6"
-                : "#d1d5db",
-        }}
+      <Link
+        href={`/roadmap/${roadmapId}/item/${item.id}`}
+        className="flex-1 group"
       >
-        {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <Link
-              href={`/roadmap/${roadmapId}/item/${item.id}`}
-              className={`text-sm font-semibold hover:underline ${
-                item.status === "completed" ? "line-through opacity-60" : ""
-              }`}
+        <Card
+          className={cn(
+            "p-5 transition-all hover:shadow-md border",
+            isInProgress && "border-[#1E5F74]/30 bg-white shadow-sm",
+            isCompleted && "border-slate-200 bg-white",
+            isUpcoming && "border-slate-200 bg-white",
+          )}
+        >
+          {/* Title row + status badge */}
+          <div className="flex items-start justify-between mb-2">
+            <h3
+              className={cn(
+                "text-lg font-semibold group-hover:text-[#1E5F74] transition-colors",
+                isCompleted && "text-slate-700",
+                isInProgress && "text-slate-900",
+                isUpcoming && "text-slate-700",
+              )}
             >
               {item.title}
-            </Link>
-            <p className="text-xs text-gray-500 mt-1">
-              Step {index + 1} of {totalItems}
-            </p>
-          </div>
-          {getStatusBadge(item.status)}
-        </div>
-
-        {/* Description */}
-        <p className="text-xs text-gray-600 mb-4">{item.description}</p>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-2">
-          {/* THEORY ITEMS: Resources + Quiz */}
-          {item.type === "theory" && (
-            <>
-              <Button
-                variant={
-                  expandedSection === "resources" ? "default" : "outline"
-                }
-                size="sm"
-                onClick={() => toggleSection("resources")}
-                className="flex-1 min-w-[120px]"
-              >
-                <PlayCircle className="h-4 w-4 mr-2" />
-                Resources
-                {hasFetched && resources.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {resources.length}
-                  </Badge>
-                )}
-              </Button>
-              {onTakeQuiz && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onTakeQuiz(item.id)}
-                  disabled={item.status === "completed"}
-                  className="flex-1 min-w-[120px]"
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Take Quiz
-                </Button>
-              )}
-            </>
-          )}
-
-          {/* PROJECT ITEMS: Instructions + Submit Project (NO Resources) */}
-          {item.type === "project" && (
-            <>
-              <Button
-                variant={
-                  expandedSection === "instructions" ? "default" : "outline"
-                }
-                size="sm"
-                onClick={() => toggleSection("instructions")}
-                className="flex-1 min-w-[120px]"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Instructions
-              </Button>
-              <Button
-                variant={expandedSection === "submit" ? "default" : "outline"}
-                size="sm"
-                onClick={() => toggleSection("submit")}
-                disabled={item.status === "completed"}
-                className="flex-1 min-w-[120px]"
-              >
-                <Github className="h-4 w-4 mr-2" />
-                Submit Project
-              </Button>
-            </>
-          )}
-
-          {/* Status Change Button */}
-          <Button
-            variant={item.status === "pending" ? "default" : "ghost"}
-            size="sm"
-            onClick={handleStatusChange}
-            className="flex-1 min-w-[120px]"
-          >
-            {item.status === "pending" && "Start"}
-            {item.status === "in_progress" && "Mark Complete"}
-            {item.status === "completed" && "Undo"}
-          </Button>
-        </div>
-
-        {/* Expandable Content */}
-        {expandedSection && (
-          <div className="mt-4 pt-4 border-t">
-            {/* RESOURCES SECTION (Theory only) */}
-            {expandedSection === "resources" && item.type === "theory" && (
-              <div>
-                {/* Loading State */}
-                {isLoading && (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {[1, 2].map((i) => (
-                      <div key={i} className="space-y-2">
-                        <Skeleton className="h-32 w-full" />
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-3 w-1/2" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Error State */}
-                {error && !isLoading && (
-                  <div className="text-center py-6">
-                    <p className="text-sm text-red-600">
-                      Failed to load resources: {error}
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={fetchResources}
-                      className="mt-2"
-                    >
-                      Try Again
-                    </Button>
-                  </div>
-                )}
-
-                {/* Resources Grid */}
-                {!isLoading && !error && resources.length > 0 && (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {resources.map((resource) => (
-                      <VideoCard
-                        key={resource.id || resource.url}
-                        title={resource.title}
-                        thumbnailUrl={resource.thumbnailUrl}
-                        channelName={resource.channelName}
-                        videoUrl={resource.url}
-                        duration={resource.duration}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Empty State */}
-                {!isLoading &&
-                  !error &&
-                  resources.length === 0 &&
-                  hasFetched && (
-                    <div className="text-center py-6">
-                      <PlayCircle className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600">
-                        No resources found for this topic.
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Try checking back later or explore other items!
-                      </p>
-                    </div>
-                  )}
-              </div>
+            </h3>
+            {isCompleted && (
+              <Badge className="bg-green-100 text-green-700 border-0 text-xs hover:bg-green-100">
+                Completed
+              </Badge>
             )}
+            {isInProgress && (
+              <Badge className="bg-orange-100 text-orange-700 border-0 text-xs uppercase tracking-wide font-semibold hover:bg-orange-100">
+                In Progress
+              </Badge>
+            )}
+            {isUpcoming && (
+              <Badge
+                variant="outline"
+                className="text-slate-500 border-slate-300 text-xs"
+              >
+                Upcoming
+              </Badge>
+            )}
+          </div>
 
-            {/* INSTRUCTIONS SECTION (Project only) */}
-            {expandedSection === "instructions" && item.type === "project" && (
-              <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-blue-900 mb-2">
-                    📋 Project Requirements
-                  </h4>
-                  <p className="text-sm text-blue-800 leading-relaxed">
-                    {item.description}
+          {/* Description */}
+          <p className="text-sm mb-3 leading-relaxed text-slate-600">
+            {item.description}
+          </p>
+
+          {/* Meta row */}
+          <div className="flex items-center gap-4 text-xs text-slate-500">
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {getEstimatedTime(item.difficulty)}
+            </span>
+            <span className="flex items-center gap-1">
+              <BookOpen className="h-3 w-3" />
+              {item.topic}
+            </span>
+            <span
+              className={cn(
+                "flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium",
+                item.type === "theory"
+                  ? "bg-blue-50 text-blue-600"
+                  : "bg-amber-50 text-amber-600",
+              )}
+            >
+              <FlaskConical className="h-3 w-3" />
+              {item.type === "theory" ? "Theory" : "Project"}
+            </span>
+          </div>
+
+          {/* IN PROGRESS expanded section */}
+          {isInProgress && (
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <Progress
+                value={30}
+                className="h-1.5 bg-slate-100 mb-3 [&>div]:bg-[#1E5F74]"
+              />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-slate-500">
+                <div>
+                  <p className="text-[10px] uppercase text-slate-400">
+                    Time Left
+                  </p>
+                  <p className="font-semibold text-slate-700">
+                    {getEstimatedTime(item.difficulty)}
                   </p>
                 </div>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-amber-900 mb-2">
-                    🎯 Expected Skills
-                  </h4>
-                  <p className="text-sm text-amber-800">{item.topic}</p>
+                <div>
+                  <p className="text-[10px] uppercase text-slate-400">
+                    Content
+                  </p>
+                  <p className="font-semibold text-slate-700">
+                    {item.type === "theory" ? "Videos" : "Labs"}
+                  </p>
                 </div>
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-2">
-                    ✅ Submission Guidelines
-                  </h4>
-                  <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-                    <li>
-                      Your repository must be <strong>public</strong>
-                    </li>
-                    <li>Include a README with project description</li>
-                    <li>Ensure code is well-organized and documented</li>
-                    <li>Score ≥70% required to pass</li>
-                  </ul>
+                <div>
+                  <p className="text-[10px] uppercase text-slate-400">Type</p>
+                  <p className="font-semibold text-slate-700 capitalize">
+                    {item.type}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase text-slate-400">Pace</p>
+                  <p className="font-semibold text-slate-700">Active</p>
                 </div>
               </div>
-            )}
-
-            {/* SUBMIT SECTION (Project only) */}
-            {expandedSection === "submit" && item.type === "project" && (
-              <ProjectSubmissionForm
-                roadmapId={roadmapId}
-                roadmapItemId={item.id}
-                onSuccess={onProjectSubmitted}
-              />
-            )}
-          </div>
-        )}
-      </Card>
+            </div>
+          )}
+        </Card>
+      </Link>
     </div>
   );
 }
 
-/**
- * RoadmapTimeline Component
- *
- * Displays a vertical timeline of roadmap items with:
- * - Progress bar at the top
- * - Status indicators (completed/in_progress/pending)
- * - Interactive cards to toggle status
- * - Step counter (e.g., "Step 1 of 3")
- * - Progress calculation
- * - Collapsible content sections per item
- */
 export function RoadmapTimeline({
   roadmap,
-  onItemStatusChange,
-  onTakeQuiz,
-  onProjectSubmitted,
-}: RoadmapTimelineProps): React.ReactNode {
+}: RoadmapTimelineProps): React.ReactElement {
   return (
-    <div className="space-y-6">
-      {/* Progress Bar */}
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-medium">Progress</h3>
-          <span className="text-sm text-gray-600">{roadmap.progress}%</span>
-        </div>
-        <Progress value={roadmap.progress} className="h-2" />
-      </div>
-
-      {/* Timeline */}
-      <div className="space-y-4">
+    <div className="max-w-2xl mx-auto py-10 px-4">
+      <div className="relative">
         {roadmap.items.map((item, index) => (
-          <RoadmapItem
+          <RoadmapTimelineItem
             key={item.id}
             item={item}
             roadmapId={roadmap.id}
-            index={index}
-            totalItems={roadmap.items.length}
             isLastItem={index === roadmap.items.length - 1}
-            onStatusChange={onItemStatusChange}
-            onTakeQuiz={onTakeQuiz}
-            onProjectSubmitted={onProjectSubmitted}
           />
         ))}
       </div>

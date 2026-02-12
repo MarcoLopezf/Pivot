@@ -52,7 +52,26 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     return redirectResponse;
   }
 
-  return response;
+  // Clone request headers and add pathname for layout detection
+  // RootLayout reads request headers via headers(), so x-pathname
+  // must be set on the REQUEST, not the response
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+
+  // Create new response with modified request headers
+  const nextResponse = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
+  // Copy cookies from updateSession response to preserve refreshed session
+  // (updateSession may have refreshed auth tokens)
+  response.cookies.getAll().forEach((cookie) => {
+    nextResponse.cookies.set(cookie);
+  });
+
+  return nextResponse;
 }
 
 /**

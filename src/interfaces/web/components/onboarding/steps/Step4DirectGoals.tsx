@@ -3,8 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Sparkles } from "lucide-react";
 import { StepContainer } from "@/interfaces/web/components/onboarding/StepContainer";
 import { useOnboardingStore } from "@/interfaces/web/stores/useOnboardingStore";
+import { InfoBox } from "@/interfaces/web/components/onboarding/InfoBox";
 import {
   Form,
   FormControl,
@@ -82,8 +84,11 @@ export function Step4DirectGoals() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <StepContainer
+          currentStep={4}
           title="What's your target role?"
           description="Tell us your specific career goal so we can create a personalized learning roadmap."
+          quote="The future belongs to those who believe in the beauty of their dreams."
+          quoteAuthor="ELEANOR ROOSEVELT"
           onNext={form.handleSubmit(onSubmit)}
           onBack={previousStep}
           isNextDisabled={!form.formState.isValid}
@@ -115,14 +120,20 @@ export function Step4DirectGoals() {
               )}
             />
 
-            {/* Info Box */}
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-              <p className="font-medium">Next Step</p>
-              <p className="mt-1">
+            {/* Info Box - Next Step */}
+            <InfoBox icon={Sparkles} title="Next Step">
+              <p>
                 We&apos;ll use your goal to generate a personalized learning
-                roadmap with curated resources, projects, and milestones.
+                roadmap with curated resources, projects, and milestones
+                {form.watch("targetRole") && (
+                  <>
+                    {" "}
+                    tailored specifically to becoming a{" "}
+                    <strong>{form.watch("targetRole")}</strong>.
+                  </>
+                )}
               </p>
-            </div>
+            </InfoBox>
           </div>
         </StepContainer>
       </form>

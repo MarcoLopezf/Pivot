@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { StepContainer } from "@/interfaces/web/components/onboarding/StepContainer";
+import { InfoBox } from "@/interfaces/web/components/onboarding/InfoBox";
 import { useOnboardingStore } from "@/interfaces/web/stores/useOnboardingStore";
 import { getRoleSuggestionsAction } from "@/interfaces/web/actions/learningActions";
 import {
@@ -16,8 +17,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+import {
+  OnboardingTextarea,
+  OnboardingFileInput,
+} from "@/interfaces/web/components/onboarding/OnboardingFormComponents";
 import {
   Card,
   CardContent,
@@ -25,7 +28,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Sparkles, FileText, ArrowRight, CheckCircle } from "lucide-react";
+import {
+  Sparkles,
+  FileText,
+  ArrowRight,
+  CheckCircle,
+  Info,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -92,6 +101,18 @@ export function Step4Discovery() {
   const [suggestions, setSuggestions] = useState<RoleSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string>("");
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to suggestions when they load
+  useEffect(() => {
+    if (suggestions.length > 0 && !isAnalyzing) {
+      suggestionsRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [suggestions, isAnalyzing]);
 
   // Initialize form with store values
   const form = useForm<DiscoveryGoalsFormValues>({
@@ -175,9 +196,6 @@ export function Step4Discovery() {
    */
   const handleSelectRole = (role: string): void => {
     setSelectedRole(role);
-    toast.success("Role selected!", {
-      description: `${role} - Click "Continue with this role" to proceed`,
-    });
   };
 
   /**
@@ -221,8 +239,11 @@ export function Step4Discovery() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <StepContainer
+          currentStep={4}
           title="Tell us about your interests"
           description="Help us understand what excites you so we can suggest the best career paths."
+          quote="The best way to predict the future is to create it. Your path in tech starts with the first step."
+          quoteAuthor="INNOVATION MANTRA"
           onNext={form.handleSubmit(onSubmit)}
           onBack={previousStep}
           isNextDisabled={!selectedRole}
@@ -240,17 +261,19 @@ export function Step4Discovery() {
               name="interests"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>What topics interest you?</FormLabel>
+                  <FormLabel className="text-slate-700">
+                    What topics interest you?
+                  </FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="e.g., Artificial Intelligence, Web Design, Data Analysis, Mobile Apps, Cybersecurity, Creative Writing..."
+                    <OnboardingTextarea
+                      placeholder="E.g., Artificial Intelligence, Web Design, Data Analysis, Mobile Apps, Cybersecurity..."
                       className="resize-none"
-                      rows={5}
+                      rows={2}
                       {...field}
                       disabled={isLoading || isAnalyzing}
                     />
                   </FormControl>
-                  <FormDescription>
+                  <FormDescription className="text-slate-500">
                     List technologies, fields, or skills that excite you. Be as
                     specific or broad as you like.
                   </FormDescription>
@@ -266,24 +289,28 @@ export function Step4Discovery() {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               render={({ field: { onChange, value, ...fieldProps } }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-2">
+                  <FormLabel className="flex items-center gap-2 text-slate-700">
                     <FileText className="h-4 w-4" />
                     Upload CV for Better Suggestions (Optional)
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      type="file"
+                    <OnboardingFileInput
                       accept=".pdf"
                       disabled={isLoading || isAnalyzing}
-                      className="cursor-pointer file:mr-4 file:rounded-md file:border-0 file:bg-purple-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-purple-700"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        onChange(file || new File([], ""));
+                      selectedFileName={selectedFileName}
+                      onFileChange={(file) => {
+                        if (file) {
+                          setSelectedFileName(file.name);
+                          onChange(file);
+                        } else {
+                          setSelectedFileName("");
+                          onChange(new File([], ""));
+                        }
                       }}
                       {...fieldProps}
                     />
                   </FormControl>
-                  <FormDescription className="text-xs">
+                  <FormDescription className="text-slate-500">
                     Upload your CV to get personalized suggestions based on your
                     experience (PDF, max 5MB)
                   </FormDescription>
@@ -298,7 +325,7 @@ export function Step4Discovery() {
                 type="button"
                 onClick={handleGetSuggestions}
                 disabled={isAnalyzing || isLoading || !form.watch("interests")}
-                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:from-purple-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center gap-2 rounded-lg bg-[#FCDAB7] px-6 py-3 font-semibold text-slate-900 shadow-lg transition-colors hover:bg-[#f5c9a0] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Sparkles className="h-5 w-5" />
                 {isAnalyzing
@@ -309,12 +336,12 @@ export function Step4Discovery() {
 
             {/* AI Suggestions Display */}
             {showSuggestions && (
-              <div className="space-y-4">
+              <div ref={suggestionsRef} className="space-y-4">
                 <div className="text-center">
-                  <h3 className="text-sm font-medium">
+                  <h3 className="text-sm font-medium text-slate-900">
                     AI-Recommended Career Paths
                   </h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 text-xs text-slate-500">
                     {selectedRole
                       ? "Selection made! Click the button below to continue"
                       : "Click on a card to select your target role"}
@@ -322,68 +349,71 @@ export function Step4Discovery() {
                 </div>
 
                 {isAnalyzing ? (
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-3">
                     {[1, 2, 3].map((i) => (
                       <div
                         key={i}
-                        className="animate-pulse rounded-lg border border-gray-200 p-4"
+                        className="animate-pulse rounded-lg border border-slate-200 bg-white p-4"
                       >
-                        <div className="mb-2 h-5 w-3/4 rounded bg-gray-200"></div>
-                        <div className="mb-4 h-4 w-1/2 rounded bg-gray-200"></div>
-                        <div className="h-20 w-full rounded bg-gray-200"></div>
+                        <div className="mb-2 h-5 w-3/4 rounded bg-slate-200"></div>
+                        <div className="mb-4 h-4 w-1/2 rounded bg-slate-200"></div>
+                        <div className="h-16 w-full rounded bg-slate-200"></div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-3">
                     {suggestions.map((suggestion, index) => {
                       const isSelected = selectedRole === suggestion.role;
+                      // Truncate reasoning to 160 characters
+                      const truncatedReasoning =
+                        suggestion.reasoning.length > 150
+                          ? suggestion.reasoning.substring(0, 160) + "..."
+                          : suggestion.reasoning;
+
                       return (
                         <Card
                           key={index}
                           onClick={() => handleSelectRole(suggestion.role)}
-                          className={`group relative cursor-pointer border-2 transition-all ${
+                          className={`group relative cursor-pointer border-2 bg-white transition-all ${
                             isSelected
-                              ? "scale-105 border-purple-600 bg-purple-100 shadow-xl ring-2 ring-purple-400"
-                              : "border-purple-200 hover:scale-105 hover:border-purple-500 hover:bg-purple-50 hover:shadow-xl"
+                              ? "border-[#1E5F74] shadow-md ring-2 ring-[#1E5F74]/20"
+                              : "border-slate-200 hover:border-[#1E5F74] hover:shadow-md"
                           }`}
                         >
                           {isSelected && (
-                            <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 text-white shadow-lg">
+                            <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#1E5F74] text-white shadow-lg">
                               <CheckCircle className="h-5 w-5" />
                             </div>
                           )}
-                          <CardHeader>
-                            <CardTitle className="text-lg">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-lg font-semibold text-slate-900">
                               {suggestion.role}
                             </CardTitle>
                             <CardDescription
-                              className={`text-base font-semibold ${
-                                isSelected
-                                  ? "text-purple-700"
-                                  : "text-purple-600"
+                              className={`text-sm font-semibold ${
+                                isSelected ? "text-[#1E5F74]" : "text-[#133B5C]"
                               }`}
                             >
                               {suggestion.matchPercentage}% Match
                             </CardDescription>
                           </CardHeader>
-                          <CardContent className="space-y-3">
-                            <p className="text-sm text-muted-foreground">
-                              {suggestion.reasoning}
+                          <CardContent className="space-y-3 pt-0">
+                            <p className="text-sm leading-relaxed text-slate-600">
+                              {truncatedReasoning}
                             </p>
                             {!isSelected && (
                               <Button
                                 type="button"
                                 size="sm"
-                                variant="outline"
-                                className="w-full gap-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+                                className="w-full gap-2 bg-[#1D2D50] text-white transition-colors hover:bg-[#152340]"
                               >
                                 Select this path
                                 <ArrowRight className="h-4 w-4" />
                               </Button>
                             )}
                             {isSelected && (
-                              <div className="flex w-full items-center justify-center gap-2 rounded-md bg-purple-600 py-2 text-sm font-semibold text-white">
+                              <div className="flex w-full items-center justify-center gap-2 rounded-md bg-[#1E5F74] py-2 text-sm font-semibold text-white">
                                 <CheckCircle className="h-4 w-4" />
                                 Selected
                               </div>
@@ -423,14 +453,13 @@ export function Step4Discovery() {
             /> */}
 
             {/* Info Box */}
-            <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 text-sm text-purple-900">
-              <p className="font-medium">How This Works</p>
-              <p className="mt-1">
+            <InfoBox icon={Info} title="How This Works">
+              <p>
                 {data.resumeText
                   ? "We'll use your CV context to create a personalized roadmap in the next step."
                   : "Our AI will analyze your interests to suggest career paths that align with your preferences."}
               </p>
-            </div>
+            </InfoBox>
           </div>
         </StepContainer>
       </form>

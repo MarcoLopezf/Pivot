@@ -230,6 +230,9 @@ export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
     const state = get();
     set({ isLoading: true });
 
+    // Minimum display time so transition doesn't flash
+    const minDelay = new Promise((r) => setTimeout(r, 600));
+
     try {
       // Call server action to persist to database
       const result = await saveStepAction(state.currentStep, state.data);
@@ -247,6 +250,7 @@ export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
       console.error("Error saving onboarding progress:", error);
       throw error;
     } finally {
+      await minDelay;
       set({ isLoading: false });
     }
   },

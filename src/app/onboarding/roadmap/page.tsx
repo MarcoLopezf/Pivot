@@ -30,14 +30,7 @@ import { AlertCircle, ArrowRight } from "lucide-react";
 export default function OnboardingRoadmapPage(): React.ReactElement {
   const router = useRouter();
 
-  // Hook now gets user from Supabase auth internally
-  const { roadmap, isLoading, error, toggleItemStatus } = useRoadmap();
-
-  // Handle quiz navigation
-  const handleTakeQuiz = (itemId: string) => {
-    if (!roadmap) return;
-    router.push(`/quiz/${roadmap.id}/${itemId}`);
-  };
+  const { roadmap, isLoading, error } = useRoadmap();
 
   // Loading state
   if (isLoading) {
@@ -131,11 +124,7 @@ export default function OnboardingRoadmapPage(): React.ReactElement {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Roadmap Timeline */}
-          <RoadmapTimeline
-            roadmap={roadmap}
-            onItemStatusChange={toggleItemStatus}
-            onTakeQuiz={handleTakeQuiz}
-          />
+          <RoadmapTimeline roadmap={roadmap} />
 
           {/* Continue Button */}
           <div className="flex justify-end pt-4 border-t">

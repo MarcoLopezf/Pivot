@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/infrastructure/auth/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +29,6 @@ type MessageType = "error" | "success";
  * After successful authentication, users are redirected to /onboarding
  */
 export default function LoginPage() {
-  const router = useRouter();
   const supabase = createClient();
 
   // State management
@@ -128,8 +126,8 @@ export default function LoginPage() {
       }
 
       if (data.session) {
-        // Login successful - redirect to onboarding
-        router.push("/onboarding");
+        // Full page navigation to re-render server components (SiteHeader auth state)
+        window.location.href = "/onboarding";
       }
     } catch {
       setMessage({
@@ -213,9 +211,9 @@ export default function LoginPage() {
           text: "Account created! Redirecting to onboarding...",
           type: "success",
         });
-        // Redirect after brief delay to show success message
+        // Full page navigation to re-render server components (SiteHeader auth state)
         setTimeout(() => {
-          router.push("/onboarding");
+          window.location.href = "/onboarding";
         }, 1000);
       }
     } catch {
@@ -229,13 +227,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/50 p-4">
-      <Card className="w-full max-w-md shadow-lg">
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gray-100 p-4">
+      <Card className="w-full max-w-md bg-[#1D2D50] shadow-xl border-none">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight">
+          <CardTitle className="text-3xl font-bold tracking-tight text-white">
             Welcome to Pivot
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className="text-base text-slate-300">
             Sign in or create your account
           </CardDescription>
         </CardHeader>
@@ -246,7 +244,7 @@ export default function LoginPage() {
             <Button
               variant="outline"
               size="lg"
-              className="w-full gap-3"
+              className="w-full gap-3 border-slate-600 bg-transparent text-white hover:bg-[#133B5C] hover:border-slate-500 transition-colors"
               onClick={() => handleOAuth("github")}
               disabled={isLoading}
             >
@@ -261,7 +259,7 @@ export default function LoginPage() {
             <Button
               variant="outline"
               size="lg"
-              className="w-full gap-3"
+              className="w-full gap-3 border-slate-600 bg-transparent text-white hover:bg-[#133B5C] hover:border-slate-500 transition-colors"
               onClick={() => handleOAuth("google")}
               disabled={isLoading}
             >
@@ -277,10 +275,10 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <span className="w-full border-t border-slate-600" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
+              <span className="bg-[#1D2D50] px-2 text-slate-400">
                 Or continue with
               </span>
             </div>
@@ -292,16 +290,28 @@ export default function LoginPage() {
             className="w-full"
             onValueChange={handleTabChange}
           >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-transparent border-b border-slate-600 rounded-none h-auto p-0">
+              <TabsTrigger
+                value="login"
+                className="rounded-none border-0 data-[state=active]:bg-[#1E5F74] data-[state=inactive]:bg-transparent text-slate-300 data-[state=active]:text-white py-2.5 data-[state=active]:shadow-none transition-colors"
+              >
+                Login
+              </TabsTrigger>
+              <TabsTrigger
+                value="register"
+                className="rounded-none border-0 data-[state=active]:bg-[#1E5F74] data-[state=inactive]:bg-transparent text-slate-300 data-[state=active]:text-white py-2.5 data-[state=active]:shadow-none transition-colors"
+              >
+                Register
+              </TabsTrigger>
             </TabsList>
 
             {/* Login Tab */}
-            <TabsContent value="login" className="space-y-4">
+            <TabsContent value="login" className="space-y-4 mt-6">
               <form onSubmit={handleEmailLogin} className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-email" className="text-slate-300">
+                    Email
+                  </Label>
                   <Input
                     id="login-email"
                     type="email"
@@ -310,22 +320,27 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={isLoading}
+                    className="bg-[#133B5C] border-slate-600 text-white placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74]"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="login-password">Password</Label>
+                  <Label htmlFor="login-password" className="text-slate-300">
+                    Password
+                  </Label>
                   <Input
                     id="login-password"
                     type="password"
+                    placeholder="••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
+                    className="bg-[#133B5C] border-slate-600 text-white placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74]"
                   />
                 </div>
                 <Button
                   type="submit"
-                  className="w-full gap-2"
+                  className="w-full gap-2 bg-[#FCDAB7] hover:bg-[#f5c9a0] text-slate-900 font-medium transition-colors"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -344,10 +359,12 @@ export default function LoginPage() {
             </TabsContent>
 
             {/* Register Tab */}
-            <TabsContent value="register" className="space-y-4">
+            <TabsContent value="register" className="space-y-4 mt-6">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="register-email">Email</Label>
+                  <Label htmlFor="register-email" className="text-slate-300">
+                    Email
+                  </Label>
                   <Input
                     id="register-email"
                     type="email"
@@ -356,10 +373,13 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={isLoading}
+                    className="bg-[#133B5C] border-slate-600 text-white placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74]"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="register-password">Password</Label>
+                  <Label htmlFor="register-password" className="text-slate-300">
+                    Password
+                  </Label>
                   <Input
                     id="register-password"
                     type="password"
@@ -369,10 +389,14 @@ export default function LoginPage() {
                     required
                     minLength={6}
                     disabled={isLoading}
+                    className="bg-[#133B5C] border-slate-600 text-white placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74]"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="register-confirm-password">
+                  <Label
+                    htmlFor="register-confirm-password"
+                    className="text-slate-300"
+                  >
                     Confirm Password
                   </Label>
                   <Input
@@ -384,11 +408,12 @@ export default function LoginPage() {
                     required
                     minLength={6}
                     disabled={isLoading}
+                    className="bg-[#133B5C] border-slate-600 text-white placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74]"
                   />
                 </div>
                 <Button
                   type="submit"
-                  className="w-full gap-2"
+                  className="w-full gap-2 bg-[#FCDAB7] hover:bg-[#f5c9a0] text-slate-900 font-medium transition-colors"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -414,8 +439,8 @@ export default function LoginPage() {
             <div
               className={`w-full rounded-md border p-3 text-sm ${
                 message.type === "error"
-                  ? "border-red-500 bg-red-50 text-red-900"
-                  : "border-green-500 bg-green-50 text-green-900"
+                  ? "border-red-400 bg-red-950/50 text-red-200"
+                  : "border-green-400 bg-green-950/50 text-green-200"
               }`}
             >
               {message.text}
@@ -423,13 +448,19 @@ export default function LoginPage() {
           )}
 
           {/* Legal Footer */}
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center text-xs text-slate-400">
             By continuing, you agree to our{" "}
-            <a href="/terms" className="underline hover:text-primary">
+            <a
+              href="/terms"
+              className="underline hover:text-slate-200 transition-colors"
+            >
               Terms of Service
             </a>{" "}
             and{" "}
-            <a href="/privacy" className="underline hover:text-primary">
+            <a
+              href="/privacy"
+              className="underline hover:text-slate-200 transition-colors"
+            >
               Privacy Policy
             </a>
           </p>

@@ -116,7 +116,7 @@ ${contextSection}
 For each suggested role, provide:
 1. The role name - MUST be an EXACT MATCH from the "Valid Job Roles" list above (case-sensitive)
 2. A match percentage (0-100) indicating how well their interests${resumeText ? " and background" : ""} align with this role
-3. A brief reasoning (2-3 sentences) explaining why this role is a good fit${resumeText ? " based on their experience" : ""} and what skills they should develop
+3. A brief reasoning (max 160 characters) explaining why this role is a good fit${resumeText ? " based on their experience" : ""} and what skills they should develop
 
 Focus on realistic career transitions that align with their interests while offering growth opportunities. Consider both lateral moves and progressive career paths.
 

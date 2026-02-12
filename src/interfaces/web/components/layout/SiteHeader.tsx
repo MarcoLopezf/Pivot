@@ -11,15 +11,6 @@ interface SiteHeaderProps {
   currentRoadmapId?: string;
 }
 
-/**
- * SiteHeader - Global Navigation Header (Server Component)
- *
- * Fetches user session and roadmaps list server-side.
- * Renders the logo, context switcher, and user menu.
- * Shows login button for unauthenticated users.
- *
- * @layer Interface (Web)
- */
 export async function SiteHeader({
   currentRoadmapId,
 }: SiteHeaderProps): Promise<React.ReactElement> {
@@ -28,15 +19,23 @@ export async function SiteHeader({
     data: { user: authUser },
   } = await supabase.auth.getUser();
 
-  // Unauthenticated: show minimal header with logo + login
   if (!authUser) {
     return (
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-14 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-lg font-bold tracking-tight">PIVOT</span>
+      <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200">
+        <div className="container mx-auto flex h-16 items-center justify-between px-6">
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <span className="text-xl font-bold tracking-tight text-[#1D2D50]">
+              PIVOT
+            </span>
           </Link>
-          <Button variant="outline" size="sm" asChild>
+          <Button
+            size="default"
+            asChild
+            className="bg-[#1D2D50] text-white hover:bg-[#152340] transition-colors font-medium"
+          >
             <Link href="/login">Log in</Link>
           </Button>
         </div>
@@ -44,7 +43,6 @@ export async function SiteHeader({
     );
   }
 
-  // Fetch user profile from DB and roadmaps list in parallel
   const userRepository = profileContainer.getUserRepository();
   const [dbUser, roadmapsResult] = await Promise.all([
     userRepository.findById(UserId.create(authUser.id)),
@@ -60,17 +58,22 @@ export async function SiteHeader({
   const roadmaps = roadmapsResult.success ? (roadmapsResult.data ?? []) : [];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-14 items-center justify-between px-4">
+    <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200">
+      <div className="container mx-auto flex h-16 items-center justify-between px-6">
         {/* Left: Logo + Context Switcher */}
         <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-lg font-bold tracking-tight">PIVOT</span>
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <span className="text-xl font-bold tracking-tight text-[#1D2D50]">
+              PIVOT
+            </span>
           </Link>
 
           {roadmaps.length > 0 && (
             <>
-              <span className="text-muted-foreground/50">/</span>
+              <span className="text-slate-300">/</span>
               <RoadmapSwitcher
                 currentRoadmapId={currentRoadmapId}
                 roadmaps={roadmaps}

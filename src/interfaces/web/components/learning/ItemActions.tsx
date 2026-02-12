@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { RoadmapItemStatus } from "@application/dtos/learning/RoadmapDTO";
 import * as roadmapApi from "@interfaces/web/api/roadmapApi";
@@ -12,74 +11,52 @@ interface ItemActionsProps {
   itemId: string;
   roadmapId: string;
   initialStatus: RoadmapItemStatus;
-  itemType: "theory" | "project";
 }
 
 /**
  * ItemActions Component (Client)
  *
- * Provides "Mark as Complete" and "Take Quiz" action buttons.
- * Uses optimistic UI for immediate status feedback.
+ * Provides status action buttons (Start Learning, Mark as Complete, Undo).
+ * Status only updates after API success to avoid flash of wrong button.
  */
 export function ItemActions({
   itemId,
   roadmapId,
   initialStatus,
-  itemType,
 }: ItemActionsProps): React.ReactElement {
   const [status, setStatus] = useState<RoadmapItemStatus>(initialStatus);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleMarkComplete = useCallback(async (): Promise<void> => {
-    const previousStatus = status;
-    const newStatus: RoadmapItemStatus =
-      status === "completed" ? "in_progress" : "completed";
+  const updateStatus = useCallback(
+    async (newStatus: RoadmapItemStatus): Promise<void> => {
+      setIsUpdating(true);
 
-    // Optimistic update
-    setStatus(newStatus);
-    setIsUpdating(true);
-
-    try {
-      await roadmapApi.updateItemStatus(roadmapId, itemId, newStatus);
-      toast.success(
-        newStatus === "completed"
-          ? "Marked as complete!"
-          : "Marked as in progress",
-      );
-    } catch (err) {
-      // Revert on failure
-      setStatus(previousStatus);
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update status";
-      toast.error(errorMessage);
-    } finally {
-      setIsUpdating(false);
-    }
-  }, [status, roadmapId, itemId]);
-
-  const handleStart = useCallback(async (): Promise<void> => {
-    setStatus("in_progress");
-    setIsUpdating(true);
-
-    try {
-      await roadmapApi.updateItemStatus(roadmapId, itemId, "in_progress");
-      toast.success("Started learning!");
-    } catch (err) {
-      setStatus("pending");
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update status";
-      toast.error(errorMessage);
-    } finally {
-      setIsUpdating(false);
-    }
-  }, [roadmapId, itemId]);
+      try {
+        await roadmapApi.updateItemStatus(roadmapId, itemId, newStatus);
+        setStatus(newStatus);
+        toast.success(
+          newStatus === "completed"
+            ? "Marked as complete!"
+            : newStatus === "in_progress"
+              ? "Started learning!"
+              : "Marked as in progress",
+        );
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to update status";
+        toast.error(errorMessage);
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [roadmapId, itemId],
+  );
 
   return (
     <div className="space-y-3">
-      {/* Status-dependent primary action */}
       {status === "pending" && (
         <Button
-          onClick={handleStart}
+          onClick={() => void updateStatus("in_progress")}
           disabled={isUpdating}
           className="w-full gap-2"
           size="lg"
@@ -89,13 +66,13 @@ export function ItemActions({
           ) : (
             <BookOpen className="h-4 w-4" />
           )}
-          Start Learning
+          {isUpdating ? "Starting..." : "Start Learning"}
         </Button>
       )}
 
       {status === "in_progress" && (
         <Button
-          onClick={handleMarkComplete}
+          onClick={() => void updateStatus("completed")}
           disabled={isUpdating}
           className="w-full gap-2 bg-green-600 hover:bg-green-700"
           size="lg"
@@ -105,13 +82,13 @@ export function ItemActions({
           ) : (
             <CheckCircle2 className="h-4 w-4" />
           )}
-          Mark as Complete
+          {isUpdating ? "Updating..." : "Mark as Complete"}
         </Button>
       )}
 
       {status === "completed" && (
         <Button
-          onClick={handleMarkComplete}
+          onClick={() => void updateStatus("in_progress")}
           disabled={isUpdating}
           variant="outline"
           className="w-full gap-2 border-green-300 text-green-700 bg-green-50 hover:bg-green-100"
@@ -124,35 +101,6 @@ export function ItemActions({
           )}
           Completed - Undo
         </Button>
-      )}
-
-      {/* Take Quiz button (theory items only) */}
-      {itemType === "theory" && (
-        <>
-          {status === "pending" ? (
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              size="lg"
-              disabled
-            >
-              <BookOpen className="h-4 w-4" />
-              Take Quiz
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              size="lg"
-              asChild
-            >
-              <Link href={`/quiz/${roadmapId}/${itemId}`}>
-                <BookOpen className="h-4 w-4" />
-                Take Quiz
-              </Link>
-            </Button>
-          )}
-        </>
       )}
     </div>
   );

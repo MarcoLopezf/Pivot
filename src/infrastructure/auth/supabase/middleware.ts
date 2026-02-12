@@ -50,6 +50,20 @@ export async function updateSession(request: NextRequest): Promise<{
           });
         },
       },
+      auth: {
+        // Increase timeout for auth requests to handle slow connections
+        detectSessionInUrl: false,
+        flowType: "pkce",
+      },
+      global: {
+        // Add fetch options to increase timeout to 20 seconds
+        fetch: (url, options = {}) => {
+          return fetch(url, {
+            ...options,
+            signal: AbortSignal.timeout(20000),
+          });
+        },
+      },
     },
   );
 
@@ -57,9 +71,29 @@ export async function updateSession(request: NextRequest): Promise<{
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Retry logic for network timeouts (handles intermittent connectivity issues)
+  let user: User | null = null;
+  let retries = 2;
+
+  while (retries >= 0) {
+    try {
+      const {
+        data: { user: fetchedUser },
+      } = await supabase.auth.getUser();
+      user = fetchedUser;
+      break; // Success - exit retry loop
+    } catch (error) {
+      retries--;
+      if (retries < 0) {
+        console.error("Failed to fetch user after retries:", error);
+        // Return null user on final failure (let app handle gracefully)
+        user = null;
+      } else {
+        // Wait 500ms before retry
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
+  }
 
   return { response: supabaseResponse, user };
 }

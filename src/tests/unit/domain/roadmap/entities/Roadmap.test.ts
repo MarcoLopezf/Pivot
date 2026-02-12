@@ -291,6 +291,28 @@ describe("Roadmap Entity", () => {
       );
     });
 
+    it("should update item status to in_progress", () => {
+      const roadmap = Roadmap.create(roadmapId, goalId, "Path to Senior");
+      const itemId = RoadmapItemId.create("i1");
+      roadmap.addItem(RoadmapItem.create(itemId, "Item 1", "desc", 1));
+
+      roadmap.updateItemStatus(itemId, "in_progress");
+
+      expect(roadmap.items[0].status).toBe("in_progress");
+    });
+
+    it("should update item status to pending", () => {
+      const roadmap = Roadmap.create(roadmapId, goalId, "Path to Senior");
+      const itemId = RoadmapItemId.create("i1");
+      const item = RoadmapItem.create(itemId, "Item 1", "desc", 1);
+      item.markCompleted();
+      roadmap.addItem(item);
+
+      roadmap.updateItemStatus(itemId, "pending");
+
+      expect(roadmap.items[0].status).toBe("pending");
+    });
+
     it("should update updatedAt when item status changes", () => {
       const roadmap = Roadmap.create(roadmapId, goalId, "Path to Senior");
       const itemId = RoadmapItemId.create("i1");

@@ -88,21 +88,6 @@ export function StepContainer({
       {/* Left Panel - Motivational */}
       <div className="hidden md:flex md:w-2/5 xl:w-5/12 bg-gradient-to-br from-[#1D2D50] via-[#1D2D50] to-[#133B5C] flex-col justify-between p-10 xl:p-12 text-white">
         {/* Logo */}
-        {/* Borrar o decidir antes de hacer un commit  */}
-        {/* <div className="mb-8 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400 uppercase tracking-wider text-xs font-medium">
-                Step {currentStep} of {totalSteps}
-              </span>
-              <span className="font-semibold text-slate-300 text-sm">
-                {progressPercentage}%
-              </span>
-            </div>
-            <Progress
-              value={progressPercentage}
-              className="h-1.5 bg-white/15 [&>div]:bg-[#4DC9F6]"
-            />
-          </div> */}
         <div className="flex-shrink-0">
           <h2 className="text-xl font-bold tracking-tight">
             <span className="flex items-center gap-2">

@@ -38,9 +38,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex min-h-screen flex-col`}
       >
         <SiteHeader />
-        <main className="flex-1 min-h-screen bg-gray-100 text-slate-900">
-          {children}
-        </main>
+        <main className="flex-1 bg-gray-100 text-slate-900">{children}</main>
         {!hideFooter && <SiteFooter />}
         <Toaster />
       </body>

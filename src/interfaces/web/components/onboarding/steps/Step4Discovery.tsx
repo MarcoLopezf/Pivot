@@ -365,7 +365,7 @@ export function Step4Discovery() {
                   <div className="space-y-3">
                     {suggestions.map((suggestion, index) => {
                       const isSelected = selectedRole === suggestion.role;
-                      // Truncate reasoning to 150 characters
+                      // Truncate reasoning to 160 characters
                       const truncatedReasoning =
                         suggestion.reasoning.length > 150
                           ? suggestion.reasoning.substring(0, 160) + "..."

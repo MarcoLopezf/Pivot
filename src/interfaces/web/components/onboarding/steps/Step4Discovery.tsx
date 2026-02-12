@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -102,6 +102,17 @@ export function Step4Discovery() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string>("");
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to suggestions when they load
+  useEffect(() => {
+    if (suggestions.length > 0 && !isAnalyzing) {
+      suggestionsRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [suggestions, isAnalyzing]);
 
   // Initialize form with store values
   const form = useForm<DiscoveryGoalsFormValues>({
@@ -255,9 +266,9 @@ export function Step4Discovery() {
                   </FormLabel>
                   <FormControl>
                     <OnboardingTextarea
-                      placeholder="E.g., Artificial Intelligence, Web Design, Data Analysis, Mobile Apps, Cybersecurity, Creative Writing..."
+                      placeholder="E.g., Artificial Intelligence, Web Design, Data Analysis, Mobile Apps, Cybersecurity..."
                       className="resize-none"
-                      rows={5}
+                      rows={2}
                       {...field}
                       disabled={isLoading || isAnalyzing}
                     />
@@ -325,7 +336,7 @@ export function Step4Discovery() {
 
             {/* AI Suggestions Display */}
             {showSuggestions && (
-              <div className="space-y-4">
+              <div ref={suggestionsRef} className="space-y-4">
                 <div className="text-center">
                   <h3 className="text-sm font-medium text-slate-900">
                     AI-Recommended Career Paths
@@ -357,7 +368,7 @@ export function Step4Discovery() {
                       // Truncate reasoning to 150 characters
                       const truncatedReasoning =
                         suggestion.reasoning.length > 150
-                          ? suggestion.reasoning.substring(0, 150) + "..."
+                          ? suggestion.reasoning.substring(0, 160) + "..."
                           : suggestion.reasoning;
 
                       return (

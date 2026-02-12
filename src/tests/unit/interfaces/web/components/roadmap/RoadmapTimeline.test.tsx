@@ -1,10 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { RoadmapTimeline } from "@interfaces/web/components/roadmap/RoadmapTimeline";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
 
-// Mock next/link to render as a simple anchor tag in tests
 vi.mock("next/link", () => ({
   default: ({
     children,
@@ -66,32 +64,8 @@ describe("RoadmapTimeline Component", () => {
     updatedAt: new Date(),
   };
 
-  it("should render progress bar", () => {
-    const onItemStatusChange = vi.fn();
-    const { container } = render(
-      <RoadmapTimeline
-        roadmap={mockRoadmap}
-        onItemStatusChange={onItemStatusChange}
-      />,
-    );
-
-    // Find progress element
-    const progressSection = container.querySelector("div");
-    expect(progressSection).toBeDefined();
-
-    // Check for progress text
-    const progressText = screen.getByText("33%");
-    expect(progressText).toBeDefined();
-  });
-
   it("should render all roadmap items", () => {
-    const onItemStatusChange = vi.fn();
-    render(
-      <RoadmapTimeline
-        roadmap={mockRoadmap}
-        onItemStatusChange={onItemStatusChange}
-      />,
-    );
+    render(<RoadmapTimeline roadmap={mockRoadmap} />);
 
     expect(screen.getByText("Learn TypeScript")).toBeDefined();
     expect(screen.getByText("Learn React")).toBeDefined();
@@ -99,70 +73,62 @@ describe("RoadmapTimeline Component", () => {
   });
 
   it("should display correct status badges", () => {
-    const onItemStatusChange = vi.fn();
-    render(
-      <RoadmapTimeline
-        roadmap={mockRoadmap}
-        onItemStatusChange={onItemStatusChange}
-      />,
-    );
+    render(<RoadmapTimeline roadmap={mockRoadmap} />);
 
-    // Should render at least one badge of each type
-    const badges = screen.getAllByText(/completed|in progress|pending/i);
-    expect(badges.length).toBeGreaterThanOrEqual(3);
+    expect(screen.getByText("Completed")).toBeDefined();
+    expect(screen.getByText("In Progress")).toBeDefined();
+    expect(screen.getByText("Upcoming")).toBeDefined();
   });
 
-  it("should call onItemStatusChange when status button is clicked", async () => {
-    const onItemStatusChange = vi.fn();
-    const user = userEvent.setup();
+  it("should render navigation links to item detail pages", () => {
+    render(<RoadmapTimeline roadmap={mockRoadmap} />);
 
-    render(
-      <RoadmapTimeline
-        roadmap={mockRoadmap}
-        onItemStatusChange={onItemStatusChange}
-      />,
+    const links = screen.getAllByRole("link");
+    expect(links[0].getAttribute("href")).toBe(
+      "/roadmap/roadmap-001/item/item-001",
     );
-
-    // Find and click the "Start" button (for pending item - "Learn Node.js")
-    const startButton = screen.getByText("Start");
-    await user.click(startButton);
-
-    // Status change SHOULD be called when clicking the status button
-    expect(onItemStatusChange).toHaveBeenCalledTimes(1);
-    expect(onItemStatusChange).toHaveBeenCalledWith("item-003", "in_progress");
+    expect(links[1].getAttribute("href")).toBe(
+      "/roadmap/roadmap-001/item/item-002",
+    );
+    expect(links[2].getAttribute("href")).toBe(
+      "/roadmap/roadmap-001/item/item-003",
+    );
   });
 
-  it("should display step counter for each item", () => {
-    const onItemStatusChange = vi.fn();
-    render(
-      <RoadmapTimeline
-        roadmap={mockRoadmap}
-        onItemStatusChange={onItemStatusChange}
-      />,
-    );
+  it("should render upcoming items with normal styling", () => {
+    render(<RoadmapTimeline roadmap={mockRoadmap} />);
 
-    expect(screen.getByText(/step 1 of 3/i)).toBeDefined();
-    expect(screen.getByText(/step 2 of 3/i)).toBeDefined();
-    expect(screen.getByText(/step 3 of 3/i)).toBeDefined();
+    const upcomingTitle = screen.getByText("Learn Node.js");
+    const className = upcomingTitle.getAttribute("class") || "";
+    expect(className).not.toContain("italic");
+    expect(className).toContain("text-slate-700");
   });
 
-  it("should apply strikethrough styling to completed items", () => {
-    const onItemStatusChange = vi.fn();
-    render(
-      <RoadmapTimeline
-        roadmap={mockRoadmap}
-        onItemStatusChange={onItemStatusChange}
-      />,
-    );
+  it("should render expanded section for in-progress item", () => {
+    render(<RoadmapTimeline roadmap={mockRoadmap} />);
 
-    // Find the completed item title (rendered as a Link/anchor)
-    const completedTitle = screen.getByText("Learn TypeScript");
+    expect(screen.getByText("Time Left")).toBeDefined();
+    expect(screen.getByText("Content")).toBeDefined();
+    expect(screen.getByText("Type")).toBeDefined();
+    expect(screen.getByText("Pace")).toBeDefined();
+  });
 
-    // Check for line-through or opacity classes on the link element
-    const className = completedTitle.getAttribute("class") || "";
-    const hasStrikethrough =
-      className.includes("line-through") || className.includes("opacity");
-    expect(hasStrikethrough).toBe(true);
+  it("should show topic in meta row", () => {
+    render(<RoadmapTimeline roadmap={mockRoadmap} />);
+
+    expect(screen.getByText("typescript")).toBeDefined();
+    expect(screen.getByText("react")).toBeDefined();
+    expect(screen.getByText("nodejs")).toBeDefined();
+  });
+
+  it("should show time estimate based on difficulty", () => {
+    render(<RoadmapTimeline roadmap={mockRoadmap} />);
+
+    // beginner items show "2h 15m", intermediate shows "3h 30m"
+    const beginnerTimes = screen.getAllByText("2h 15m");
+    expect(beginnerTimes.length).toBeGreaterThanOrEqual(1);
+    const intermediateTimes = screen.getAllByText("3h 30m");
+    expect(intermediateTimes.length).toBeGreaterThanOrEqual(1);
   });
 
   it("should handle empty roadmap items", () => {
@@ -172,88 +138,15 @@ describe("RoadmapTimeline Component", () => {
       progress: 0,
     };
 
-    const onItemStatusChange = vi.fn();
-    render(
-      <RoadmapTimeline
-        roadmap={emptyRoadmap}
-        onItemStatusChange={onItemStatusChange}
-      />,
-    );
-
-    // Should render progress bar even with no items
-    const progressBar = screen.getByRole("progressbar");
-    expect(progressBar).toBeDefined();
+    const { container } = render(<RoadmapTimeline roadmap={emptyRoadmap} />);
+    expect(container.querySelector("[data-testid]")).toBeNull();
   });
 
-  it("should NOT trigger status change when clicking 'Resources' tab button", async () => {
-    const onItemStatusChange = vi.fn();
-    const user = userEvent.setup();
+  it("should render item descriptions", () => {
+    render(<RoadmapTimeline roadmap={mockRoadmap} />);
 
-    render(
-      <RoadmapTimeline
-        roadmap={mockRoadmap}
-        onItemStatusChange={onItemStatusChange}
-      />,
-    );
-
-    // Find and click "Resources" tab button
-    const resourcesTab = screen.getAllByText(/^Resources$/i)[0];
-    await user.click(resourcesTab);
-
-    // Status change should NOT be called (event should be stopped by tab click)
-    expect(onItemStatusChange).not.toHaveBeenCalled();
-  });
-
-  it("should NOT trigger status change when clicking action buttons inside item card", async () => {
-    const onItemStatusChange = vi.fn();
-    const onTakeQuiz = vi.fn();
-    const user = userEvent.setup();
-
-    // First render: test the "Start" button
-    const { unmount } = render(
-      <RoadmapTimeline
-        roadmap={mockRoadmap}
-        onItemStatusChange={onItemStatusChange}
-        onTakeQuiz={onTakeQuiz}
-      />,
-    );
-
-    // Find and click the "Start" button (for pending item)
-    const startButton = screen.getByText("Start");
-    await user.click(startButton);
-
-    // Status change SHOULD be called once (this button explicitly changes status)
-    expect(onItemStatusChange).toHaveBeenCalledTimes(1);
-
-    // Clean up first render
-    unmount();
-
-    // Reset mocks for second test
-    onItemStatusChange.mockClear();
-    onTakeQuiz.mockClear();
-
-    // Second render: test the "Take Quiz" button
-    render(
-      <RoadmapTimeline
-        roadmap={mockRoadmap}
-        onItemStatusChange={onItemStatusChange}
-        onTakeQuiz={onTakeQuiz}
-      />,
-    );
-
-    // Find the "Take Quiz" button from the IN_PROGRESS item (not disabled)
-    // The completed item has a disabled Take Quiz button
-    const takeQuizButtons = screen.getAllByText(/take quiz/i);
-    const activeQuizButton = takeQuizButtons.find(
-      (btn) => !btn.closest("button")?.hasAttribute("disabled"),
-    );
-
-    if (activeQuizButton) {
-      await user.click(activeQuizButton);
-    }
-
-    // Status change should NOT be called (only quiz handler should be called)
-    expect(onItemStatusChange).not.toHaveBeenCalled();
-    expect(onTakeQuiz).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Study TS fundamentals")).toBeDefined();
+    expect(screen.getByText("Study React hooks")).toBeDefined();
+    expect(screen.getByText("Study Node.js basics")).toBeDefined();
   });
 });

@@ -47,23 +47,29 @@ export function UserMenu({
         </Avatar>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-[200px]">
-        <div className="px-2 py-1.5">
-          <p className="text-sm font-medium">{userName}</p>
-          <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+      <DropdownMenuContent
+        align="end"
+        className="w-[220px] bg-white border-slate-200 text-slate-900"
+      >
+        <div className="px-3 py-2">
+          <p className="text-sm font-medium text-slate-900">{userName}</p>
+          <p className="text-xs text-slate-500 truncate">{userEmail}</p>
         </div>
 
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-slate-200" />
 
-        <DropdownMenuItem disabled className="gap-2">
+        <DropdownMenuItem
+          disabled
+          className="gap-2 text-slate-400 focus:bg-slate-100 focus:text-slate-900"
+        >
           <User className="h-4 w-4" />
           Profile
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-slate-200" />
 
         <DropdownMenuItem
-          className="gap-2 text-destructive hover:text-destructive focus:text-destructive"
+          className="gap-2 text-red-600 focus:bg-slate-100 focus:text-red-600"
           onSelect={handleLogout}
         >
           <LogOut className="h-4 w-4" />

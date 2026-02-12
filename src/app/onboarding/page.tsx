@@ -11,6 +11,7 @@ import { Step5Import } from "@/interfaces/web/components/onboarding/steps/Step5I
 import { StepReview } from "@/interfaces/web/components/onboarding/steps/StepReview";
 import { Step7Generating } from "@/interfaces/web/components/onboarding/steps/Step7Generating";
 import { useOnboardingStore } from "@/interfaces/web/stores/useOnboardingStore";
+import { StepTransitionLoading } from "@/interfaces/web/components/onboarding/StepTransitionLoading";
 
 /**
  * Onboarding Page - Main Entry Point for Onboarding Wizard
@@ -32,7 +33,8 @@ import { useOnboardingStore } from "@/interfaces/web/stores/useOnboardingStore";
  * @layer Interface (Web)
  */
 export default function OnboardingPage() {
-  const { step, isLoading, syncWithServer } = useOnboardingStore();
+  const { step, currentStep, totalSteps, isLoading, syncWithServer } =
+    useOnboardingStore();
 
   /**
    * On mount, sync onboarding state from server
@@ -85,18 +87,12 @@ export default function OnboardingPage() {
 
   return (
     <OnboardingLayout>
-      {/* Loading State - Show skeleton while syncing with server */}
+      {/* Loading State - Show transition screen while saving */}
       {isLoading ? (
-        <div className="flex min-h-screen items-center justify-center bg-slate-50">
-          <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-lg">
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 w-64 rounded bg-slate-200"></div>
-              <div className="h-4 w-full rounded bg-slate-200"></div>
-              <div className="h-4 w-5/6 rounded bg-slate-200"></div>
-              <div className="mt-6 h-10 w-32 rounded bg-slate-200"></div>
-            </div>
-          </div>
-        </div>
+        <StepTransitionLoading
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+        />
       ) : (
         /* Current Step Component */
         renderStep()

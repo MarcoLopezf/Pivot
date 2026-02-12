@@ -84,10 +84,25 @@ export function StepContainer({
   const progressPercentage = Math.round((currentStep / totalSteps) * 100);
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex h-[calc(100dvh-4rem)] w-full">
       {/* Left Panel - Motivational */}
-      <div className="hidden md:flex md:w-2/5 xl:w-5/12 bg-gradient-to-br from-[#1D2D50] via-[#1D2D50] to-[#133B5C] flex-col justify-between p-10 xl:p-12 text-white min-h-screen">
+      <div className="hidden md:flex md:w-2/5 xl:w-5/12 bg-gradient-to-br from-[#1D2D50] via-[#1D2D50] to-[#133B5C] flex-col justify-between p-10 xl:p-12 text-white">
         {/* Logo */}
+        {/* Borrar o decidir antes de hacer un commit  */}
+        {/* <div className="mb-8 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400 uppercase tracking-wider text-xs font-medium">
+                Step {currentStep} of {totalSteps}
+              </span>
+              <span className="font-semibold text-slate-300 text-sm">
+                {progressPercentage}%
+              </span>
+            </div>
+            <Progress
+              value={progressPercentage}
+              className="h-1.5 bg-white/15 [&>div]:bg-[#4DC9F6]"
+            />
+          </div> */}
         <div className="flex-shrink-0">
           <h2 className="text-xl font-bold tracking-tight">
             <span className="flex items-center gap-2">
@@ -135,10 +150,10 @@ export function StepContainer({
       </div>
 
       {/* Right Panel - Content */}
-      <div className="flex-1 bg-slate-50 overflow-y-auto min-w-0">
-        <div className="min-h-full flex flex-col max-w-2xl mx-auto px-6 md:px-8 xl:px-12 py-8 xl:py-12">
-          {/* Progress Indicator */}
-          <div className="mb-8 space-y-2">
+      <div className="flex-1 flex flex-col bg-slate-50 min-w-0">
+        <div className="flex flex-col h-full max-w-2xl w-full mx-auto px-6 md:px-8 xl:px-12">
+          {/* Progress Indicator - Always visible top */}
+          <div className="pt-8 xl:pt-12 pb-4 space-y-2 flex-shrink-0">
             <div className="flex items-center justify-between">
               <span className="text-slate-500 uppercase tracking-wider text-xs font-medium">
                 Step {currentStep} of {totalSteps}
@@ -153,8 +168,8 @@ export function StepContainer({
             />
           </div>
 
-          {/* Step Header */}
-          <div className="mb-8 space-y-3">
+          {/* Step Header - Always visible top */}
+          <div className="pb-6 space-y-3 flex-shrink-0">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1D2D50] leading-tight">
               {title}
             </h1>
@@ -165,11 +180,11 @@ export function StepContainer({
             )}
           </div>
 
-          {/* Step Content */}
-          <div className="flex-1 mb-8">{children}</div>
+          {/* Step Content - Only this area scrolls if needed */}
+          <div className="flex-1 overflow-y-auto min-h-0">{children}</div>
 
-          {/* Navigation Buttons */}
-          <div className="flex items-center justify-between gap-4 pt-6 border-t border-slate-200 mt-auto">
+          {/* Navigation Buttons - Always visible bottom */}
+          <div className="flex items-center justify-between gap-4 py-6 border-t border-slate-200 flex-shrink-0">
             {/* Back Button */}
             {onBack ? (
               <Button

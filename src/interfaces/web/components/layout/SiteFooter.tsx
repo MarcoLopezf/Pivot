@@ -13,7 +13,7 @@ export function SiteFooter(): React.ReactElement {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full border-t bg-slate-50">
+    <footer className="w-full border-t border-slate-200 bg-gray-100">
       <div className="container mx-auto flex h-16 items-center justify-between px-6">
         {/* Left: Logo */}
         <Link

@@ -29,19 +29,18 @@ export default async function RootLayout({
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
 
-  // Only hide header on login page (full screen)
-  // Hide footer on both login and onboarding pages
-  const hideHeader = pathname === "/login";
-  const hideFooter =
-    pathname.startsWith("/onboarding") || pathname === "/login";
+  // Hide footer on onboarding pages
+  const hideFooter = pathname.startsWith("/onboarding");
 
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex min-h-screen flex-col`}
       >
-        {!hideHeader && <SiteHeader />}
-        <main className="flex-1">{children}</main>
+        <SiteHeader />
+        <main className="flex-1 min-h-screen bg-gray-100 text-slate-900">
+          {children}
+        </main>
         {!hideFooter && <SiteFooter />}
         <Toaster />
       </body>

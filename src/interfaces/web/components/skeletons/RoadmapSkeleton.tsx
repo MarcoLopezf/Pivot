@@ -1,49 +1,32 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * RoadmapSkeleton - Loading placeholder for the Roadmap Overview page.
- *
- * Mimics the layout of RoadmapHeader + RoadmapStats + RoadmapTimeline
- * to prevent layout shifts and provide instant shimmer feedback.
- */
 export function RoadmapSkeleton(): React.ReactElement {
   return (
-    <div className="space-y-6">
-      {/* Hero Header */}
-      <div className="space-y-3">
-        <Skeleton className="h-10 w-1/3" />
-        <Skeleton className="h-5 w-1/4" />
-        <div className="flex items-center gap-3 mt-2">
-          <Skeleton className="h-10 w-10 rounded-full" />
-          <Skeleton className="h-10 w-10 rounded-full" />
-          <Skeleton className="h-10 w-10 rounded-full" />
+    <div className="min-h-screen bg-gray-100">
+      {/* Hero Header Skeleton */}
+      <div className="max-w-5xl mx-auto px-6 pt-6">
+        <div className="bg-[#1D2D50] rounded-xl px-6 md:px-8 py-8 space-y-4">
+          <Skeleton className="h-4 w-24 bg-slate-600" />
+          <Skeleton className="h-10 w-2/3 bg-slate-600" />
+          <Skeleton className="h-4 w-1/2 bg-slate-600" />
+          <Skeleton className="h-2 w-full bg-slate-600 rounded-full" />
+          {/* Stats row */}
+          <div className="flex gap-6 pt-2">
+            <Skeleton className="h-12 w-32 bg-slate-600" />
+            <Skeleton className="h-12 w-32 bg-slate-600" />
+            <Skeleton className="h-12 w-32 bg-slate-600" />
+          </div>
         </div>
-        <Skeleton className="h-3 w-full rounded-full" />
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 w-full rounded-xl" />
+      {/* Timeline Skeleton */}
+      <div className="max-w-2xl mx-auto py-10 px-4 space-y-8">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex gap-6">
+            <Skeleton className="h-10 w-10 rounded-full shrink-0 bg-slate-200" />
+            <Skeleton className="h-32 w-full rounded-xl bg-slate-200" />
+          </div>
         ))}
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left Column - Timeline */}
-        <div className="lg:col-span-2 space-y-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-start gap-4">
-              <Skeleton className="h-8 w-8 rounded-full shrink-0 mt-2" />
-              <Skeleton className="h-24 w-full rounded-xl" />
-            </div>
-          ))}
-        </div>
-
-        {/* Right Column - Sidebar */}
-        <div className="space-y-6">
-          <Skeleton className="h-36 w-full rounded-xl" />
-        </div>
       </div>
     </div>
   );

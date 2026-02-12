@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/infrastructure/auth/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +29,6 @@ type MessageType = "error" | "success";
  * After successful authentication, users are redirected to /onboarding
  */
 export default function LoginPage() {
-  const router = useRouter();
   const supabase = createClient();
 
   // State management
@@ -128,8 +126,8 @@ export default function LoginPage() {
       }
 
       if (data.session) {
-        // Login successful - redirect to onboarding
-        router.push("/onboarding");
+        // Full page navigation to re-render server components (SiteHeader auth state)
+        window.location.href = "/onboarding";
       }
     } catch {
       setMessage({
@@ -213,9 +211,9 @@ export default function LoginPage() {
           text: "Account created! Redirecting to onboarding...",
           type: "success",
         });
-        // Redirect after brief delay to show success message
+        // Full page navigation to re-render server components (SiteHeader auth state)
         setTimeout(() => {
-          router.push("/onboarding");
+          window.location.href = "/onboarding";
         }, 1000);
       }
     } catch {
@@ -229,7 +227,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gray-100 p-4">
       <Card className="w-full max-w-md bg-[#1D2D50] shadow-xl border-none">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-bold tracking-tight text-white">

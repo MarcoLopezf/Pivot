@@ -116,13 +116,13 @@ export function StepReview(): React.ReactElement {
           onEdit={() => goToStep(2)}
         />
 
-        {/* Resume */}
-        {resumeFileNameValue && (
+        {/* Resume / Manual Experience */}
+        {(resumeFileNameValue || resumePreview) && (
           <ReviewItem
             icon={<FileText className="h-5 w-5 text-slate-600" />}
             iconBg="bg-slate-100"
-            label="Resume"
-            value={resumeFileNameValue}
+            label={resumeFileNameValue ? "Resume" : "Experience"}
+            value={resumeFileNameValue ?? "Manual entry"}
             extraInfo={resumePreview}
             onEdit={() => goToStep(5)}
           />

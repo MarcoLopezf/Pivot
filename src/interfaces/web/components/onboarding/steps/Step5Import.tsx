@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { z } from "zod";
 import { StepContainer } from "../StepContainer";
 import { InfoBox } from "../InfoBox";
+import { OnboardingTextarea } from "../OnboardingFormComponents";
 import { useOnboardingStore } from "@interfaces/web/stores/useOnboardingStore";
 import { uploadResumeAction } from "@interfaces/web/actions/documentActions";
 import { Button } from "@/components/ui/button";
@@ -16,22 +18,30 @@ import {
   Info,
 } from "lucide-react";
 
+type InputMode = "upload" | "manual";
+
+const manualExperienceSchema = z.object({
+  experienceText: z
+    .string()
+    .trim()
+    .min(10, "Please provide at least 10 characters describing your experience")
+    .max(1000, "Must be less than 1,000 characters")
+    .transform((val) => val.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")),
+});
+
 /**
- * Step5Import - CV/Resume Upload Step
+ * Step5Import - CV/Resume Upload or Manual Experience Entry Step
  *
- * Allows users to upload their CV or LinkedIn PDF export to personalize
- * their learning roadmap. The PDF is parsed and text is extracted for AI analysis.
+ * Allows users to either upload their CV/LinkedIn PDF export or manually
+ * describe their experience to personalize their learning roadmap.
  *
  * Features:
- * - Drag-and-drop file upload
- * - File validation (PDF only, 5MB max)
+ * - Drag-and-drop file upload (PDF)
+ * - Manual text entry with validation (1000 char limit)
+ * - Mutually exclusive modes (upload OR manual)
  * - Loading state during parsing
  * - Success/error feedback
- * - Skip option for manual entry
- *
- * TECHNICAL DEBT:
- * - TODO: Add manual input form for users who want to enter details manually
- *   instead of uploading CV (currently just a link button)
+ * - Skip option
  *
  * @layer Interface (Web)
  */
@@ -43,8 +53,25 @@ export function Step5Import() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Mode: upload (default) or manual text entry
+  const [mode, setMode] = useState<InputMode>(() => {
+    if (data.resumeText && !data.resumeFileName) return "manual";
+    return "upload";
+  });
+  const [manualText, setManualText] = useState<string>(() => {
+    if (data.resumeText && !data.resumeFileName) {
+      return typeof data.resumeText === "string" ? data.resumeText : "";
+    }
+    return "";
+  });
+
   // Check if file was uploaded
   const uploadedFile = data.resumeFileName as string | undefined;
+
+  // Manual text validation
+  const trimmedText = manualText.trim();
+  const characterCount = trimmedText.length;
+  const isManualTextValid = characterCount >= 10 && characterCount <= 1000;
 
   /**
    * Handles file upload and parsing
@@ -153,22 +180,78 @@ export function Step5Import() {
     }
   };
 
+  /**
+   * Handle manual experience submission
+   */
+  const handleManualSubmit = async () => {
+    try {
+      const parsed = manualExperienceSchema.parse({
+        experienceText: manualText,
+      });
+      updateData({
+        resumeText: parsed.experienceText,
+        resumeFileName: undefined,
+      });
+      await saveCurrentStep();
+      nextStep();
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setError(err.issues[0]?.message ?? "Invalid input");
+      } else {
+        console.error("Error saving manual experience:", err);
+        setError("Failed to save progress");
+      }
+    }
+  };
+
+  /**
+   * Switch to manual text entry mode
+   */
+  const handleSwitchToManual = () => {
+    updateData({ resumeText: undefined, resumeFileName: undefined });
+    setError(null);
+    setMode("manual");
+  };
+
+  /**
+   * Switch back to PDF upload mode
+   */
+  const handleSwitchToUpload = () => {
+    updateData({ resumeText: undefined, resumeFileName: undefined });
+    setManualText("");
+    setError(null);
+    setMode("upload");
+  };
+
   return (
     <StepContainer
       currentStep={5}
       totalSteps={7}
       title="Import Your Experience"
-      description="Upload your CV or LinkedIn PDF export to personalize your learning path (optional)."
+      description="Upload your CV or describe your experience to personalize your learning path (optional)."
       quote="Success is where preparation and opportunity meet."
       quoteAuthor="Bobby Unser"
-      onNext={uploadedFile ? handleNext : handleSkip}
+      onNext={
+        uploadedFile
+          ? handleNext
+          : mode === "manual"
+            ? handleManualSubmit
+            : handleSkip
+      }
       onBack={previousStep}
       isLoading={isUploading}
-      nextLabel={uploadedFile ? "Continue" : "Skip for Now"}
+      isNextDisabled={mode === "manual" && !uploadedFile && !isManualTextValid}
+      nextLabel={
+        uploadedFile
+          ? "Continue"
+          : mode === "manual"
+            ? "Continue"
+            : "Skip for Now"
+      }
     >
       <div className="space-y-6">
-        {/* Upload Area - Only show if no file uploaded yet */}
-        {!uploadedFile && (
+        {/* Upload Area - Only show in upload mode when no file uploaded */}
+        {mode === "upload" && !uploadedFile && (
           <div
             className={`relative rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
               isDragging
@@ -274,15 +357,57 @@ export function Step5Import() {
           </>
         )}
 
+        {/* Manual Input Area - Only show in manual mode when no file uploaded */}
+        {mode === "manual" && !uploadedFile && (
+          <div className="space-y-3">
+            <OnboardingTextarea
+              placeholder={
+                "Describe your professional experience, skills, and background. For example:\n\nI have 3 years of experience as a frontend developer working with React and TypeScript. I've built e-commerce applications and worked with REST APIs..."
+              }
+              rows={6}
+              maxLength={1000}
+              value={manualText}
+              onChange={(e) => {
+                setManualText(e.target.value);
+                setError(null);
+              }}
+              className="resize-none"
+            />
+            <div className="flex justify-end">
+              <span
+                className={`text-xs ${
+                  characterCount > 900
+                    ? "text-amber-600"
+                    : characterCount > 0
+                      ? "text-slate-500"
+                      : "text-slate-400"
+                }`}
+              >
+                {characterCount.toLocaleString()}/1,000
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Error State */}
         {error && (
-          <InfoBox icon={AlertCircle} title="Upload Failed">
+          <InfoBox
+            icon={AlertCircle}
+            title={mode === "manual" ? "Validation Error" : "Upload Failed"}
+          >
             <p>{error}</p>
           </InfoBox>
         )}
 
         {/* Info Box - Always visible */}
-        <InfoBox icon={Info} title="Why upload your CV?">
+        <InfoBox
+          icon={Info}
+          title={
+            mode === "manual"
+              ? "Why share your experience?"
+              : "Why upload your CV?"
+          }
+        >
           <ul className="space-y-1.5">
             <li>• Get a personalized roadmap based on your experience</li>
             <li>• AI analyzes your skills to identify knowledge gaps</li>
@@ -290,18 +415,24 @@ export function Step5Import() {
           </ul>
         </InfoBox>
 
-        {/* Manual Entry Link - Always visible */}
-        <div className="text-center">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleSkip}
-            disabled={isUploading}
-            className="text-slate-500 hover:text-slate-900 hover:bg-transparent text-sm"
-          >
-            I&apos;ll enter details manually instead
-          </Button>
-        </div>
+        {/* Mode Toggle - Show when no file is uploaded */}
+        {!uploadedFile && (
+          <div className="text-center">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={
+                mode === "upload" ? handleSwitchToManual : handleSwitchToUpload
+              }
+              disabled={isUploading}
+              className="text-slate-500 hover:text-slate-900 hover:bg-transparent text-sm"
+            >
+              {mode === "upload"
+                ? "I\u2019ll enter details manually instead"
+                : "Upload a PDF instead"}
+            </Button>
+          </div>
+        )}
       </div>
     </StepContainer>
   );

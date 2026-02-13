@@ -15,16 +15,16 @@ import { NextRequest, NextResponse } from "next/server";
  * 1. User authenticates (OAuth or email confirmation)
  * 2. Provider/Supabase redirects back to this route with `code` param
  * 3. We exchange the code for a session using Supabase
- * 4. Redirect user to the intended destination (default: /onboarding)
+ * 4. Redirect user to the intended destination (default: /)
  *
  * @example
- * OAuth: /auth/callback?code=xyz&next=/onboarding
+ * OAuth: /auth/callback?code=xyz&next=/
  * Email: /auth/callback?code=xyz (from confirmation email)
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") ?? "/onboarding";
+  const next = requestUrl.searchParams.get("next") ?? "/";
 
   if (code) {
     try {

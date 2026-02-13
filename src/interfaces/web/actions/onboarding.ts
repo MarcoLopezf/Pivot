@@ -179,13 +179,15 @@ export async function completeOnboardingAction(): Promise<{
   }
 
   try {
-    // Resolve from container
-    await onboardingContainer.completeOnboarding.execute(user.id);
+    // Resolve from container — returns the new roadmap ID
+    const roadmapId = await onboardingContainer.completeOnboarding.execute(
+      user.id,
+    );
 
     // Invalidate cached layout so SiteHeader re-fetches roadmaps list
     revalidatePath("/", "layout");
 
-    return { success: true, redirectUrl: "/" };
+    return { success: true, redirectUrl: `/roadmap/${roadmapId}` };
   } catch (error) {
     console.error("Onboarding completion failed:", error);
     return { success: false, error: "Failed to generate roadmap" };

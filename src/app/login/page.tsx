@@ -26,7 +26,8 @@ type MessageType = "error" | "success";
  * - Email/Password (Login)
  * - Email/Password (Sign Up with email confirmation)
  *
- * After successful authentication, users are redirected to /onboarding
+ * After successful authentication, users are redirected to /
+ * The root page handles smart routing (has roadmap → roadmap, no roadmap → onboarding)
  */
 export default function LoginPage() {
   const supabase = createClient();
@@ -73,7 +74,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/`,
         },
       });
 
@@ -128,7 +129,7 @@ export default function LoginPage() {
 
       if (data.session) {
         // Full page navigation to re-render server components (SiteHeader auth state)
-        window.location.href = "/onboarding";
+        window.location.href = "/";
       }
     } catch {
       setMessage({
@@ -214,7 +215,7 @@ export default function LoginPage() {
         });
         // Full page navigation to re-render server components (SiteHeader auth state)
         setTimeout(() => {
-          window.location.href = "/onboarding";
+          window.location.href = "/";
         }, 1000);
       }
     } catch {

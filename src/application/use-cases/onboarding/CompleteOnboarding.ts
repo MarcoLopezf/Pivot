@@ -30,13 +30,14 @@ export class CompleteOnboarding {
   /**
    * Execute the use case
    *
-   * Idempotent: Can be called multiple times safely.
-   * If user already completed onboarding, returns early without error.
+   * Supports both first-time and returning users:
+   * - First-time: Updates profile, marks onboarding complete, creates goal + roadmap
+   * - Returning: Updates profile fields, creates a new goal + roadmap
    *
    * @param userId - The user's unique identifier
-   * @returns Promise that resolves when onboarding is complete
+   * @returns The ID of the newly created roadmap
    */
-  async execute(userId: string): Promise<void> {
+  async execute(userId: string): Promise<string> {
     // 1. Get user from repository
     const user = await this.userRepository.findById(UserId.create(userId));
 
@@ -44,15 +45,7 @@ export class CompleteOnboarding {
       throw new Error("User not found");
     }
 
-    // 2. Check if onboarding already completed (idempotency check)
-    if (user.onboardingCompleted) {
-      console.log(
-        "CompleteOnboarding: User already completed onboarding, skipping",
-      );
-      return; // Already done, nothing to do
-    }
-
-    // 3. Retrieve onboarding session
+    // 2. Retrieve onboarding session
     const session = await this.onboardingRepository.findByUserId(userId);
 
     if (session) {
@@ -75,13 +68,19 @@ export class CompleteOnboarding {
     const isEntryLevel = yearsExperience === 0;
     const currentSeniority = this.determineSeniority(yearsExperience);
 
-    // 4. Update user profile with onboarding data using domain method
-    user.completeOnboarding(
-      location,
-      isEntryLevel,
-      yearsExperience,
-      currentSeniority,
-    );
+    // 4. Update user profile with onboarding data
+    if (!user.onboardingCompleted) {
+      // First-time: mark onboarding as complete
+      user.completeOnboarding(
+        location,
+        isEntryLevel,
+        yearsExperience,
+        currentSeniority,
+      );
+    } else {
+      // Returning user: update profile fields without re-triggering onboarding flag
+      user.updateProfile(user.name, location, user.bio);
+    }
 
     // Save updated user
     await this.userRepository.save(user);
@@ -117,7 +116,7 @@ export class CompleteOnboarding {
     console.log(`  GitHub username: ${githubUsername || "No"}`);
 
     // Use GenerateUserRoadmap which handles CV, GitHub, and all context
-    await this.generateUserRoadmap.execute({
+    const roadmapDTO = await this.generateUserRoadmap.execute({
       goalId: careerGoal.id.value,
       currentRole,
       targetRole,
@@ -128,8 +127,10 @@ export class CompleteOnboarding {
 
     console.log("✅ CompleteOnboarding: Roadmap generated successfully");
 
-    // 8. Clean up onboarding session
+    // 7. Clean up onboarding session
     await this.onboardingRepository.delete(userId);
+
+    return roadmapDTO.id;
   }
 
   /**

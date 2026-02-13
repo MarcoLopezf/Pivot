@@ -52,7 +52,8 @@ export default function LoginPage() {
   /**
    * Clears form fields when switching tabs
    */
-  const handleTabChange = (value: string): void => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleTabChange = (_value: string): void => {
     setEmail("");
     setPassword("");
     setConfirmPassword("");

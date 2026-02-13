@@ -78,6 +78,7 @@ export default async function ClassroomPage({
       "Tailwind CSS",
     ];
     // --- END MOCK DATA ---
+    console.log(item);
 
     return (
       <div className="container mx-auto p-6 md:p-8 max-w-6xl">

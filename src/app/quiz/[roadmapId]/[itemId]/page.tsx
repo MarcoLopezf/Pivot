@@ -69,9 +69,15 @@ export default function QuizPage(): React.ReactElement {
         const data = await response.json();
         setQuiz(data.data);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "An unexpected error occurred",
-        );
+        const message =
+          err instanceof Error ? err.message : "An unexpected error occurred";
+
+        // Log if it's a project type as requested
+        if (message.includes("PROJECT")) {
+          console.log("Item is a project of the project");
+        }
+
+        setError(message);
       } finally {
         setIsLoading(false);
       }

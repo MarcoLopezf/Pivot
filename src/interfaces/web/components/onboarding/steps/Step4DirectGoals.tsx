@@ -60,6 +60,9 @@ export function Step4DirectGoals() {
     },
   });
 
+  // Watch targetRole for conditional rendering
+  const targetRole = form.watch("targetRole");
+
   /**
    * Handles form submission
    * Updates store data, saves progress, and navigates to next step (Import)
@@ -125,11 +128,11 @@ export function Step4DirectGoals() {
               <p>
                 We&apos;ll use your goal to generate a personalized learning
                 roadmap with curated resources, projects, and milestones
-                {form.watch("targetRole") && (
+                {targetRole && (
                   <>
                     {" "}
                     tailored specifically to becoming a{" "}
-                    <strong>{form.watch("targetRole")}</strong>.
+                    <strong>{targetRole}</strong>.
                   </>
                 )}
               </p>

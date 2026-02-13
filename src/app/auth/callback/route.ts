@@ -15,16 +15,33 @@ import { NextRequest, NextResponse } from "next/server";
  * 1. User authenticates (OAuth or email confirmation)
  * 2. Provider/Supabase redirects back to this route with `code` param
  * 3. We exchange the code for a session using Supabase
- * 4. Redirect user to the intended destination (default: /onboarding)
+ * 4. Redirect user to the intended destination (default: /)
  *
  * @example
- * OAuth: /auth/callback?code=xyz&next=/onboarding
+ * OAuth: /auth/callback?code=xyz&next=/
  * Email: /auth/callback?code=xyz (from confirmation email)
  */
+/**
+ * Validates that a redirect path is a safe same-origin relative path.
+ * Prevents open redirect attacks by rejecting absolute URLs, protocol-relative
+ * URLs, and paths containing schemes.
+ */
+function getSafeRedirectPath(value: string | null): string {
+  if (
+    !value ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("://")
+  ) {
+    return "/";
+  }
+  return value;
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") ?? "/onboarding";
+  const next = getSafeRedirectPath(requestUrl.searchParams.get("next"));
 
   if (code) {
     try {

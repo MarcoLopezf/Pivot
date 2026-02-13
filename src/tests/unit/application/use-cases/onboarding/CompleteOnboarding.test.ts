@@ -59,7 +59,7 @@ describe("CompleteOnboarding Use Case", () => {
     await expect(useCase.execute("user-1")).rejects.toThrow("User not found");
   });
 
-  it("should return early when onboarding already completed", async () => {
+  it("should create a new roadmap for returning users who already completed onboarding", async () => {
     const user = User.reconstitute(
       UserId.create("user-1"),
       Email.create("u@e.com"),
@@ -73,9 +73,39 @@ describe("CompleteOnboarding Use Case", () => {
     );
     vi.mocked(mockUserRepo.findById).mockResolvedValue(user);
 
-    await useCase.execute("user-1");
+    const session = OnboardingSession.create("user-1", 5, {
+      targetRole: "Data Engineer",
+      currentRole: "Backend Dev",
+      yearsExperience: 4,
+      region: "Buenos Aires",
+    });
+    vi.mocked(mockOnboardingRepo.findByUserId).mockResolvedValue(session);
+    vi.mocked(mockUserRepo.save).mockResolvedValue(undefined);
+    vi.mocked(mockGoalRepo.save).mockResolvedValue(undefined);
+    vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(mockRoadmapDTO);
+    vi.mocked(mockOnboardingRepo.delete).mockResolvedValue(undefined);
 
-    expect(mockOnboardingRepo.findByUserId).not.toHaveBeenCalled();
+    const roadmapId = await useCase.execute("user-1");
+
+    // Should still create goal and roadmap
+    expect(mockGoalRepo.save).toHaveBeenCalledTimes(1);
+    expect(mockGenerateRoadmap.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        currentRole: "Backend Dev",
+        targetRole: "Data Engineer",
+      }),
+    );
+    expect(mockOnboardingRepo.delete).toHaveBeenCalledWith("user-1");
+    expect(roadmapId).toBe("roadmap-1");
+
+    // Should NOT re-set onboardingCompleted (already true)
+    expect(user.onboardingCompleted).toBe(true);
+
+    // Should update experience/seniority fields
+    expect(user.location).toBe("Buenos Aires");
+    expect(user.yearsExperience).toBe(4);
+    expect(user.currentSeniority).toBe("MID");
+    expect(user.isEntryLevel).toBe(false);
   });
 
   it("should throw when onboarding session not found", async () => {
@@ -116,8 +146,9 @@ describe("CompleteOnboarding Use Case", () => {
     vi.mocked(mockGenerateRoadmap.execute).mockResolvedValue(mockRoadmapDTO);
     vi.mocked(mockOnboardingRepo.delete).mockResolvedValue(undefined);
 
-    await useCase.execute("user-1");
+    const roadmapId = await useCase.execute("user-1");
 
+    expect(roadmapId).toBe("roadmap-1");
     expect(user.onboardingCompleted).toBe(true);
     expect(user.location).toBe("Mexico City");
     expect(user.yearsExperience).toBe(3);

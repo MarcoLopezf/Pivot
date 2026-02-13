@@ -199,6 +199,43 @@ describe("User", () => {
     });
   });
 
+  describe("updateOnboardingFields", () => {
+    it("should update experience fields without changing onboardingCompleted", () => {
+      const user = User.reconstitute(
+        UserId.create("user-1"),
+        Email.create("user@example.com"),
+        "John Doe",
+        UserRole.USER,
+        new Date(),
+        new Date(),
+        true,
+        new Date(),
+        "NYC",
+      );
+
+      user.updateOnboardingFields("Buenos Aires", false, 4, "MID");
+
+      expect(user.location).toBe("Buenos Aires");
+      expect(user.isEntryLevel).toBe(false);
+      expect(user.yearsExperience).toBe(4);
+      expect(user.currentSeniority).toBe("MID");
+      expect(user.onboardingCompleted).toBe(true);
+    });
+
+    it("should update updatedAt", () => {
+      const user = User.create(
+        UserId.create("user-1"),
+        Email.create("user@example.com"),
+        "John Doe",
+      );
+      const before = user.updatedAt;
+
+      user.updateOnboardingFields("NYC", true, 0, null);
+
+      expect(user.updatedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
+    });
+  });
+
   describe("completeOnboarding", () => {
     it("should mark onboarding as completed with profile data", () => {
       const user = User.create(

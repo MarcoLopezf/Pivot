@@ -166,6 +166,23 @@ export class User {
   }
 
   /**
+   * Update onboarding-related profile fields without changing onboardingCompleted flag.
+   * Used when a returning user creates a new roadmap via onboarding.
+   */
+  public updateOnboardingFields(
+    location: string | null,
+    isEntryLevel: boolean,
+    yearsExperience: number,
+    currentSeniority: string | null,
+  ): void {
+    this._location = location;
+    this._isEntryLevel = isEntryLevel;
+    this._yearsExperience = yearsExperience;
+    this._currentSeniority = currentSeniority;
+    this._updatedAt = new Date();
+  }
+
+  /**
    * Complete onboarding and update profile information
    */
   public completeOnboarding(

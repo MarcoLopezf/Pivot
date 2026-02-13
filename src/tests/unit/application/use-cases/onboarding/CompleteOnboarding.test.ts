@@ -100,6 +100,12 @@ describe("CompleteOnboarding Use Case", () => {
 
     // Should NOT re-set onboardingCompleted (already true)
     expect(user.onboardingCompleted).toBe(true);
+
+    // Should update experience/seniority fields
+    expect(user.location).toBe("Buenos Aires");
+    expect(user.yearsExperience).toBe(4);
+    expect(user.currentSeniority).toBe("MID");
+    expect(user.isEntryLevel).toBe(false);
   });
 
   it("should throw when onboarding session not found", async () => {

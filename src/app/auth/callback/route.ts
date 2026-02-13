@@ -21,10 +21,27 @@ import { NextRequest, NextResponse } from "next/server";
  * OAuth: /auth/callback?code=xyz&next=/
  * Email: /auth/callback?code=xyz (from confirmation email)
  */
+/**
+ * Validates that a redirect path is a safe same-origin relative path.
+ * Prevents open redirect attacks by rejecting absolute URLs, protocol-relative
+ * URLs, and paths containing schemes.
+ */
+function getSafeRedirectPath(value: string | null): string {
+  if (
+    !value ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("://")
+  ) {
+    return "/";
+  }
+  return value;
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") ?? "/";
+  const next = getSafeRedirectPath(requestUrl.searchParams.get("next"));
 
   if (code) {
     try {

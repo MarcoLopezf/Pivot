@@ -78,8 +78,13 @@ export class CompleteOnboarding {
         currentSeniority,
       );
     } else {
-      // Returning user: update profile fields without re-triggering onboarding flag
-      user.updateProfile(user.name, location, user.bio);
+      // Returning user: update experience/seniority without re-triggering onboarding flag
+      user.updateOnboardingFields(
+        location,
+        isEntryLevel,
+        yearsExperience,
+        currentSeniority,
+      );
     }
 
     // Save updated user

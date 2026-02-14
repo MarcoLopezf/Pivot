@@ -11,7 +11,7 @@ export interface RoadmapItemDTO {
   order: number;
   status: RoadmapItemStatus;
   type: RoadmapItemType;
-  topic: string;
+  tags: string[];
   difficulty: string;
   submissionUrl: string | null;
 }

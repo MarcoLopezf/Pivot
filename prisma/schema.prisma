@@ -86,7 +86,7 @@ model RoadmapItem {
   order         Int
   status        RoadmapItemStatus @default(PENDING)
   type          RoadmapItemType   @default(THEORY)
-  topic         String            @default("")
+  tags          String[]          @default([])
   difficulty    String            @default("beginner")
   submissionUrl String?
 

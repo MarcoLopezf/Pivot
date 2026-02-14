@@ -15,7 +15,7 @@ interface RoadmapGenerationResponse {
     order: number;
     status: "pending" | "in_progress" | "completed";
     type: "theory" | "project";
-    topic: string;
+    tags: string[];
     difficulty: "beginner" | "intermediate" | "advanced";
   }>;
 }
@@ -66,7 +66,7 @@ export class GenkitRoadmapFlow implements IGenerateRoadmapFlow {
         order: item.order,
         status: item.status,
         type: item.type,
-        topic: item.topic,
+        tags: item.tags,
         difficulty: item.difficulty,
       }));
     } catch (error) {
@@ -151,35 +151,50 @@ For items where "type": "project", follow these strict rules:
    - Mention key technical aspects (data sources, performance requirements, edge cases)
    - The description will be used to generate a detailed project specification later
 
-- "topic": **CRITICAL - ATOMIC TAG RULES:**
-  * Use strictly atomic, single-concept tags (e.g., "react", "typescript", "docker")
+- "tags": **CRITICAL - ATOMIC TAG ARRAY RULES:**
+  * Provide an array of atomic, single-concept tags that describe the specific skills/concepts covered
+  * The NUMBER of tags depends on the item's difficulty level:
+    - "beginner" items: 1-2 tags (focused, foundational) e.g. ["react"] or ["react", "components"]
+    - "intermediate" items: 2-3 tags (more specific) e.g. ["react", "hooks", "state"]
+    - "advanced" items: 3-4 tags (interconnected concepts) e.g. ["react-native", "native-modules", "ios", "android"]
+  * Each tag must be a single concept (e.g., "react", "typescript", "docker", "hooks", "native-modules")
+  * Tags MUST differentiate items covering the same broad technology (e.g., ["react", "hooks", "state"] vs ["react", "routing", "navigation"])
   * NO difficulty words (never: "react-basics", "advanced-typescript", "intro-to-python")
   * NO compound tags (never: "react-hooks-basics", "nodejs-tutorial")
   * Use canonical names: "react" (not "reactjs"), "node" (not "nodejs"), "postgres" (not "postgresql")
-  * Examples of GOOD tags: "react", "typescript", "hooks", "docker", "graphql", "testing"
-  * Examples of BAD tags: "react-basics", "reactjs", "intro-to-react", "advanced-hooks"
+  * Examples of GOOD tags: ["react", "hooks", "state"], ["typescript", "generics"], ["docker", "containers", "deployment"]
+  * Examples of BAD tags: ["react-basics"], ["reactjs"], ["intro-to-react"]
 - "difficulty": One of "beginner", "intermediate", or "advanced" based on the complexity of the milestone.
 
 Return ONLY a JSON object with this exact structure (no markdown, no code blocks):
 {
   "items": [
     {
-      "title": "React Component Lifecycle",
-      "description": "Deep dive into component mounting, updating, and unmounting phases. Covers useEffect dependencies, cleanup functions, and common pitfalls with state updates during lifecycle events.",
+      "title": "React Fundamentals",
+      "description": "Core concepts of React including JSX syntax, component composition, and props. Understanding the virtual DOM and React's rendering model.",
       "order": 1,
       "status": "pending",
       "type": "theory",
-      "topic": "react",
+      "tags": ["react"],
+      "difficulty": "beginner"
+    },
+    {
+      "title": "React Hooks & State Management",
+      "description": "Deep dive into useState, useEffect, useContext and custom hooks. Covers effect dependencies, cleanup functions, and common pitfalls with state updates.",
+      "order": 2,
+      "status": "pending",
+      "type": "theory",
+      "tags": ["react", "hooks", "state"],
       "difficulty": "intermediate"
     },
     {
       "title": "Real-time Kanban Board",
       "description": "Build a collaborative task management application with drag-and-drop functionality. Must support multiple boards, real-time updates across users using WebSockets, task assignment, and persist data to a database. Include filtering by assignee and status.",
-      "order": 2,
+      "order": 3,
       "status": "pending",
       "type": "project",
-      "topic": "react",
-      "difficulty": "intermediate"
+      "tags": ["react", "websockets", "drag-and-drop", "real-time"],
+      "difficulty": "advanced"
     }
   ]
 }

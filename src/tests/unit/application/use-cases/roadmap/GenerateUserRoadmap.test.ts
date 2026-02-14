@@ -23,7 +23,7 @@ describe("GenerateUserRoadmap Use Case", () => {
       order: 1,
       status: "pending",
       type: "theory",
-      topic: "typescript",
+      tags: ["typescript"],
       difficulty: "intermediate",
     },
     {
@@ -32,7 +32,7 @@ describe("GenerateUserRoadmap Use Case", () => {
       order: 2,
       status: "pending",
       type: "theory",
-      topic: "system-design",
+      tags: ["system-design"],
       difficulty: "advanced",
     },
     {
@@ -41,7 +41,7 @@ describe("GenerateUserRoadmap Use Case", () => {
       order: 3,
       status: "pending",
       type: "project",
-      topic: "full-stack",
+      tags: ["full-stack"],
       difficulty: "advanced",
     },
   ];
@@ -346,7 +346,7 @@ describe("GenerateUserRoadmap Use Case", () => {
           order: 1,
           status: "completed",
           type: "theory",
-          topic: "react",
+          tags: ["react"],
           difficulty: "beginner",
         },
         {
@@ -355,7 +355,7 @@ describe("GenerateUserRoadmap Use Case", () => {
           order: 2,
           status: "in_progress",
           type: "theory",
-          topic: "react",
+          tags: ["react"],
           difficulty: "advanced",
         },
         {
@@ -364,7 +364,7 @@ describe("GenerateUserRoadmap Use Case", () => {
           order: 3,
           status: "pending",
           type: "theory",
-          topic: "graphql",
+          tags: ["graphql"],
           difficulty: "intermediate",
         },
       ];

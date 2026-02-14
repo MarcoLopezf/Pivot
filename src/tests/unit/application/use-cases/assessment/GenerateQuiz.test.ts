@@ -120,7 +120,7 @@ describe("GenerateQuiz Use Case", () => {
       1,
       {
         type: "theory",
-        topic: "TypeScript",
+        tags: ["typescript"],
         difficulty: "beginner",
       },
     );
@@ -156,7 +156,7 @@ describe("GenerateQuiz Use Case", () => {
       1,
       {
         type: "theory",
-        topic: "TypeScript",
+        tags: ["typescript"],
         difficulty: "beginner",
       },
     );
@@ -185,7 +185,7 @@ describe("GenerateQuiz Use Case", () => {
 
     const result = await useCase.execute("r-1", "item-1");
 
-    expect(mockFlow.generate).toHaveBeenCalledWith("TypeScript", "beginner", 7);
+    expect(mockFlow.generate).toHaveBeenCalledWith("typescript", "beginner", 7);
     expect(result.questions).toHaveLength(5);
   });
 
@@ -197,7 +197,7 @@ describe("GenerateQuiz Use Case", () => {
       1,
       {
         type: "theory",
-        topic: "X",
+        tags: ["x"],
         difficulty: "beginner",
       },
     );
@@ -229,7 +229,7 @@ describe("GenerateQuiz Use Case", () => {
       1,
       {
         type: "theory",
-        topic: "",
+        tags: [],
         difficulty: "intermediate",
       },
     );

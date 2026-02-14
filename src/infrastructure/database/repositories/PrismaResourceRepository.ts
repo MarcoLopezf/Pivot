@@ -24,8 +24,8 @@ export class PrismaResourceRepository implements IResourceRepository {
   /**
    * Find resources by tags
    *
-   * Uses Prisma's array contains operator to find resources
-   * that have ANY of the provided tags.
+   * Uses Prisma's hasEvery operator to find resources
+   * that contain ALL of the provided tags.
    */
   async findByTags(tags: string[]): Promise<LearningResource[]> {
     if (!tags || tags.length === 0) {
@@ -36,7 +36,7 @@ export class PrismaResourceRepository implements IResourceRepository {
       const resources = await this.prisma.learningResource.findMany({
         where: {
           tags: {
-            hasSome: tags, // Matches if ANY tag overlaps
+            hasEvery: tags, // Matches only if resource contains ALL query tags
           },
         },
         orderBy: {

@@ -22,9 +22,9 @@ export interface GeneratedRoadmapItem {
    */
   type: RoadmapItemType;
   /**
-   * Topic tag used for question pool matching
+   * Tags used for question pool matching and resource search
    */
-  topic: string;
+  tags: string[];
   /**
    * Difficulty level for the item
    */

@@ -106,7 +106,7 @@ describe.skipIf(!hasTestDb)(
                 description: "Create a REST API with Node.js",
                 order: 1,
                 type: "PROJECT",
-                topic: "Node.js, Express",
+                tags: ["node", "express"],
                 difficulty: "intermediate",
               },
               {
@@ -115,7 +115,7 @@ describe.skipIf(!hasTestDb)(
                 description: "Study TypeScript fundamentals",
                 order: 2,
                 type: "THEORY",
-                topic: "TypeScript",
+                tags: ["typescript"],
                 difficulty: "beginner",
               },
             ],

@@ -141,7 +141,10 @@ export class SubmitProject {
         files: repoData.files,
         topic: roadmapItem.title,
         description: roadmapItem.description,
-        expectedSkills: roadmapItem.topic || roadmapItem.description,
+        expectedSkills:
+          roadmapItem.tags.length > 0
+            ? roadmapItem.tags.join(", ")
+            : roadmapItem.description,
       });
 
       // 10. Complete analysis with results

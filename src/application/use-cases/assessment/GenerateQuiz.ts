@@ -51,12 +51,10 @@ export class GenerateQuiz {
     }
 
     // 2. Search for existing questions in the pool (with normalized tags)
-    const normalizedTopic = item.topic
-      ? TagNormalizer.normalize(item.topic)
-      : "";
-    const tags = normalizedTopic ? [normalizedTopic] : [];
+    const normalizedTags =
+      item.tags.length > 0 ? TagNormalizer.normalizeMany(item.tags) : [];
     const existingQuestions = await this.questionRepository.findByTags(
-      tags,
+      normalizedTags,
       item.difficulty,
     );
 
@@ -65,7 +63,7 @@ export class GenerateQuiz {
     if (existingQuestions.length < GenerateQuiz.MIN_POOL_SIZE) {
       const neededCount = GenerateQuiz.MIN_POOL_SIZE - existingQuestions.length;
       const newQuestions = await this.generateAndSaveQuestions(
-        item.topic || item.title,
+        item.tags.join(" ") || item.title,
         item.difficulty,
         neededCount,
       );

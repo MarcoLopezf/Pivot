@@ -10,7 +10,7 @@ export class RoadmapItem {
   private readonly _order: number;
   private _status: RoadmapItemStatus;
   private readonly _type: RoadmapItemType;
-  private readonly _topic: string;
+  private readonly _tags: string[];
   private readonly _difficulty: string;
   private readonly _submissionUrl: string | null;
 
@@ -21,7 +21,7 @@ export class RoadmapItem {
     order: number,
     status: RoadmapItemStatus,
     type: RoadmapItemType,
-    topic: string,
+    tags: string[],
     difficulty: string,
     submissionUrl: string | null,
   ) {
@@ -31,7 +31,7 @@ export class RoadmapItem {
     this._order = order;
     this._status = status;
     this._type = type;
-    this._topic = topic;
+    this._tags = tags;
     this._difficulty = difficulty;
     this._submissionUrl = submissionUrl;
   }
@@ -43,7 +43,7 @@ export class RoadmapItem {
     order: number,
     options?: {
       type?: RoadmapItemType;
-      topic?: string;
+      tags?: string[];
       difficulty?: string;
       submissionUrl?: string | null;
     },
@@ -61,7 +61,7 @@ export class RoadmapItem {
       order,
       "pending",
       options?.type ?? "theory",
-      options?.topic ?? "",
+      options?.tags ?? [],
       options?.difficulty ?? "beginner",
       options?.submissionUrl ?? null,
     );
@@ -74,7 +74,7 @@ export class RoadmapItem {
     order: number,
     status: RoadmapItemStatus,
     type: RoadmapItemType = "theory",
-    topic: string = "",
+    tags: string[] = [],
     difficulty: string = "beginner",
     submissionUrl: string | null = null,
   ): RoadmapItem {
@@ -85,7 +85,7 @@ export class RoadmapItem {
       order,
       status,
       type,
-      topic,
+      tags,
       difficulty,
       submissionUrl,
     );
@@ -115,8 +115,8 @@ export class RoadmapItem {
     return this._type;
   }
 
-  public get topic(): string {
-    return this._topic;
+  public get tags(): string[] {
+    return this._tags;
   }
 
   public get difficulty(): string {

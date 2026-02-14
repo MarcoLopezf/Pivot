@@ -53,7 +53,7 @@ export class PrismaRoadmapRepository implements IRoadmapRepository {
               order: item.order,
               status: item.status as PrismaRoadmapItemStatus,
               type: item.type as PrismaRoadmapItemType,
-              topic: item.topic,
+              tags: item.tags,
               difficulty: item.difficulty,
               submissionUrl: item.submissionUrl,
             })),

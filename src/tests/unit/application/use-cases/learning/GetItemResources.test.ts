@@ -82,7 +82,7 @@ describe("GetItemResources Use Case", () => {
 
       vi.mocked(mockRepository.findByTags).mockResolvedValue(mockDbResources);
 
-      const result = await useCase.execute("item-001", "React Basics");
+      const result = await useCase.execute("item-001", ["react"]);
 
       // Assert: Returns DB resources
       expect(result).toEqual(mockDbResources);
@@ -99,13 +99,13 @@ describe("GetItemResources Use Case", () => {
       expect(mockRepository.saveMany).not.toHaveBeenCalled();
     });
 
-    it("should normalize topic tags before querying DB", async () => {
+    it("should normalize tags before querying DB", async () => {
       vi.mocked(mockRepository.findByTags).mockResolvedValue([]);
       vi.mocked(mockYouTubeService.searchVideos).mockResolvedValue([]);
 
-      await useCase.execute("item-001", "ReactJS Basics Tutorial");
+      await useCase.execute("item-001", ["reactjs"]);
 
-      // "ReactJS Basics Tutorial" -> ["react"] (normalized)
+      // "reactjs" -> "react" (normalized via TagNormalizer alias)
       expect(mockRepository.findByTags).toHaveBeenCalledWith(["react"]);
     });
   });
@@ -135,7 +135,7 @@ describe("GetItemResources Use Case", () => {
       // saveMany succeeds
       vi.mocked(mockRepository.saveMany).mockResolvedValue(undefined);
 
-      const result = await useCase.execute("item-002", "TypeScript");
+      const result = await useCase.execute("item-002", ["typescript"]);
 
       // Assert: Returns API resources
       expect(result).toEqual(mockApiResources);
@@ -175,7 +175,7 @@ describe("GetItemResources Use Case", () => {
       );
       vi.mocked(mockRepository.saveMany).mockResolvedValue(undefined);
 
-      await useCase.execute("item-002", "TypeScript", "advanced");
+      await useCase.execute("item-002", ["typescript"], "advanced");
 
       // Assert: YouTube API called with difficulty parameter
       expect(mockYouTubeService.searchVideos).toHaveBeenCalledWith(
@@ -184,19 +184,24 @@ describe("GetItemResources Use Case", () => {
       );
     });
 
-    it("should handle multiple normalized tags from topic", async () => {
+    it("should handle multiple tags for precise resource matching", async () => {
       vi.mocked(mockRepository.findByTags).mockResolvedValue([]);
       vi.mocked(mockYouTubeService.searchVideos).mockResolvedValue([]);
 
-      await useCase.execute("item-003", "Next.js and TypeScript Tutorial");
+      await useCase.execute("item-003", [
+        "react-native",
+        "native-modules",
+        "ios",
+      ]);
 
-      // "Next.js and TypeScript Tutorial" -> ["next", "typescript"]
+      // Multiple tags passed directly
       expect(mockRepository.findByTags).toHaveBeenCalledWith([
-        "next",
-        "typescript",
+        "react-native",
+        "native-modules",
+        "ios",
       ]);
       expect(mockYouTubeService.searchVideos).toHaveBeenCalledWith(
-        ["next", "typescript"],
+        ["react-native", "native-modules", "ios"],
         undefined,
       );
     });
@@ -210,7 +215,7 @@ describe("GetItemResources Use Case", () => {
       // API fails (returns empty due to error handling)
       vi.mocked(mockYouTubeService.searchVideos).mockResolvedValue([]);
 
-      const result = await useCase.execute("item-004", "Node.js");
+      const result = await useCase.execute("item-004", ["node"]);
 
       // Assert: Returns empty array (does not crash)
       expect(result).toEqual([]);
@@ -225,33 +230,11 @@ describe("GetItemResources Use Case", () => {
       // Assert: saveMany was NOT called (no data to save)
       expect(mockRepository.saveMany).not.toHaveBeenCalled();
     });
-
-    it("should return empty array when tags cannot be normalized", async () => {
-      // Topic with only stop words: "Tutorial Basics 101"
-      vi.mocked(mockRepository.findByTags).mockResolvedValue([]);
-
-      const result = await useCase.execute("item-005", "Tutorial Basics 101");
-
-      // Assert: Returns empty (no valid tags after normalization)
-      expect(result).toEqual([]);
-
-      // Assert: Neither DB nor API called (invalid tags)
-      expect(mockRepository.findByTags).not.toHaveBeenCalled();
-      expect(mockYouTubeService.searchVideos).not.toHaveBeenCalled();
-    });
   });
 
   describe("Edge Cases", () => {
-    it("should return empty array when topic is empty string", async () => {
-      const result = await useCase.execute("item-006", "");
-
-      expect(result).toEqual([]);
-      expect(mockRepository.findByTags).not.toHaveBeenCalled();
-      expect(mockYouTubeService.searchVideos).not.toHaveBeenCalled();
-    });
-
-    it("should return empty array when topic is whitespace", async () => {
-      const result = await useCase.execute("item-007", "   ");
+    it("should return empty array when tags is empty array", async () => {
+      const result = await useCase.execute("item-006", []);
 
       expect(result).toEqual([]);
       expect(mockRepository.findByTags).not.toHaveBeenCalled();
@@ -264,7 +247,7 @@ describe("GetItemResources Use Case", () => {
       );
 
       // Should throw error (caller handles error response)
-      await expect(useCase.execute("item-008", "React")).rejects.toThrow(
+      await expect(useCase.execute("item-008", ["react"])).rejects.toThrow(
         "DB connection error",
       );
     });
@@ -273,9 +256,19 @@ describe("GetItemResources Use Case", () => {
       vi.mocked(mockRepository.findByTags).mockResolvedValue([]);
       vi.mocked(mockYouTubeService.searchVideos).mockResolvedValue([]);
 
-      await useCase.execute("item-009", "Obscure Topic That Doesnt Exist");
+      await useCase.execute("item-009", ["obscure-topic"]);
 
       expect(mockRepository.saveMany).not.toHaveBeenCalled();
+    });
+
+    it("should deduplicate tags via normalization", async () => {
+      vi.mocked(mockRepository.findByTags).mockResolvedValue([]);
+      vi.mocked(mockYouTubeService.searchVideos).mockResolvedValue([]);
+
+      await useCase.execute("item-010", ["reactjs", "react"]);
+
+      // "reactjs" normalizes to "react", deduplicates with existing "react"
+      expect(mockRepository.findByTags).toHaveBeenCalledWith(["react"]);
     });
   });
 });

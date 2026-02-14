@@ -67,6 +67,7 @@ export class YouTubeService {
       // Build contextualized search query based on difficulty
       const query = this.buildQuery(tags, difficulty);
       // Call YouTube API (with 10s timeout)
+      const videoDuration = this.getVideoDuration(difficulty);
       const response = await axios.get<YouTubeSearchResponse>(this.baseUrl, {
         params: {
           key: this.apiKey,
@@ -74,9 +75,9 @@ export class YouTubeService {
           part: "snippet",
           type: "video",
           maxResults: 4,
-          videoDefinition: "any",
+          videoDuration,
           safeSearch: "strict",
-          order: "rating",
+          order: "relevance",
         },
         timeout: 10000, // 10 seconds
       });
@@ -112,14 +113,13 @@ export class YouTubeService {
 
     switch (normalizedDifficulty) {
       case "beginner":
-        return "tutorial for beginners basics";
+        return "full course complete tutorial for beginners";
       case "intermediate":
-        return "intermediate guide in depth";
+        return "full course complete guide in depth";
       case "advanced":
-        return "advanced deep dive architecture";
+        return "full course advanced deep dive masterclass";
       default:
-        // Default to general tutorial if difficulty not specified
-        return "tutorial guide";
+        return "full course complete tutorial";
     }
   }
 
@@ -131,20 +131,11 @@ export class YouTubeService {
    * - Advanced: long (20+ min, in-depth content)
    */
   private getVideoDuration(
-    difficulty?: string,
+    _difficulty?: string,
   ): "short" | "medium" | "long" | "any" {
-    const normalizedDifficulty = difficulty?.toLowerCase();
-
-    switch (normalizedDifficulty) {
-      case "beginner":
-        return "medium";
-      case "intermediate":
-        return "medium";
-      case "advanced":
-        return "long";
-      default:
-        return "medium";
-    }
+    // Roadmap items always need comprehensive, in-depth content (20+ min)
+    // regardless of difficulty level
+    return "long";
   }
 
   /**

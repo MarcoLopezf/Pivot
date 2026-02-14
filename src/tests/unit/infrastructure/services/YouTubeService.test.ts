@@ -155,20 +155,20 @@ describe("YouTubeService", () => {
         "https://www.googleapis.com/youtube/v3/search",
         expect.objectContaining({
           params: expect.objectContaining({
-            q: "react hooks tutorial guide -shorts -song -music",
+            q: "react hooks full course complete tutorial -shorts -song -music",
             part: "snippet",
             type: "video",
             maxResults: 4,
-            videoDefinition: "any",
+            videoDuration: "long",
             safeSearch: "strict",
-            order: "rating",
+            order: "relevance",
           }),
           timeout: 10000,
         }),
       );
     });
 
-    it("should build beginner-contextualized query with medium duration", async () => {
+    it("should build beginner-contextualized query with long duration", async () => {
       const mockResponse: YouTubeSearchResponse = { items: [] };
       vi.mocked(axios.get).mockResolvedValue({ data: mockResponse });
 
@@ -179,20 +179,20 @@ describe("YouTubeService", () => {
         "https://www.googleapis.com/youtube/v3/search",
         expect.objectContaining({
           params: expect.objectContaining({
-            q: "variables tutorial for beginners basics -shorts -song -music",
+            q: "variables full course complete tutorial for beginners -shorts -song -music",
             part: "snippet",
             type: "video",
             maxResults: 4,
-            videoDefinition: "any",
+            videoDuration: "long",
             safeSearch: "strict",
-            order: "rating",
+            order: "relevance",
           }),
           timeout: 10000,
         }),
       );
     });
 
-    it("should build intermediate-contextualized query with medium duration", async () => {
+    it("should build intermediate-contextualized query with long duration", async () => {
       const mockResponse: YouTubeSearchResponse = { items: [] };
       vi.mocked(axios.get).mockResolvedValue({ data: mockResponse });
 
@@ -203,13 +203,13 @@ describe("YouTubeService", () => {
         "https://www.googleapis.com/youtube/v3/search",
         expect.objectContaining({
           params: expect.objectContaining({
-            q: "react hooks intermediate guide in depth -shorts -song -music",
+            q: "react hooks full course complete guide in depth -shorts -song -music",
             part: "snippet",
             type: "video",
             maxResults: 4,
-            videoDefinition: "any",
+            videoDuration: "long",
             safeSearch: "strict",
-            order: "rating",
+            order: "relevance",
           }),
           timeout: 10000,
         }),
@@ -227,13 +227,13 @@ describe("YouTubeService", () => {
         "https://www.googleapis.com/youtube/v3/search",
         expect.objectContaining({
           params: expect.objectContaining({
-            q: "memory management advanced deep dive architecture -shorts -song -music",
+            q: "memory management full course advanced deep dive masterclass -shorts -song -music",
             part: "snippet",
             type: "video",
             maxResults: 4,
-            videoDefinition: "any",
+            videoDuration: "long",
             safeSearch: "strict",
-            order: "rating",
+            order: "relevance",
           }),
           timeout: 10000,
         }),

@@ -63,8 +63,8 @@ export class PrismaResourceRepository implements IResourceRepository {
     }
 
     try {
-      // Use transactions for atomicity
-      await this.prisma.$transaction(
+      // Upserts in parallel — no transaction needed for independent resources
+      await Promise.all(
         resources.map((resource) =>
           this.prisma.learningResource.upsert({
             where: { url: resource.url },

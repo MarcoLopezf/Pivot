@@ -20,6 +20,17 @@ interface ApiErrorResponse {
 type ApiResponse = ApiSuccessResponse | ApiErrorResponse;
 
 /**
+ * Return type for the useItemResources hook
+ */
+export interface UseItemResourcesResult {
+  resources: LearningResource[];
+  isLoading: boolean;
+  error: string | null;
+  hasFetched: boolean;
+  fetchResources: () => Promise<void>;
+}
+
+/**
  * useItemResources Hook
  *
  * Custom hook for fetching learning resources (videos) for a roadmap item.
@@ -43,7 +54,7 @@ export function useItemResources(
   itemId: string,
   tags: string[],
   difficulty?: string,
-) {
+): UseItemResourcesResult {
   const [resources, setResources] = useState<LearningResource[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

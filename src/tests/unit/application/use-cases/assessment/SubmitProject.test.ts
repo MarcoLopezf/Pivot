@@ -225,7 +225,7 @@ describe("SubmitProject Use Case", () => {
         "Build E-commerce API",
         "Create a full-featured e-commerce API",
         1,
-        { type: "project", topic: "Node.js, Express, PostgreSQL" },
+        { type: "project", tags: ["node", "express", "postgres"] },
       );
 
       const roadmap = Roadmap.reconstitute(

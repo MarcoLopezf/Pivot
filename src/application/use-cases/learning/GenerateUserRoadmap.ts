@@ -108,8 +108,8 @@ export class GenerateUserRoadmap {
     // Create roadmap items with AI-determined status and normalized topics
     for (const generated of generatedItems) {
       const itemId = RoadmapItemId.create(randomUUID());
-      // Normalize the topic tag to ensure atomic, canonical form
-      const normalizedTopic = TagNormalizer.normalize(generated.topic);
+      // Normalize the tags to ensure atomic, canonical form
+      const normalizedTags = TagNormalizer.normalizeMany(generated.tags);
       const item = RoadmapItem.reconstitute(
         itemId,
         generated.title,
@@ -117,7 +117,7 @@ export class GenerateUserRoadmap {
         generated.order,
         generated.status,
         generated.type,
-        normalizedTopic || generated.topic, // Fallback to original if normalization fails
+        normalizedTags.length > 0 ? normalizedTags : generated.tags,
         generated.difficulty,
       );
       roadmap.addItem(item);
@@ -137,7 +137,7 @@ export class GenerateUserRoadmap {
         order: item.order,
         status: item.status,
         type: item.type,
-        topic: item.topic,
+        tags: item.tags,
         difficulty: item.difficulty,
         submissionUrl: item.submissionUrl,
       })),

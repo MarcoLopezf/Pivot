@@ -20,6 +20,17 @@ interface ApiErrorResponse {
 type ApiResponse = ApiSuccessResponse | ApiErrorResponse;
 
 /**
+ * Return type for the useItemResources hook
+ */
+export interface UseItemResourcesResult {
+  resources: LearningResource[];
+  isLoading: boolean;
+  error: string | null;
+  hasFetched: boolean;
+  fetchResources: () => Promise<void>;
+}
+
+/**
  * useItemResources Hook
  *
  * Custom hook for fetching learning resources (videos) for a roadmap item.
@@ -27,7 +38,7 @@ type ApiResponse = ApiSuccessResponse | ApiErrorResponse;
  *
  * Usage:
  * ```tsx
- * const { resources, isLoading, error, fetchResources } = useItemResources(itemId, topic, difficulty);
+ * const { resources, isLoading, error, fetchResources } = useItemResources(itemId, tags, difficulty);
  *
  * <button onClick={fetchResources}>Show Resources</button>
  * ```
@@ -41,13 +52,16 @@ type ApiResponse = ApiSuccessResponse | ApiErrorResponse;
  */
 export function useItemResources(
   itemId: string,
-  topic: string,
+  tags: string[],
   difficulty?: string,
-) {
+): UseItemResourcesResult {
   const [resources, setResources] = useState<LearningResource[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasFetched, setHasFetched] = useState(false);
+
+  // Serialize tags for stable dependency comparison
+  const tagsKey = JSON.stringify(tags);
 
   /**
    * Fetch resources from API
@@ -63,8 +77,8 @@ export function useItemResources(
     }
 
     // Guard: Invalid inputs
-    if (!itemId || !topic) {
-      setError("Invalid item or topic");
+    if (!itemId || !tags || tags.length === 0) {
+      setError("Invalid item or tags");
       return;
     }
 
@@ -72,10 +86,9 @@ export function useItemResources(
     setError(null);
 
     try {
-      // Build query string with difficulty if provided
-      const queryParams = new URLSearchParams({
-        topic: topic,
-      });
+      // Build query string with tags array and difficulty
+      const queryParams = new URLSearchParams();
+      tags.forEach((tag) => queryParams.append("tags", tag));
 
       if (difficulty) {
         queryParams.append("difficulty", difficulty);
@@ -103,7 +116,8 @@ export function useItemResources(
     } finally {
       setIsLoading(false);
     }
-  }, [itemId, topic, difficulty, hasFetched, isLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemId, tagsKey, difficulty, hasFetched, isLoading]);
 
   return {
     resources,

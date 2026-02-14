@@ -34,7 +34,7 @@ export class GetUserRoadmap {
         order: item.order,
         status: item.status,
         type: item.type,
-        topic: item.topic,
+        tags: item.tags,
         difficulty: item.difficulty,
         submissionUrl: item.submissionUrl,
       })),

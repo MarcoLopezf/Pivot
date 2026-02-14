@@ -46,7 +46,7 @@ export default async function RoadmapOverviewPage({
     ? {
         id: activeItem.id,
         title: activeItem.title,
-        topic: activeItem.topic,
+        tags: activeItem.tags,
       }
     : null;
 

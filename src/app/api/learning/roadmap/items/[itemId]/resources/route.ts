@@ -28,7 +28,7 @@ interface ApiErrorResponse {
  * Query Parameters Schema
  */
 const QueryParamsSchema = z.object({
-  topic: z.string().min(1, "topic is required"),
+  tags: z.array(z.string().min(1)).min(1, "At least one tag is required"),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
 });
 
@@ -41,7 +41,7 @@ const QueryParamsSchema = z.object({
  * 3. Save API results to DB for future requests
  *
  * Query parameters:
- * - topic (required): The topic to search for (e.g., "React Hooks", "TypeScript Generics")
+ * - tags (required): Tags to search for (e.g., tags=react&tags=hooks)
  * - difficulty (optional): Learning level ('beginner', 'intermediate', 'advanced') for contextualized search
  *
  * Route parameters:
@@ -53,8 +53,8 @@ const QueryParamsSchema = z.object({
  * - 500: Internal server error
  *
  * Examples:
- * GET /api/learning/roadmap/items/abc123/resources?topic=React%20Hooks&difficulty=beginner
- * GET /api/learning/roadmap/items/abc123/resources?topic=Variables&difficulty=advanced
+ * GET /api/learning/roadmap/items/abc123/resources?tags=react&tags=hooks&difficulty=beginner
+ * GET /api/learning/roadmap/items/abc123/resources?tags=typescript&difficulty=advanced
  */
 export async function GET(
   request: NextRequest,
@@ -66,8 +66,11 @@ export async function GET(
     // Await params (Next.js 15 requirement)
     const { itemId } = await params;
 
-    // Validate query parameters
-    const queryParams = Object.fromEntries(request.nextUrl.searchParams);
+    // Validate query parameters (use getAll for array support)
+    const queryParams = {
+      tags: request.nextUrl.searchParams.getAll("tags"),
+      difficulty: request.nextUrl.searchParams.get("difficulty") || undefined,
+    };
     const parseResult = QueryParamsSchema.safeParse(queryParams);
 
     if (!parseResult.success) {
@@ -83,17 +86,17 @@ export async function GET(
       return NextResponse.json(response, { status: 400 });
     }
 
-    const { topic, difficulty } = parseResult.data;
+    const { tags, difficulty } = parseResult.data;
 
     logger.info(
-      `Fetching resources for item ${itemId}, topic: ${topic}, difficulty: ${difficulty || "default"}`,
+      `Fetching resources for item ${itemId}, tags: [${tags.join(", ")}], difficulty: ${difficulty || "default"}`,
     );
 
     // Get use case from DI container
     const getItemResources = learningContainer.getGetItemResourcesUseCase();
 
     // Execute use case (lazy loading: DB -> API -> Save)
-    const resources = await getItemResources.execute(itemId, topic, difficulty);
+    const resources = await getItemResources.execute(itemId, tags, difficulty);
 
     logger.info(`Found ${resources.length} resources for item ${itemId}`);
 

@@ -6,7 +6,7 @@ import { Settings, Clock, Flame, Play, ArrowRight } from "lucide-react";
 interface CurrentModuleInfo {
   id: string;
   title: string;
-  topic: string;
+  tags: string[];
 }
 
 interface RoadmapHeaderProps {
@@ -147,7 +147,7 @@ export function RoadmapHeader({
                     {currentModule.title}
                   </p>
                   <p className="text-xs text-slate-400">
-                    {currentModule.topic}
+                    {currentModule.tags.join(", ")}
                   </p>
                 </div>
                 <ArrowRight className="h-5 w-5 text-slate-400 group-hover:text-white transition-colors flex-shrink-0" />

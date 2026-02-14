@@ -94,7 +94,7 @@ export default async function ClassroomPage({
         {/* Header */}
         <div className="mb-8">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-            {item.topic ? `${item.topic} / ` : ""}Project
+            {item.tags.length > 0 ? `${item.tags.join(", ")} / ` : ""}Project
           </p>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1D2D50]">
             {item.title}
@@ -306,11 +306,15 @@ export default async function ClassroomPage({
 
           {/* Tags */}
           <div className="flex flex-wrap items-center gap-2 pt-2">
-            {item.topic && (
-              <Badge className="bg-[#1D2D50] text-white hover:bg-[#152340] text-xs">
-                {item.topic}
-              </Badge>
-            )}
+            {item.tags.length > 0 &&
+              item.tags.map((tag) => (
+                <Badge
+                  key={tag}
+                  className="bg-[#1D2D50] text-white hover:bg-[#152340] text-xs"
+                >
+                  {tag}
+                </Badge>
+              ))}
             <Badge className="bg-[#1E5F74] text-white hover:bg-[#1E5F74]/90 text-xs">
               {item.difficulty}
             </Badge>

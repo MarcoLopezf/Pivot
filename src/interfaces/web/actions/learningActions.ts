@@ -636,14 +636,14 @@ export async function getRoadmapItemAction(
       return { success: true, data: null };
     }
 
-    // 4. Fetch resources for the item's topic with difficulty context
+    // 4. Fetch resources for the item's tags with difficulty context
     let resources: LearningResource[] = [];
-    if (detail.item.topic) {
+    if (detail.item.tags && detail.item.tags.length > 0) {
       try {
         const getResources = learningContainer.getGetItemResourcesUseCase();
         resources = await getResources.execute(
           itemId,
-          detail.item.topic,
+          detail.item.tags,
           detail.item.difficulty,
         );
       } catch (resourceError) {

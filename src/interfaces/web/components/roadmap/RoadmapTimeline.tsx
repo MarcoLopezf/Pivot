@@ -137,7 +137,7 @@ function RoadmapTimelineItem({
             </span>
             <span className="flex items-center gap-1">
               <BookOpen className="h-3 w-3" />
-              {item.topic}
+              {item.tags.join(", ")}
             </span>
             <span
               className={cn(

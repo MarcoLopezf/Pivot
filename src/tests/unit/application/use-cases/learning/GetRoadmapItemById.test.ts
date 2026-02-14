@@ -85,7 +85,7 @@ describe("GetRoadmapItemById Use Case", () => {
           1,
           {
             type: "theory",
-            topic: "typescript",
+            tags: ["typescript"],
             difficulty: "beginner",
           },
         ),

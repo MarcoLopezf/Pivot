@@ -48,7 +48,7 @@ export class RoadmapMapper {
           item.order,
           STATUS_TO_DOMAIN[item.status] ?? "pending",
           TYPE_TO_DOMAIN[item.type] ?? "theory",
-          item.topic,
+          item.tags,
           item.difficulty,
           item.submissionUrl,
         ),
@@ -77,7 +77,7 @@ export class RoadmapMapper {
       order: number;
       status: string;
       type: string;
-      topic: string;
+      tags: string[];
       difficulty: string;
       submissionUrl: string | null;
     }>;
@@ -95,7 +95,7 @@ export class RoadmapMapper {
         order: item.order,
         status: STATUS_TO_PRISMA[item.status],
         type: TYPE_TO_PRISMA[item.type],
-        topic: item.topic,
+        tags: item.tags,
         difficulty: item.difficulty,
         submissionUrl: item.submissionUrl,
       })),

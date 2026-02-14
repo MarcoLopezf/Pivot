@@ -80,7 +80,7 @@ export class GetUserDashboard {
           order: nextItem.order,
           status: nextItem.status,
           type: nextItem.type,
-          topic: nextItem.topic,
+          tags: nextItem.tags,
           difficulty: nextItem.difficulty,
           submissionUrl: nextItem.submissionUrl,
         };

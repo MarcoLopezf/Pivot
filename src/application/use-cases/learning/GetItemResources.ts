@@ -38,18 +38,18 @@ export class GetItemResources {
    * Execute the use case
    *
    * @param itemId - Roadmap item ID (for logging/future features)
-   * @param topic - The topic to search for (e.g., "React Hooks", "TypeScript Generics")
+   * @param tags - Array of atomic tags (e.g., ["react", "hooks"])
    * @param difficulty - Learning level: 'beginner', 'intermediate', or 'advanced'
    * @returns Array of learning resources (videos)
    * @throws Error if database or YouTube API fails
    */
   async execute(
     itemId: string,
-    topic: string,
+    tags: string[],
     difficulty?: string,
   ): Promise<LearningResource[]> {
-    // Step 1: Normalize topic into tags using TagNormalizer
-    const normalizedTags = this.normalizeTopic(topic);
+    // Step 1: Normalize tags
+    const normalizedTags = TagNormalizer.normalizeMany(tags);
 
     // Guard: No valid tags after normalization
     if (normalizedTags.length === 0) {
@@ -78,67 +78,5 @@ export class GetItemResources {
 
     // Step 5: Return API resources (or empty array if none found)
     return apiResources;
-  }
-
-  /**
-   * Normalize topic string into clean tags
-   *
-   * Examples:
-   * - "React Hooks Basics" -> ["react", "hooks"]
-   * - "Next.js and TypeScript" -> ["next", "typescript"]
-   * - "Tutorial 101" -> [] (only stop words)
-   */
-  private normalizeTopic(topic: string): string[] {
-    if (!topic || topic.trim() === "") {
-      return [];
-    }
-
-    // Common words to filter out (conjunctions, articles, etc.)
-    const filterWords = new Set([
-      "and",
-      "or",
-      "the",
-      "a",
-      "an",
-      "for",
-      "to",
-      "with",
-      "in",
-      "on",
-      "at",
-      "from",
-    ]);
-
-    // Stop words to filter AFTER normalization
-    const stopWords = new Set([
-      "intro",
-      "introduction",
-      "basics",
-      "basic",
-      "advanced",
-      "tutorial",
-      "guide",
-      "101",
-      "fundamentals",
-      "overview",
-      "concept",
-      "concepts",
-      "mastering",
-    ]);
-
-    // Split by common separators and normalize each token
-    const tokens = topic.split(/[\s,&]+/);
-
-    // Filter out common words before normalization
-    const filteredTokens = tokens.filter(
-      (token) => !filterWords.has(token.toLowerCase()),
-    );
-
-    const normalized = TagNormalizer.normalizeMany(filteredTokens);
-
-    // Filter out stop words AFTER normalization
-    const finalTags = normalized.filter((tag) => !stopWords.has(tag));
-
-    return finalTags;
   }
 }

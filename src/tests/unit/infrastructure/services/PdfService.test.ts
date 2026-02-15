@@ -20,7 +20,7 @@ describe("PdfService", () => {
     });
 
     it("should wrap parsing errors with context message", async () => {
-      // The jsdom environment doesn't have DOMMatrix, so pdf-parse fails.
+      // Invalid PDF buffer triggers pdf-parse error
       // This exercises the catch block (lines 33-38) with an Error instance.
       const buffer = Buffer.from("not-a-real-pdf");
 

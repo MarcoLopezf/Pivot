@@ -24,8 +24,12 @@ export class PdfService {
     }
 
     try {
+      // Convert Buffer to Uint8Array for unpdf compatibility
+      // unpdf requires Uint8Array in serverless environments
+      const uint8Array = new Uint8Array(buffer);
+
       // Use unpdf for serverless-compatible PDF parsing
-      const result = await unpdfExtractText(buffer, { mergePages: true });
+      const result = await unpdfExtractText(uint8Array, { mergePages: true });
 
       // unpdf returns { text: string } or just the text string
       const text = typeof result === "string" ? result : result.text;

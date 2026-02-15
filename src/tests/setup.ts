@@ -24,10 +24,11 @@ if (!process.env.DATABASE_URL.includes("pivot_test")) {
 
 // Mock pdf-parse globally to avoid DOMMatrix errors in test environment
 vi.mock("pdf-parse", () => ({
-  PDFParse: vi.fn().mockImplementation(() => ({
-    getText: vi.fn().mockResolvedValue({
-      text: "Mocked PDF text content",
-      pages: [],
-    }),
-  })),
+  default: vi.fn().mockResolvedValue({
+    text: "Mocked PDF text content",
+    numpages: 1,
+    info: {},
+    metadata: null,
+    version: "1.10.100",
+  }),
 }));

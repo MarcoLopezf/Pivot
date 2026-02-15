@@ -23,12 +23,11 @@ export class PdfService {
     try {
       // Lazy load pdf-parse to allow mocking in tests
       /* eslint-disable @typescript-eslint/no-require-imports */
-      const { PDFParse } = require("pdf-parse");
+      const pdfParse = require("pdf-parse");
       /* eslint-enable @typescript-eslint/no-require-imports */
 
-      // Parse PDF using v2 API (class-based)
-      const parser = new PDFParse({ data: buffer });
-      const result = await parser.getText();
+      // Parse PDF using v1 API (functional)
+      const result = await pdfParse(buffer);
       return result.text;
     } catch (error) {
       // Wrap pdf-parse errors with context

@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# design assets
+/design
+
 # debug
 npm-debug.log*
 yarn-debug.log*

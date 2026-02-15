@@ -10,7 +10,7 @@
 - **Framework:** Next.js 14.2+ (App Router)
 - **Database:** PostgreSQL 15+ (Prisma ORM, pgvector extension)
 - **AI:** Google Genkit 0.5+ (Gemini 2.0 Flash)
-- **Auth:** NextAuth.js 5.0-beta (Email/Password + GitHub OAuth optional)
+- **Auth:** Supabase Auth (Email/Password + GitHub OAuth optional)
 - **Testing:** Vitest (unit/integration), Playwright (E2E), MSW (API mocking)
 - **UI:** React 18.3+, Tailwind CSS, shadcn/ui, Recharts, Framer Motion
 - **Deployment:** Vercel + Supabase + Upstash Redis
@@ -97,6 +97,28 @@
 - **Application layer:** 80%+
 - **Overall minimum:** 70%
 
+### Test Maintenance Protocol                                                                                                     
+**CRITICAL RULE:** When modifying code, ALWAYS check if tests need updates.   
+                                                
+#### Trigger Events (Check Tests):                                            
+- ✅ **Change constants/configuration** (e.g., `maxResults: 10 → 4`)          
+- ✅ **Modify function signatures** (add/remove parameters)                   
+- ✅ **Change return types or data structures**                               
+- ✅ **Refactor business logic** (even if behavior is "the same")             
+- ✅ **Update validation rules** (Zod schemas, guards)                        
+- ✅ **Change error messages or codes**                                       
+                                                                    
+#### Action Steps:                                                            
+1. **Before modifying code:** Note which tests cover the area                 
+2. **After modifying code:**                                                  
+- Search for test files related to the modified file                       
+- Run tests: `pnpm test --run [test-file-path]`                            
+- Update test assertions to match new behavior/values                      
+- Verify all related tests still pass                                      
+3. **If test fails after change:** This is GOOD - update the test expectations
+                                        
+**Remember:** Tests are documentation. If the code changes, the tests must    
+reflect it.`
 ---
 
 ## 📝 NAMING CONVENTIONS
@@ -141,11 +163,11 @@
 
 ### Branch Strategy
 
-**main** (production, protected) ← **develop** (integration, protected) ← **feature/\*** or **fix/\***
+**main** (production, protected) ← **dev** (integration, protected) ← **feature/\*** or **fix/\***
 
 ### Creating New Features
 
-1. **Always branch from `develop`**: `git checkout develop && git pull`
+1. **Always branch from `dev`**: `git checkout develop && git pull`
 2. **Create feature branch** with correct naming: `git checkout -b feature/roadmap-generation`
 3. **Work with TDD** (Red → Green → Refactor for each component)
 4. **Commit frequently** with conventional commits

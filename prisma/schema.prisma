@@ -12,10 +12,214 @@ enum UserRole {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  role      UserRole @default(USER)
+  id                    String              @id @default(uuid())
+  email                 String              @unique
+  name                  String
+  role                  UserRole            @default(USER)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // --- NEW FIELDS (Phase 1) ---
+  // Onboarding completion tracking
+  onboardingCompleted   Boolean             @default(false)
+  onboardingCompletedAt DateTime?
+
+  // Location for market research
+  location              String?
+  bio                   String?
+
+  // Entry level flags & experience
+  isEntryLevel          Boolean             @default(false)
+  currentSeniority      String?             // "JUNIOR" | "MID" | "SENIOR"
+  yearsExperience       Int?                // Extracted later from CV/LinkedIn
+
+  // Relations
+  careerGoals           CareerGoal[]
+  quizAttempts          QuizAttempt[]
+  projectSubmissions    ProjectSubmission[]
+  onboardingProgress    OnboardingProgress?
+}
+
+model CareerGoal {
+  id          String    @id @default(uuid())
+  userId      String
+  targetRole  String
+  currentRole String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  roadmaps    Roadmap[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum RoadmapItemStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum RoadmapItemType {
+  THEORY
+  PROJECT
+}
+
+model Roadmap {
+  id        String        @id @default(uuid())
+  goalId    String
+  title     String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  items     RoadmapItem[]
+
+  goal CareerGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+}
+
+model RoadmapItem {
+  id            String            @id @default(uuid())
+  roadmapId     String
+  title         String
+  description   String
+  order         Int
+  status        RoadmapItemStatus @default(PENDING)
+  type          RoadmapItemType   @default(THEORY)
+  tags          String[]          @default([])
+  difficulty    String            @default("beginner")
+  submissionUrl String?
+
+  roadmap            Roadmap             @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  quizAttempts       QuizAttempt[]
+  projectSubmissions ProjectSubmission[]
+
+  @@index([roadmapId])
+}
+
+model Question {
+  id         String           @id @default(uuid())
+  text       String
+  tags       String[]
+  difficulty String
+  usageCount Int              @default(0)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  options    QuestionOption[]
+}
+
+model QuestionOption {
+  id         String  @id @default(uuid())
+  text       String
+  isCorrect  Boolean
+  questionId String
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+model QuizAttempt {
+  id            String   @id @default(uuid())
+  userId        String
+  roadmapItemId String
+  score         Float
+  passed        Boolean
+  createdAt     DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmapItem RoadmapItem @relation(fields: [roadmapItemId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([roadmapItemId])
+}
+
+enum ResourceType {
+  VIDEO
+  ARTICLE
+  COURSE
+}
+
+model LearningResource {
+  id           String       @id @default(uuid())
+  title        String
+  url          String       @unique
+  thumbnailUrl String?
+  channelName  String?
+  duration     String?      // e.g., "10:05"
+
+  type         ResourceType @default(VIDEO)
+  tags         String[]     // Normalized tags e.g. ["react", "hooks"]
+
+  votes        Int          @default(0)
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([tags])
+}
+
+enum ProjectSubmissionStatus {
+  PENDING
+  ANALYZING
+  COMPLETED
+  FAILED
+}
+
+model ProjectSubmission {
+  id            String                  @id @default(uuid())
+  repoUrl       String
+  score         Float?
+  feedback      String?
+  status        ProjectSubmissionStatus @default(PENDING)
+  roadmapItemId String
+  userId        String
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmapItem RoadmapItem @relation(fields: [roadmapItemId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([roadmapItemId])
+}
+
+// --- NEW TABLE: OnboardingProgress ---
+// Para guardar el estado temporal del wizard sin ensuciar al User
+model OnboardingProgress {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Tracking
+  currentStep    Int       @default(1)
+  path           String?   // "DIRECT" | "AI_SUGGESTIONS"
+  completedSteps Int[]     @default([])
+
+  // Data flexible (JSON) para guardar partials de los steps
+  partialData    Json      @default("{}")
+
+  // Meta
+  createdAt      DateTime  @default(now())
+  lastUpdatedAt  DateTime  @updatedAt
+  abandonedAt    DateTime?
+
+  @@index([userId])
+  @@index([currentStep])
+}
+
+// --- NEW TABLE: JobRole ---
+// Curated job roles for career goal selection and roadmap generation
+model JobRole {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  category   String?
+  isEnabled  Boolean  @default(true)
+  popularity Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isEnabled])
+  @@index([popularity])
 }

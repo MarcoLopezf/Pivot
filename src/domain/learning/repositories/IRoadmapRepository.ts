@@ -1,0 +1,43 @@
+import { Roadmap } from "@domain/learning/entities/Roadmap";
+import { RoadmapId } from "@domain/learning/value-objects/RoadmapId";
+import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
+import { UserId } from "@domain/profile/value-objects/UserId";
+
+/**
+ * IRoadmapRepository
+ *
+ * Repository interface (port) for Roadmap aggregate.
+ * Defines the contract for persisting and retrieving roadmaps with their items.
+ * Implementations live in the infrastructure layer.
+ */
+export interface IRoadmapRepository {
+  /**
+   * Persist a roadmap with its items
+   */
+  save(roadmap: Roadmap): Promise<void>;
+
+  /**
+   * Find a roadmap by its ID (includes items)
+   */
+  findById(id: RoadmapId): Promise<Roadmap | null>;
+
+  /**
+   * Find all roadmaps for a specific career goal
+   */
+  findByGoalId(goalId: CareerGoalId): Promise<Roadmap[]>;
+
+  /**
+   * Find the most recent roadmap for a user (via their career goal)
+   */
+  findLatestByUserId(userId: UserId): Promise<Roadmap | null>;
+
+  /**
+   * Find all roadmaps for a user, ordered by updatedAt desc
+   */
+  findAllByUserId(userId: UserId): Promise<Roadmap[]>;
+
+  /**
+   * Find the owner user ID for a roadmap
+   */
+  findOwnerUserId(roadmapId: RoadmapId): Promise<UserId | null>;
+}

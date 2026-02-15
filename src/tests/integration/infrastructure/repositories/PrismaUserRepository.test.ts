@@ -1,7 +1,5 @@
-import { describe, it, expect, beforeEach, afterAll } from "vitest";
-import { PrismaClient } from "@prisma/client";
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { describe, it, expect, beforeEach } from "vitest";
+import { prisma } from "@infrastructure/database/PrismaClient";
 import { PrismaUserRepository } from "@infrastructure/database/repositories/PrismaUserRepository";
 import { UserId } from "@domain/profile/value-objects/UserId";
 import { Email } from "@domain/profile/value-objects/Email";
@@ -12,21 +10,16 @@ const hasTestDb = !!process.env.DATABASE_URL;
 describe.skipIf(!hasTestDb)(
   "PrismaUserRepository (integration) — requires DATABASE_URL",
   () => {
-    let db: PrismaClient;
-    let pool: Pool;
     let repository: PrismaUserRepository;
 
     beforeEach(async () => {
-      pool = new Pool({ connectionString: process.env.DATABASE_URL });
-      const adapter = new PrismaPg(pool);
-      db = new PrismaClient({ adapter });
-      repository = new PrismaUserRepository(db);
-      await db.user.deleteMany();
-    });
-
-    afterAll(async () => {
-      await db.$disconnect();
-      await pool.end();
+      repository = new PrismaUserRepository(prisma);
+      // Clean up only our own test records to avoid conflicts with parallel test files
+      await prisma.user.deleteMany({
+        where: {
+          id: { in: ["test-id-001", "test-id-002", "non-existent-id"] },
+        },
+      });
     });
 
     it("should save a user and retrieve it by ID", async () => {

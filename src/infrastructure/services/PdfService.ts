@@ -1,10 +1,13 @@
+import { extractText as unpdfExtractText } from "unpdf";
+
 /**
  * PdfService - Infrastructure service for PDF text extraction
  *
  * Provides functionality to extract text content from PDF files.
  * Used to process uploaded CVs for personalized roadmap generation.
  *
- * Infrastructure Layer - Implements external dependency (pdf-parse)
+ * Infrastructure Layer - Implements external dependency (unpdf)
+ * Uses unpdf for serverless-compatible PDF parsing (Vercel, AWS Lambda, etc.)
  */
 export class PdfService {
   /**
@@ -21,16 +24,15 @@ export class PdfService {
     }
 
     try {
-      // Lazy load pdf-parse to allow mocking in tests
-      /* eslint-disable @typescript-eslint/no-require-imports */
-      const pdfParse = require("pdf-parse");
-      /* eslint-enable @typescript-eslint/no-require-imports */
+      // Use unpdf for serverless-compatible PDF parsing
+      const result = await unpdfExtractText(buffer, { mergePages: true });
 
-      // Parse PDF using v1 API (functional)
-      const result = await pdfParse(buffer);
-      return result.text;
+      // unpdf returns { text: string } or just the text string
+      const text = typeof result === "string" ? result : result.text;
+
+      return text;
     } catch (error) {
-      // Wrap pdf-parse errors with context
+      // Wrap unpdf errors with context
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       throw new Error(`Failed to extract text from PDF: ${errorMessage}`);

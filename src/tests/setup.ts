@@ -22,13 +22,10 @@ if (!process.env.DATABASE_URL.includes("pivot_test")) {
   );
 }
 
-// Mock pdf-parse globally to avoid DOMMatrix errors in test environment
-vi.mock("pdf-parse", () => ({
-  default: vi.fn().mockResolvedValue({
+// Mock unpdf globally for test environment
+vi.mock("unpdf", () => ({
+  extractText: vi.fn().mockResolvedValue({
     text: "Mocked PDF text content",
-    numpages: 1,
-    info: {},
-    metadata: null,
-    version: "1.10.100",
+    pages: 1,
   }),
 }));

@@ -3,11 +3,15 @@ import { IQuestionRepository } from "@domain/assessment/repositories/IQuestionRe
 import { Question } from "@domain/assessment/entities/Question";
 import { QuestionId } from "@domain/assessment/value-objects/QuestionId";
 import { QuestionMapper } from "@infrastructure/database/mappers/QuestionMapper";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 export class PrismaQuestionRepository implements IQuestionRepository {
   constructor(private readonly db: PrismaClient) {}
 
-  async findByTags(tags: string[], difficulty: string): Promise<Question[]> {
+  async findByTags(
+    tags: string[],
+    difficulty: DifficultyLevel,
+  ): Promise<Question[]> {
     const prismaQuestions = await this.db.question.findMany({
       where: {
         tags: { hasSome: tags },

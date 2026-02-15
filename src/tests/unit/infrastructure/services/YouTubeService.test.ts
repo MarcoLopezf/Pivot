@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
 import { YouTubeService } from "@infrastructure/services/YouTubeService";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 /**
  * Unit tests for YouTubeService
@@ -173,7 +174,7 @@ describe("YouTubeService", () => {
       vi.mocked(axios.get).mockResolvedValue({ data: mockResponse });
 
       const service = new YouTubeService();
-      await service.searchVideos(["variables"], "beginner");
+      await service.searchVideos(["variables"], DifficultyLevel.Beginner);
 
       expect(axios.get).toHaveBeenCalledWith(
         "https://www.googleapis.com/youtube/v3/search",
@@ -197,7 +198,10 @@ describe("YouTubeService", () => {
       vi.mocked(axios.get).mockResolvedValue({ data: mockResponse });
 
       const service = new YouTubeService();
-      await service.searchVideos(["react", "hooks"], "intermediate");
+      await service.searchVideos(
+        ["react", "hooks"],
+        DifficultyLevel.Intermediate,
+      );
 
       expect(axios.get).toHaveBeenCalledWith(
         "https://www.googleapis.com/youtube/v3/search",
@@ -221,7 +225,10 @@ describe("YouTubeService", () => {
       vi.mocked(axios.get).mockResolvedValue({ data: mockResponse });
 
       const service = new YouTubeService();
-      await service.searchVideos(["memory", "management"], "advanced");
+      await service.searchVideos(
+        ["memory", "management"],
+        DifficultyLevel.Advanced,
+      );
 
       expect(axios.get).toHaveBeenCalledWith(
         "https://www.googleapis.com/youtube/v3/search",

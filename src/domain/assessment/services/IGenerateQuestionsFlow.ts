@@ -1,3 +1,5 @@
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
+
 /**
  * GeneratedQuestion
  *
@@ -28,7 +30,7 @@ export interface IGenerateQuestionsFlow {
    */
   generate(
     topic: string,
-    difficulty: string,
+    difficulty: DifficultyLevel,
     count: number,
   ): Promise<GeneratedQuestion[]>;
 }

@@ -7,6 +7,7 @@ import { RoadmapId } from "@domain/learning/value-objects/RoadmapId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
 import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
 import { UserId } from "@domain/profile/value-objects/UserId";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 describe("GetRoadmapItemById Use Case", () => {
   let mockRepo: IRoadmapRepository;
@@ -86,7 +87,7 @@ describe("GetRoadmapItemById Use Case", () => {
           {
             type: "theory",
             tags: ["typescript"],
-            difficulty: "beginner",
+            difficulty: DifficultyLevel.Beginner,
           },
         ),
       ],

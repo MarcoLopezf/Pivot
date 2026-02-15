@@ -3,6 +3,7 @@ import { Question } from "@domain/assessment/entities/Question";
 import { QuestionOption } from "@domain/assessment/entities/QuestionOption";
 import { QuestionId } from "@domain/assessment/value-objects/QuestionId";
 import { QuestionOptionId } from "@domain/assessment/value-objects/QuestionOptionId";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 function makeOption(
   id: string,
@@ -25,14 +26,14 @@ describe("Question", () => {
         id,
         "What is TypeScript?",
         ["typescript", "basics"],
-        "beginner",
+        DifficultyLevel.Beginner,
         defaultOptions,
       );
 
       expect(question.id.value).toBe("q-1");
       expect(question.text).toBe("What is TypeScript?");
       expect(question.tags).toEqual(["typescript", "basics"]);
-      expect(question.difficulty).toBe("beginner");
+      expect(question.difficulty).toBe(DifficultyLevel.Beginner);
       expect(question.usageCount).toBe(0);
       expect(question.options).toHaveLength(2);
     });
@@ -43,7 +44,7 @@ describe("Question", () => {
         QuestionId.create("q-1"),
         "What is TypeScript?",
         ["typescript"],
-        "beginner",
+        DifficultyLevel.Beginner,
         defaultOptions,
       );
       const after = new Date();
@@ -61,7 +62,7 @@ describe("Question", () => {
           QuestionId.create("q-1"),
           "",
           ["typescript"],
-          "beginner",
+          DifficultyLevel.Beginner,
           defaultOptions,
         ),
       ).toThrow("Question text cannot be empty");
@@ -73,7 +74,7 @@ describe("Question", () => {
           QuestionId.create("q-1"),
           "What is TypeScript?",
           [],
-          "beginner",
+          DifficultyLevel.Beginner,
           defaultOptions,
         ),
       ).toThrow("Question must have at least one tag");
@@ -85,10 +86,10 @@ describe("Question", () => {
           QuestionId.create("q-1"),
           "What is TypeScript?",
           ["typescript"],
-          "",
+          "" as unknown as DifficultyLevel,
           defaultOptions,
         ),
-      ).toThrow("Question difficulty cannot be empty");
+      ).toThrow("Question difficulty must be a valid DifficultyLevel");
     });
   });
 
@@ -100,7 +101,7 @@ describe("Question", () => {
         QuestionId.create("q-1"),
         "What is TypeScript?",
         ["typescript"],
-        "beginner",
+        DifficultyLevel.Beginner,
         5,
         defaultOptions,
         createdAt,
@@ -119,7 +120,7 @@ describe("Question", () => {
         QuestionId.create("q-1"),
         "What is TypeScript?",
         ["typescript"],
-        "beginner",
+        DifficultyLevel.Beginner,
         defaultOptions,
       );
 
@@ -133,7 +134,7 @@ describe("Question", () => {
         QuestionId.create("q-1"),
         "What is TypeScript?",
         ["typescript"],
-        "beginner",
+        DifficultyLevel.Beginner,
         defaultOptions,
       );
 
@@ -152,7 +153,7 @@ describe("Question", () => {
         QuestionId.create("q-1"),
         "What is TypeScript?",
         ["typescript"],
-        "beginner",
+        DifficultyLevel.Beginner,
         defaultOptions,
       );
 
@@ -167,7 +168,7 @@ describe("Question", () => {
         QuestionId.create("q-1"),
         "What is TypeScript?",
         ["typescript"],
-        "beginner",
+        DifficultyLevel.Beginner,
         defaultOptions,
       );
 

@@ -8,6 +8,7 @@ import { QuestionOptionId } from "@domain/assessment/value-objects/QuestionOptio
 import { Question } from "@domain/assessment/entities/Question";
 import { QuestionOption } from "@domain/assessment/entities/QuestionOption";
 import { TagNormalizer } from "@domain/shared/services/TagNormalizer";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 import { QuizDTO } from "@application/dtos/assessment/QuizDTO";
 import { randomUUID } from "crypto";
 
@@ -101,7 +102,7 @@ export class GenerateQuiz {
 
   private async generateAndSaveQuestions(
     topic: string,
-    difficulty: string,
+    difficulty: DifficultyLevel,
     count: number,
   ): Promise<Question[]> {
     const generatedData = await this.generateQuestionsFlow.generate(

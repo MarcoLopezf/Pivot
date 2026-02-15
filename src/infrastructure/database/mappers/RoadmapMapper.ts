@@ -11,6 +11,7 @@ import {
 import { RoadmapId } from "@domain/learning/value-objects/RoadmapId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
 import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 type PrismaRoadmapWithItems = PrismaRoadmap & { items: PrismaRoadmapItem[] };
 
@@ -49,7 +50,7 @@ export class RoadmapMapper {
           STATUS_TO_DOMAIN[item.status] ?? "pending",
           TYPE_TO_DOMAIN[item.type] ?? "theory",
           item.tags,
-          item.difficulty,
+          item.difficulty as DifficultyLevel,
           item.submissionUrl,
         ),
       );

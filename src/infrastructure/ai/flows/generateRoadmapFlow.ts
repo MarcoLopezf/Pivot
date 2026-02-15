@@ -4,6 +4,7 @@ import {
   IGenerateRoadmapFlow,
   GeneratedRoadmapItem,
 } from "@domain/learning/services/IGenerateRoadmapFlow";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 /**
  * Interface for AI response structure
@@ -16,7 +17,7 @@ interface RoadmapGenerationResponse {
     status: "pending" | "in_progress" | "completed";
     type: "theory" | "project";
     tags: string[];
-    difficulty: "beginner" | "intermediate" | "advanced";
+    difficulty: DifficultyLevel;
   }>;
 }
 

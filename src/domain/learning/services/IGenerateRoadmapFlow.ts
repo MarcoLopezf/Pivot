@@ -1,5 +1,6 @@
 import type { RoadmapItemStatus } from "@domain/learning/entities/RoadmapItem";
 import type { RoadmapItemType } from "@domain/learning/entities/RoadmapItem";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 /**
  * Raw roadmap item data returned by the AI flow
@@ -28,7 +29,7 @@ export interface GeneratedRoadmapItem {
   /**
    * Difficulty level for the item
    */
-  difficulty: string;
+  difficulty: DifficultyLevel;
 }
 
 /**

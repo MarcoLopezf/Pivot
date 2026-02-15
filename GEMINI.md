@@ -10,7 +10,7 @@
 - **Framework:** Next.js 14.2+ (App Router)
 - **Database:** PostgreSQL 15+ (Prisma ORM, pgvector extension)
 - **AI:** Google Genkit 0.5+ (Gemini 2.0 Flash)
-- **Auth:** NextAuth.js 5.0-beta (Email/Password + GitHub OAuth optional)
+- **Auth:** Supabase Auth (Email/Password + GitHub OAuth optional)
 - **Testing:** Vitest (unit/integration), Playwright (E2E), MSW (API mocking)
 - **UI:** React 18.3+, Tailwind CSS, shadcn/ui, Recharts, Framer Motion
 - **Deployment:** Vercel + Supabase + Upstash Redis

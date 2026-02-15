@@ -1,5 +1,6 @@
 import axios from "axios";
 import { LearningResource } from "@domain/learning/repositories/IResourceRepository";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 /**
  * YouTubeService
@@ -56,7 +57,7 @@ export class YouTubeService {
    */
   async searchVideos(
     tags: string[],
-    difficulty?: string,
+    difficulty?: DifficultyLevel,
   ): Promise<LearningResource[]> {
     // Guard: Empty tags
     if (!tags || tags.length === 0) {
@@ -97,7 +98,7 @@ export class YouTubeService {
    * Appends difficulty-specific qualifiers to avoid showing beginner tutorials
    * to advanced users, and vice versa.
    */
-  private buildQuery(tags: string[], difficulty?: string): string {
+  private buildQuery(tags: string[], difficulty?: DifficultyLevel): string {
     const baseTopic = tags.join(" ");
     const difficultyQualifier = this.getDifficultyQualifier(difficulty);
     const contentFilters = "-shorts -song -music"; // Block irrelevant content
@@ -108,15 +109,13 @@ export class YouTubeService {
   /**
    * Get difficulty-specific search qualifiers
    */
-  private getDifficultyQualifier(difficulty?: string): string {
-    const normalizedDifficulty = difficulty?.toLowerCase();
-
-    switch (normalizedDifficulty) {
-      case "beginner":
+  private getDifficultyQualifier(difficulty?: DifficultyLevel): string {
+    switch (difficulty) {
+      case DifficultyLevel.Beginner:
         return "full course complete tutorial for beginners";
-      case "intermediate":
+      case DifficultyLevel.Intermediate:
         return "full course complete guide in depth";
-      case "advanced":
+      case DifficultyLevel.Advanced:
         return "full course advanced deep dive masterclass";
       default:
         return "full course complete tutorial";
@@ -131,7 +130,7 @@ export class YouTubeService {
    * - Advanced: long (20+ min, in-depth content)
    */
   private getVideoDuration(
-    _difficulty?: string,
+    _difficulty?: DifficultyLevel,
   ): "short" | "medium" | "long" | "any" {
     // Roadmap items always need comprehensive, in-depth content (20+ min)
     // regardless of difficulty level

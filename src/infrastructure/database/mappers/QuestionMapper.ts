@@ -6,6 +6,7 @@ import { Question } from "@domain/assessment/entities/Question";
 import { QuestionOption } from "@domain/assessment/entities/QuestionOption";
 import { QuestionId } from "@domain/assessment/value-objects/QuestionId";
 import { QuestionOptionId } from "@domain/assessment/value-objects/QuestionOptionId";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 type PrismaQuestionWithOptions = PrismaQuestion & {
   options: PrismaQuestionOption[];
@@ -25,7 +26,7 @@ export class QuestionMapper {
       QuestionId.create(prismaQuestion.id),
       prismaQuestion.text,
       prismaQuestion.tags,
-      prismaQuestion.difficulty,
+      prismaQuestion.difficulty as DifficultyLevel,
       prismaQuestion.usageCount,
       options,
       prismaQuestion.createdAt,

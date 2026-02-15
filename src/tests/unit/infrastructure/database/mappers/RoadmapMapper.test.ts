@@ -9,6 +9,7 @@ import type {
   RoadmapItemStatus as PrismaRoadmapItemStatus,
   RoadmapItemType as PrismaRoadmapItemType,
 } from "@prisma/client";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 describe("RoadmapMapper", () => {
   const now = new Date("2024-01-01");
@@ -163,7 +164,7 @@ describe("RoadmapMapper", () => {
             "pending",
             "theory",
             ["typescript"],
-            "beginner",
+            DifficultyLevel.Beginner,
             null,
           ),
           RoadmapItem.reconstitute(
@@ -174,7 +175,7 @@ describe("RoadmapMapper", () => {
             "completed",
             "project",
             ["typescript"],
-            "intermediate",
+            DifficultyLevel.Intermediate,
             "https://github.com/repo",
           ),
         ],

@@ -1,4 +1,5 @@
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 export type RoadmapItemStatus = "pending" | "in_progress" | "completed";
 export type RoadmapItemType = "theory" | "project";
@@ -11,7 +12,7 @@ export class RoadmapItem {
   private _status: RoadmapItemStatus;
   private readonly _type: RoadmapItemType;
   private readonly _tags: string[];
-  private readonly _difficulty: string;
+  private readonly _difficulty: DifficultyLevel;
   private readonly _submissionUrl: string | null;
 
   private constructor(
@@ -22,7 +23,7 @@ export class RoadmapItem {
     status: RoadmapItemStatus,
     type: RoadmapItemType,
     tags: string[],
-    difficulty: string,
+    difficulty: DifficultyLevel,
     submissionUrl: string | null,
   ) {
     this._id = id;
@@ -44,7 +45,7 @@ export class RoadmapItem {
     options?: {
       type?: RoadmapItemType;
       tags?: string[];
-      difficulty?: string;
+      difficulty?: DifficultyLevel;
       submissionUrl?: string | null;
     },
   ): RoadmapItem {
@@ -62,7 +63,7 @@ export class RoadmapItem {
       "pending",
       options?.type ?? "theory",
       options?.tags ?? [],
-      options?.difficulty ?? "beginner",
+      options?.difficulty ?? DifficultyLevel.Beginner,
       options?.submissionUrl ?? null,
     );
   }
@@ -75,7 +76,7 @@ export class RoadmapItem {
     status: RoadmapItemStatus,
     type: RoadmapItemType = "theory",
     tags: string[] = [],
-    difficulty: string = "beginner",
+    difficulty: DifficultyLevel = DifficultyLevel.Beginner,
     submissionUrl: string | null = null,
   ): RoadmapItem {
     return new RoadmapItem(
@@ -119,7 +120,7 @@ export class RoadmapItem {
     return this._tags;
   }
 
-  public get difficulty(): string {
+  public get difficulty(): DifficultyLevel {
     return this._difficulty;
   }
 

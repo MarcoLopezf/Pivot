@@ -4,6 +4,7 @@ import {
 } from "@domain/learning/repositories/IResourceRepository";
 import { YouTubeService } from "@infrastructure/services/YouTubeService";
 import { TagNormalizer } from "@domain/shared/services/TagNormalizer";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 /**
  * GetItemResources Use Case
@@ -46,7 +47,7 @@ export class GetItemResources {
   async execute(
     itemId: string,
     tags: string[],
-    difficulty?: string,
+    difficulty?: DifficultyLevel,
   ): Promise<LearningResource[]> {
     // Step 1: Normalize tags
     const normalizedTags = TagNormalizer.normalizeMany(tags);

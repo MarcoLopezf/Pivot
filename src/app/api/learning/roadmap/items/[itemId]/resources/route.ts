@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { learningContainer } from "@infrastructure/di/LearningContainer";
 import { LearningResource } from "@domain/learning/repositories/IResourceRepository";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 import { createLogger } from "@infrastructure/logging/logger";
 
 const logger = createLogger(
@@ -96,7 +97,11 @@ export async function GET(
     const getItemResources = learningContainer.getGetItemResourcesUseCase();
 
     // Execute use case (lazy loading: DB -> API -> Save)
-    const resources = await getItemResources.execute(itemId, tags, difficulty);
+    const resources = await getItemResources.execute(
+      itemId,
+      tags,
+      difficulty as DifficultyLevel | undefined,
+    );
 
     logger.info(`Found ${resources.length} resources for item ${itemId}`);
 

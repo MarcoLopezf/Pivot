@@ -8,6 +8,7 @@ import { JobRoleDTO } from "@application/dtos/learning/JobRoleDTO";
 import { RoadmapOverviewDTO } from "@application/use-cases/learning/GetRoadmapById";
 import { RoadmapItemDetailDTO } from "@application/use-cases/learning/GetRoadmapItemById";
 import { LearningResource } from "@domain/learning/repositories/IResourceRepository";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 import { PdfService } from "@infrastructure/services/PdfService";
 import type { RoadmapListItemDTO } from "@application/use-cases/learning/GetUserRoadmaps";
 import { saveStepAction } from "./onboarding";
@@ -644,7 +645,7 @@ export async function getRoadmapItemAction(
         resources = await getResources.execute(
           itemId,
           detail.item.tags,
-          detail.item.difficulty,
+          detail.item.difficulty as DifficultyLevel,
         );
       } catch (resourceError) {
         // Resources are non-critical; log and continue

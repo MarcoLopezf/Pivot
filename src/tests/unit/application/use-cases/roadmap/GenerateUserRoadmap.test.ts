@@ -8,6 +8,7 @@ import {
 import { Roadmap } from "@domain/learning/entities/Roadmap";
 import { PdfService } from "@infrastructure/services/PdfService";
 import { GitHubService } from "@infrastructure/services/GitHubService";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 describe("GenerateUserRoadmap Use Case", () => {
   let mockRepository: IRoadmapRepository;
@@ -24,7 +25,7 @@ describe("GenerateUserRoadmap Use Case", () => {
       status: "pending",
       type: "theory",
       tags: ["typescript"],
-      difficulty: "intermediate",
+      difficulty: DifficultyLevel.Intermediate,
     },
     {
       title: "Study System Design",
@@ -33,7 +34,7 @@ describe("GenerateUserRoadmap Use Case", () => {
       status: "pending",
       type: "theory",
       tags: ["system-design"],
-      difficulty: "advanced",
+      difficulty: DifficultyLevel.Advanced,
     },
     {
       title: "Build a Portfolio Project",
@@ -42,7 +43,7 @@ describe("GenerateUserRoadmap Use Case", () => {
       status: "pending",
       type: "project",
       tags: ["full-stack"],
-      difficulty: "advanced",
+      difficulty: DifficultyLevel.Advanced,
     },
   ];
 
@@ -347,7 +348,7 @@ describe("GenerateUserRoadmap Use Case", () => {
           status: "completed",
           type: "theory",
           tags: ["react"],
-          difficulty: "beginner",
+          difficulty: DifficultyLevel.Beginner,
         },
         {
           title: "Advanced React Patterns",
@@ -356,7 +357,7 @@ describe("GenerateUserRoadmap Use Case", () => {
           status: "in_progress",
           type: "theory",
           tags: ["react"],
-          difficulty: "advanced",
+          difficulty: DifficultyLevel.Advanced,
         },
         {
           title: "GraphQL",
@@ -365,7 +366,7 @@ describe("GenerateUserRoadmap Use Case", () => {
           status: "pending",
           type: "theory",
           tags: ["graphql"],
-          difficulty: "intermediate",
+          difficulty: DifficultyLevel.Intermediate,
         },
       ];
 

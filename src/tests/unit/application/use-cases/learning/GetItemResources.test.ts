@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GetItemResources } from "@application/use-cases/learning/GetItemResources";
 import { IResourceRepository } from "@domain/learning/repositories/IResourceRepository";
 import { YouTubeService } from "@infrastructure/services/YouTubeService";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 /**
  * Unit tests for GetItemResources Use Case
@@ -175,12 +176,16 @@ describe("GetItemResources Use Case", () => {
       );
       vi.mocked(mockRepository.saveMany).mockResolvedValue(undefined);
 
-      await useCase.execute("item-002", ["typescript"], "advanced");
+      await useCase.execute(
+        "item-002",
+        ["typescript"],
+        DifficultyLevel.Advanced,
+      );
 
       // Assert: YouTube API called with difficulty parameter
       expect(mockYouTubeService.searchVideos).toHaveBeenCalledWith(
         ["typescript"],
-        "advanced",
+        DifficultyLevel.Advanced,
       );
     });
 

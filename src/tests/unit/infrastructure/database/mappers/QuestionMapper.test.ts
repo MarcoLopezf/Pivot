@@ -4,6 +4,7 @@ import { Question } from "@domain/assessment/entities/Question";
 import { QuestionOption } from "@domain/assessment/entities/QuestionOption";
 import { QuestionId } from "@domain/assessment/value-objects/QuestionId";
 import { QuestionOptionId } from "@domain/assessment/value-objects/QuestionOptionId";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 describe("QuestionMapper", () => {
   const now = new Date("2024-01-01");
@@ -72,7 +73,7 @@ describe("QuestionMapper", () => {
         QuestionId.create("q-1"),
         "What is TypeScript?",
         ["typescript"],
-        "beginner",
+        DifficultyLevel.Beginner,
         3,
         [
           QuestionOption.reconstitute(

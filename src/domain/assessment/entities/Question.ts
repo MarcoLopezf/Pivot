@@ -1,11 +1,12 @@
 import { QuestionId } from "@domain/assessment/value-objects/QuestionId";
 import { QuestionOption } from "@domain/assessment/entities/QuestionOption";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 export class Question {
   private readonly _id: QuestionId;
   private readonly _text: string;
   private readonly _tags: string[];
-  private readonly _difficulty: string;
+  private readonly _difficulty: DifficultyLevel;
   private _usageCount: number;
   private readonly _options: QuestionOption[];
   private readonly _createdAt: Date;
@@ -15,7 +16,7 @@ export class Question {
     id: QuestionId,
     text: string,
     tags: string[],
-    difficulty: string,
+    difficulty: DifficultyLevel,
     usageCount: number,
     options: QuestionOption[],
     createdAt: Date,
@@ -34,7 +35,7 @@ export class Question {
     id: QuestionId,
     text: string,
     tags: string[],
-    difficulty: string,
+    difficulty: DifficultyLevel,
     options: QuestionOption[],
   ): Question {
     if (text.trim().length === 0) {
@@ -43,8 +44,8 @@ export class Question {
     if (tags.length === 0) {
       throw new Error("Question must have at least one tag");
     }
-    if (difficulty.trim().length === 0) {
-      throw new Error("Question difficulty cannot be empty");
+    if (!Object.values(DifficultyLevel).includes(difficulty)) {
+      throw new Error("Question difficulty must be a valid DifficultyLevel");
     }
     return new Question(id, text, tags, difficulty, 0, options, new Date());
   }
@@ -53,7 +54,7 @@ export class Question {
     id: QuestionId,
     text: string,
     tags: string[],
-    difficulty: string,
+    difficulty: DifficultyLevel,
     usageCount: number,
     options: QuestionOption[],
     createdAt: Date,
@@ -84,7 +85,7 @@ export class Question {
     return [...this._tags];
   }
 
-  public get difficulty(): string {
+  public get difficulty(): DifficultyLevel {
     return this._difficulty;
   }
 

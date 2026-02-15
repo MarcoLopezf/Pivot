@@ -18,6 +18,7 @@ import { Question } from "@domain/assessment/entities/Question";
 import { QuestionOption } from "@domain/assessment/entities/QuestionOption";
 import { QuestionId } from "@domain/assessment/value-objects/QuestionId";
 import { QuestionOptionId } from "@domain/assessment/value-objects/QuestionOptionId";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 function createQuestions(count: number): Question[] {
   return Array.from({ length: count }, (_, i) =>
@@ -25,7 +26,7 @@ function createQuestions(count: number): Question[] {
       QuestionId.create(`q-${i}`),
       `Question ${i}?`,
       ["test"],
-      "beginner",
+      DifficultyLevel.Beginner,
       [
         QuestionOption.create(
           QuestionOptionId.create(`opt-${i}-a`),
@@ -121,7 +122,7 @@ describe("GenerateQuiz Use Case", () => {
       {
         type: "theory",
         tags: ["typescript"],
-        difficulty: "beginner",
+        difficulty: DifficultyLevel.Beginner,
       },
     );
     const roadmap = Roadmap.reconstitute(
@@ -157,7 +158,7 @@ describe("GenerateQuiz Use Case", () => {
       {
         type: "theory",
         tags: ["typescript"],
-        difficulty: "beginner",
+        difficulty: DifficultyLevel.Beginner,
       },
     );
     const roadmap = Roadmap.reconstitute(
@@ -185,7 +186,11 @@ describe("GenerateQuiz Use Case", () => {
 
     const result = await useCase.execute("r-1", "item-1");
 
-    expect(mockFlow.generate).toHaveBeenCalledWith("typescript", "beginner", 7);
+    expect(mockFlow.generate).toHaveBeenCalledWith(
+      "typescript",
+      DifficultyLevel.Beginner,
+      7,
+    );
     expect(result.questions).toHaveLength(5);
   });
 
@@ -198,7 +203,7 @@ describe("GenerateQuiz Use Case", () => {
       {
         type: "theory",
         tags: ["x"],
-        difficulty: "beginner",
+        difficulty: DifficultyLevel.Beginner,
       },
     );
     const roadmap = Roadmap.reconstitute(
@@ -230,7 +235,7 @@ describe("GenerateQuiz Use Case", () => {
       {
         type: "theory",
         tags: [],
-        difficulty: "intermediate",
+        difficulty: DifficultyLevel.Intermediate,
       },
     );
     const roadmap = Roadmap.reconstitute(
@@ -258,12 +263,12 @@ describe("GenerateQuiz Use Case", () => {
 
     expect(mockFlow.generate).toHaveBeenCalledWith(
       "Closures",
-      "intermediate",
+      DifficultyLevel.Intermediate,
       10,
     );
     expect(mockQuestionRepo.findByTags).toHaveBeenCalledWith(
       [],
-      "intermediate",
+      DifficultyLevel.Intermediate,
     );
   });
 });

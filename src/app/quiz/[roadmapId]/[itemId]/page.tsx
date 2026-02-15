@@ -36,8 +36,9 @@ import type { QuizResultDTO } from "@application/dtos/assessment/SubmitQuizDTO";
 export default function QuizPage(): React.ReactElement {
   const router = useRouter();
   const params = useParams();
-  const roadmapId = params.roadmapId as string;
-  const itemId = params.itemId as string;
+  const roadmapId =
+    typeof params.roadmapId === "string" ? params.roadmapId : null;
+  const itemId = typeof params.itemId === "string" ? params.itemId : null;
 
   const [quiz, setQuiz] = React.useState<QuizDTO | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -98,7 +99,7 @@ export default function QuizPage(): React.ReactElement {
 
   // Handle quiz submission
   const handleSubmit = async () => {
-    if (!quiz) return;
+    if (!quiz || !roadmapId || !itemId) return;
 
     setIsSubmitting(true);
     setError(null);

@@ -4,6 +4,7 @@ import {
   IGenerateQuestionsFlow,
   GeneratedQuestion,
 } from "@domain/assessment/services/IGenerateQuestionsFlow";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 /**
  * Interface for AI response structure
@@ -27,7 +28,7 @@ interface QuestionGenerationResponse {
 export class GenkitQuestionsFlow implements IGenerateQuestionsFlow {
   async generate(
     topic: string,
-    difficulty: string,
+    difficulty: DifficultyLevel,
     count: number,
   ): Promise<GeneratedQuestion[]> {
     try {
@@ -92,7 +93,7 @@ export class GenkitQuestionsFlow implements IGenerateQuestionsFlow {
 
   private buildPrompt(
     topic: string,
-    difficulty: string,
+    difficulty: DifficultyLevel,
     count: number,
   ): string {
     return `You are an expert educational content creator specializing in technical assessments. Generate ${count} high-quality multiple-choice quiz questions for the topic "${topic}" at "${difficulty}" difficulty level.

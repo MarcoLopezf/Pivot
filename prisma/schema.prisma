@@ -93,8 +93,20 @@ model RoadmapItem {
   roadmap            Roadmap             @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
   quizAttempts       QuizAttempt[]
   projectSubmissions ProjectSubmission[]
+  projectDetails     ProjectDetails?
 
   @@index([roadmapId])
+}
+
+model ProjectDetails {
+  id                 String   @id @default(uuid())
+  roadmapItemId      String   @unique
+  acceptanceCriteria String[]
+  technicalStack     String[]
+  keyConcepts        String[]
+  generatedAt        DateTime @default(now())
+
+  roadmapItem RoadmapItem @relation(fields: [roadmapItemId], references: [id], onDelete: Cascade)
 }
 
 model Question {

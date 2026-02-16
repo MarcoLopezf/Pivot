@@ -111,7 +111,8 @@ Instead of giving you generic learning paths, PIVOT:
 - **Smart Project Proposals**: AI generates practical projects aligned with each learning module
   - Example: Learning React? Build a "Task Manager with Context API and local storage"
   - Example: Learning Node.js? Create a "REST API for a bookstore with authentication"
-- **AI Code Review**: Submit GitHub repos URL for automated evaluation
+- **AI-Generated Acceptance Criteria**: On first visit, AI generates specific acceptance criteria, recommended tech stack, and key concepts for each project
+- **Criteria-Based Evaluation**: Submit GitHub repos for automated scoring against specific acceptance criteria (40%), code quality (25%), best practices (20%), documentation (10%), and functionality (5%)
 - **Instant Feedback**: Get strengths, weaknesses, and improvement suggestions
 - **Proof of Competence**: Build a "PIVOT Certified" portfolio (coming soon)
 
@@ -729,16 +730,17 @@ Currently, PIVOT is in **development/beta phase** as a Final Master's Project.
 <details>
 <summary><strong>How does the project submission work?</strong></summary>
 
-1. You submit a **GitHub repository URL**
-2. PIVOT's AI agent:
-   - Clones the repo structure
-   - Analyzes code quality, patterns, and architecture
-   - Validates core requirements for the project type
-3. You receive:
-   - **Score** (0-100)
+1. When you visit a project page, **AI generates specific acceptance criteria**, recommended tech stack, and key concepts (cached for future visits)
+2. You build the project and submit a **GitHub repository URL**
+3. PIVOT's AI agent:
+   - Performs a **relevance check** (correct technology and purpose)
+   - Fetches and analyzes your repository code
+   - Evaluates against the specific acceptance criteria (40%), code quality (25%), best practices (20%), documentation (10%), and functionality (5%)
+4. You receive:
+   - **Score** (0-100, 70+ to pass)
    - **Strengths** (what you did well)
    - **Improvements** (specific suggestions)
-   - **Pass/Fail** status
+   - **Pass/Fail** status (passing auto-completes the roadmap item)
 
 </details>
 

@@ -10,7 +10,7 @@ export interface EnrichProjectInput {
   title: string;
   description: string;
   tags: string[];
-  difficulty: string;
+  difficulty: DifficultyLevel;
 }
 
 /**
@@ -38,7 +38,7 @@ export class EnrichProjectDetails {
       item.title,
       item.description,
       item.tags,
-      item.difficulty as DifficultyLevel,
+      item.difficulty,
     );
 
     // 3. Persist and return

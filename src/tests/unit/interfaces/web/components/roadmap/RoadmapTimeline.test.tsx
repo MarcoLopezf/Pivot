@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { RoadmapTimeline } from "@interfaces/web/components/roadmap/RoadmapTimeline";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -34,7 +35,7 @@ describe("RoadmapTimeline Component", () => {
         status: "completed",
         type: "theory" as const,
         tags: ["typescript"],
-        difficulty: "beginner",
+        difficulty: DifficultyLevel.Beginner,
         submissionUrl: null,
       },
       {
@@ -45,7 +46,7 @@ describe("RoadmapTimeline Component", () => {
         status: "in_progress",
         type: "theory" as const,
         tags: ["react"],
-        difficulty: "intermediate",
+        difficulty: DifficultyLevel.Intermediate,
         submissionUrl: null,
       },
       {
@@ -56,7 +57,7 @@ describe("RoadmapTimeline Component", () => {
         status: "pending",
         type: "theory" as const,
         tags: ["nodejs"],
-        difficulty: "beginner",
+        difficulty: DifficultyLevel.Beginner,
         submissionUrl: null,
       },
     ],

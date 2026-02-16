@@ -3,6 +3,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useRoadmap } from "@interfaces/web/hooks/useRoadmap";
 import * as roadmapApi from "@interfaces/web/api/roadmapApi";
 import * as learningActions from "@interfaces/web/actions/learningActions";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 
 vi.mock("@interfaces/web/api/roadmapApi");
 vi.mock("@interfaces/web/actions/learningActions");
@@ -22,7 +23,7 @@ describe("useRoadmap Hook", () => {
         status: "pending" as const,
         type: "theory" as const,
         tags: [],
-        difficulty: "beginner",
+        difficulty: DifficultyLevel.Beginner,
         submissionUrl: null,
       },
       {
@@ -33,7 +34,7 @@ describe("useRoadmap Hook", () => {
         status: "pending" as const,
         type: "theory" as const,
         tags: [],
-        difficulty: "beginner",
+        difficulty: DifficultyLevel.Beginner,
         submissionUrl: null,
       },
     ],

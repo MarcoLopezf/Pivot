@@ -1,3 +1,5 @@
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
+
 /**
  * Strict literal union type for roadmap item status
  */
@@ -12,7 +14,7 @@ export interface RoadmapItemDTO {
   status: RoadmapItemStatus;
   type: RoadmapItemType;
   tags: string[];
-  difficulty: string;
+  difficulty: DifficultyLevel;
   submissionUrl: string | null;
 }
 

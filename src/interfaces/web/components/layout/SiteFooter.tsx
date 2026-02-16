@@ -14,8 +14,8 @@ export function SiteFooter(): React.ReactElement {
 
   return (
     <footer className="w-full border-t border-slate-200 bg-gray-100">
-      <div className="container mx-auto flex h-16 items-center justify-between px-6">
-        {/* Left: Logo */}
+      <div className="container mx-auto flex flex-col items-center gap-4 px-6 py-6 md:h-16 md:flex-row md:justify-between md:py-0">
+        {/* Logo */}
         <Link
           href="/"
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
@@ -26,8 +26,8 @@ export function SiteFooter(): React.ReactElement {
           </span>
         </Link>
 
-        {/* Center: Navigation Links */}
-        <nav className="flex items-center gap-6">
+        {/* Navigation Links */}
+        <nav className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
           <Link
             href="/privacy"
             className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
@@ -48,7 +48,7 @@ export function SiteFooter(): React.ReactElement {
           </Link>
         </nav>
 
-        {/* Right: Copyright */}
+        {/* Copyright */}
         <div className="text-sm text-slate-500">
           © {currentYear} Pivot AI Inc.
         </div>

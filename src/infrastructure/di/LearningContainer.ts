@@ -5,6 +5,8 @@ import { PrismaResourceRepository } from "@infrastructure/database/repositories/
 import { PrismaJobRoleRepository } from "@infrastructure/database/repositories/PrismaJobRoleRepository";
 import { GenkitRoleRecommender } from "@infrastructure/ai/flows/suggestRolesFlow";
 import { GenkitRoadmapFlow } from "@infrastructure/ai/flows/generateRoadmapFlow";
+import { GenkitProjectEnrichmentFlow } from "@infrastructure/ai/flows/enrichProjectFlow";
+import { PrismaProjectDetailsRepository } from "@infrastructure/database/repositories/PrismaProjectDetailsRepository";
 import { PdfService } from "@infrastructure/services/PdfService";
 import { GitHubService } from "@infrastructure/services/GitHubService";
 import { YouTubeService } from "@infrastructure/services/YouTubeService";
@@ -19,6 +21,7 @@ import { GetRoadmapById } from "@application/use-cases/learning/GetRoadmapById";
 import { GetRoadmapItemById } from "@application/use-cases/learning/GetRoadmapItemById";
 import { GetUserRoadmaps } from "@application/use-cases/learning/GetUserRoadmaps";
 import { GetLastActiveRoadmap } from "@application/use-cases/learning/GetLastActiveRoadmap";
+import { EnrichProjectDetails } from "@application/use-cases/learning/EnrichProjectDetails";
 
 /**
  * LearningContainer - Dependency Injection Container for Learning bounded context
@@ -38,6 +41,8 @@ class LearningContainer {
   private jobRoleRepository: PrismaJobRoleRepository;
   private roleRecommender: GenkitRoleRecommender;
   private roadmapFlow: GenkitRoadmapFlow;
+  private projectEnrichmentFlow: GenkitProjectEnrichmentFlow;
+  private projectDetailsRepository: PrismaProjectDetailsRepository;
   private pdfService: PdfService;
   private gitHubService: GitHubService;
   private youtubeService: YouTubeService;
@@ -51,6 +56,8 @@ class LearningContainer {
     // Inject jobRoleRepository to ground AI suggestions to valid database roles
     this.roleRecommender = new GenkitRoleRecommender(this.jobRoleRepository);
     this.roadmapFlow = new GenkitRoadmapFlow();
+    this.projectEnrichmentFlow = new GenkitProjectEnrichmentFlow();
+    this.projectDetailsRepository = new PrismaProjectDetailsRepository(prisma);
     this.pdfService = new PdfService();
     this.gitHubService = new GitHubService();
     this.youtubeService = new YouTubeService();
@@ -174,6 +181,16 @@ class LearningContainer {
    */
   getJobRoleRepository(): PrismaJobRoleRepository {
     return this.jobRoleRepository;
+  }
+
+  /**
+   * Returns an initialized EnrichProjectDetails use case with all dependencies injected
+   */
+  getEnrichProjectDetailsUseCase(): EnrichProjectDetails {
+    return new EnrichProjectDetails(
+      this.projectDetailsRepository,
+      this.projectEnrichmentFlow,
+    );
   }
 }
 

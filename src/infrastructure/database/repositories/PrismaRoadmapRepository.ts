@@ -39,13 +39,29 @@ export class PrismaRoadmapRepository implements IRoadmapRepository {
           },
         });
 
-        await tx.roadmapItem.deleteMany({
+        // Get existing item IDs to detect removals
+        const existingItems = await tx.roadmapItem.findMany({
           where: { roadmapId: data.id },
+          select: { id: true },
         });
 
-        if (data.items.length > 0) {
-          await tx.roadmapItem.createMany({
-            data: data.items.map((item) => ({
+        const currentItemIds = new Set(data.items.map((i) => i.id));
+        const toDelete = existingItems
+          .filter((e) => !currentItemIds.has(e.id))
+          .map((e) => e.id);
+
+        // Delete only removed items (cascade deletes their ProjectDetails)
+        if (toDelete.length > 0) {
+          await tx.roadmapItem.deleteMany({
+            where: { id: { in: toDelete } },
+          });
+        }
+
+        // Upsert each item to preserve related data (e.g. ProjectDetails)
+        for (const item of data.items) {
+          await tx.roadmapItem.upsert({
+            where: { id: item.id },
+            create: {
               id: item.id,
               roadmapId: data.id,
               title: item.title,
@@ -56,13 +72,23 @@ export class PrismaRoadmapRepository implements IRoadmapRepository {
               tags: item.tags,
               difficulty: item.difficulty,
               submissionUrl: item.submissionUrl,
-            })),
+            },
+            update: {
+              title: item.title,
+              description: item.description,
+              order: item.order,
+              status: item.status as PrismaRoadmapItemStatus,
+              type: item.type as PrismaRoadmapItemType,
+              tags: item.tags,
+              difficulty: item.difficulty,
+              submissionUrl: item.submissionUrl,
+            },
           });
         }
       },
       {
-        maxWait: 10000, // 10 segundos para esperar que la transacción comience
-        timeout: 30000, // 30 segundos para completar la transacción
+        maxWait: 10000,
+        timeout: 30000,
       },
     );
   }

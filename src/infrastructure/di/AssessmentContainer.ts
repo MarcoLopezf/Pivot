@@ -3,6 +3,7 @@ import { PrismaQuestionRepository } from "@infrastructure/database/repositories/
 import { PrismaRoadmapRepository } from "@infrastructure/database/repositories/PrismaRoadmapRepository";
 import { PrismaQuizAttemptRepository } from "@infrastructure/database/repositories/PrismaQuizAttemptRepository";
 import { PrismaProjectSubmissionRepository } from "@infrastructure/database/repositories/PrismaProjectSubmissionRepository";
+import { PrismaProjectDetailsRepository } from "@infrastructure/database/repositories/PrismaProjectDetailsRepository";
 import { GenkitQuestionsFlow } from "@infrastructure/ai/flows/generateQuestionsFlow";
 import { analyzeProjectFlow } from "@infrastructure/ai/flows/analyzeProjectFlow";
 import { GitHubService } from "@infrastructure/services/GitHubService";
@@ -22,6 +23,7 @@ class AssessmentContainer {
   private projectSubmissionRepository: PrismaProjectSubmissionRepository;
   private questionsFlow: GenkitQuestionsFlow;
   private githubService: GitHubService;
+  private projectDetailsRepository: PrismaProjectDetailsRepository;
 
   constructor() {
     this.questionRepository = new PrismaQuestionRepository(prisma);
@@ -32,6 +34,7 @@ class AssessmentContainer {
     );
     this.questionsFlow = new GenkitQuestionsFlow();
     this.githubService = new GitHubService();
+    this.projectDetailsRepository = new PrismaProjectDetailsRepository(prisma);
   }
 
   getGenerateQuizUseCase(): GenerateQuiz {
@@ -56,6 +59,7 @@ class AssessmentContainer {
       this.roadmapRepository,
       this.githubService,
       analyzeProjectFlow,
+      this.projectDetailsRepository,
     );
   }
 }

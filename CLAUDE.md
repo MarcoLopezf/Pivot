@@ -159,6 +159,17 @@ reflect it.`
 
 ---
 
+## 🗄️ PRISMA MIGRATIONS (CRITICAL)
+
+**NEVER edit `schema.prisma` without creating a migration:**
+```bash
+pnpm prisma migrate dev --name descriptive_name  # Creates migration file + applies to DB
+git add prisma/schema.prisma prisma/migrations/  # Commit BOTH files together
+```
+**Why:** Production only runs migration files. Schema-only changes = broken prod. No exceptions.
+
+---
+
 ## 🌿 GIT WORKFLOW
 
 ### Branch Strategy

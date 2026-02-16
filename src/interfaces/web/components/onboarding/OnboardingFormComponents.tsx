@@ -27,7 +27,7 @@ export const OnboardingInput = React.forwardRef<
     <Input
       {...props}
       ref={ref}
-      className="!bg-white border-slate-300 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74] text-slate-900 placeholder:text-slate-400"
+      className="!bg-white border-slate-300 focus-visible:ring-0 focus-visible:border-[#1E5F74] text-slate-900 placeholder:text-slate-400"
     />
   );
 });

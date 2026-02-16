@@ -14,6 +14,8 @@ import {
   ListChecks,
   Layers,
   Send,
+  Lightbulb,
+  Bot,
 } from "lucide-react";
 
 interface ClassroomPageProps {
@@ -49,7 +51,7 @@ export default async function ClassroomPage({
     notFound();
   }
 
-  const { detail, resources } = result.data;
+  const { detail, resources, projectDetails } = result.data;
   const { item, roadmapTitle, totalItems } = detail;
 
   // Pick the first video resource for the main player
@@ -60,29 +62,15 @@ export default async function ClassroomPage({
     ? resources.filter((r) => r.url !== primaryVideo.url)
     : resources;
 
-  // Project items: Redesigned layout matching design system
+  // Project items: Redesigned layout with AI-generated details
   if (item.type === "project") {
-    // --- MOCK DATA (not yet in database — will come from AI generation in the future) ---
-    const mockAcceptanceCriteria = [
-      "Successfully decompose the 'User Analytics' module into a standalone microservice",
-      "Implement a Redis caching layer to reduce database load by at least 40%",
-      "Create a shared UI component library using Tailwind CSS and Storybook",
-      "Set up a CI/CD pipeline script using GitHub Actions for automated deployment tests",
-    ];
-    const mockTechnicalStack = [
-      "React 18",
-      "Node.js",
-      "PostgreSQL",
-      "Redis",
-      "Docker",
-      "Tailwind CSS",
-    ];
-    // --- END MOCK DATA ---
-    console.log(item);
+    const acceptanceCriteria = projectDetails?.acceptanceCriteria ?? [];
+    const technicalStack = projectDetails?.technicalStack ?? [];
+    const keyConcepts = projectDetails?.keyConcepts ?? [];
 
     return (
       <div className="container mx-auto p-6 md:p-8 max-w-6xl">
-        {/* Back to roadmap — same as theory */}
+        {/* Back to roadmap */}
         <Link
           href={`/roadmap/${roadmapId}`}
           className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors mb-6"
@@ -124,7 +112,7 @@ export default async function ClassroomPage({
               </p>
             </section>
 
-            {/* Acceptance Criteria (MOCK) */}
+            {/* Acceptance Criteria */}
             <section className="space-y-3">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
@@ -134,17 +122,23 @@ export default async function ClassroomPage({
                   Acceptance Criteria
                 </h2>
               </div>
-              <ul className="space-y-2.5">
-                {mockAcceptanceCriteria.map((criteria, i) => (
-                  <li key={i} className="flex items-start gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-[#1E5F74] mt-0.5" />
-                    <span className="text-sm text-slate-600">{criteria}</span>
-                  </li>
-                ))}
-              </ul>
+              {acceptanceCriteria.length > 0 ? (
+                <ul className="space-y-2.5">
+                  {acceptanceCriteria.map((criteria, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-[#1E5F74] mt-0.5" />
+                      <span className="text-sm text-slate-600">{criteria}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-slate-400 italic">
+                  Generating acceptance criteria...
+                </p>
+              )}
             </section>
 
-            {/* Technical Stack (MOCK) */}
+            {/* Technical Stack */}
             <section className="space-y-3">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
@@ -154,17 +148,51 @@ export default async function ClassroomPage({
                   Technical Stack
                 </h2>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {mockTechnicalStack.map((tech) => (
-                  <Badge
-                    key={tech}
-                    variant="outline"
-                    className="border-slate-300 bg-white px-3 py-1 text-xs text-slate-700"
-                  >
-                    {tech}
-                  </Badge>
-                ))}
+              {technicalStack.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {technicalStack.map((tech) => (
+                    <Badge
+                      key={tech}
+                      variant="outline"
+                      className="border-slate-300 bg-white px-3 py-1 text-xs text-slate-700"
+                    >
+                      {tech}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-400 italic">
+                  Generating technical stack...
+                </p>
+              )}
+            </section>
+
+            {/* Key Concepts */}
+            <section className="space-y-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+                  <Lightbulb className="h-4 w-4 text-slate-600" />
+                </div>
+                <h2 className="text-lg font-bold text-[#1D2D50]">
+                  Key Concepts
+                </h2>
               </div>
+              {keyConcepts.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {keyConcepts.map((concept) => (
+                    <Badge
+                      key={concept}
+                      className="bg-[#1D2D50] text-white hover:bg-[#152340] px-3 py-1 text-xs"
+                    >
+                      {concept}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-400 italic">
+                  Generating key concepts...
+                </p>
+              )}
             </section>
           </div>
 
@@ -173,43 +201,39 @@ export default async function ClassroomPage({
             {/* Evaluation Criteria — Dark card */}
             <div className="rounded-xl bg-[#1D2D50] p-5 space-y-5">
               <div className="space-y-3">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-                  How We Evaluate
-                </h3>
+                <div className="flex items-center gap-2">
+                  <Bot className="h-4 w-4 text-[#FCDAB7]" />
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                    How Our AI Evaluates
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Our AI analyzes your GitHub repository and evaluates your
+                  project across multiple dimensions:
+                </p>
                 <ul className="space-y-2.5">
                   <li className="flex items-start gap-2.5">
                     <CheckCircle2 className="h-4 w-4 text-[#FCDAB7] mt-0.5 shrink-0" />
                     <span className="text-sm text-white">
-                      Relevance to the module topic{" "}
-                      <span className="text-slate-400">(40%)</span>
+                      Fulfillment of acceptance criteria
                     </span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <CheckCircle2 className="h-4 w-4 text-[#FCDAB7] mt-0.5 shrink-0" />
                     <span className="text-sm text-white">
-                      Code quality &amp; organization{" "}
-                      <span className="text-slate-400">(25%)</span>
+                      Code quality &amp; organization
                     </span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <CheckCircle2 className="h-4 w-4 text-[#FCDAB7] mt-0.5 shrink-0" />
                     <span className="text-sm text-white">
-                      Best practices &amp; patterns{" "}
-                      <span className="text-slate-400">(20%)</span>
+                      Best practices &amp; patterns
                     </span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <CheckCircle2 className="h-4 w-4 text-[#FCDAB7] mt-0.5 shrink-0" />
                     <span className="text-sm text-white">
-                      Documentation &amp; README{" "}
-                      <span className="text-slate-400">(10%)</span>
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-[#FCDAB7] mt-0.5 shrink-0" />
-                    <span className="text-sm text-white">
-                      Functionality &amp; completeness{" "}
-                      <span className="text-slate-400">(5%)</span>
+                      Documentation &amp; README
                     </span>
                   </li>
                 </ul>
@@ -228,7 +252,7 @@ export default async function ClassroomPage({
                   </li>
                   <li className="flex items-start gap-2 text-xs text-slate-300">
                     <span className="text-[#FCDAB7] font-bold mt-px">•</span>
-                    Must match the module&apos;s technology and purpose
+                    Must address the acceptance criteria listed
                   </li>
                   <li className="flex items-start gap-2 text-xs text-slate-300">
                     <span className="text-[#FCDAB7] font-bold mt-px">•</span>

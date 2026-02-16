@@ -16,6 +16,8 @@ export const AnalyzeProjectInputSchema = z.object({
   topic: z.string().min(1, "Topic is required"),
   description: z.string().min(1, "Description is required"),
   expectedSkills: z.string(),
+  acceptanceCriteria: z.array(z.string()).optional(),
+  technicalStack: z.array(z.string()).optional(),
 });
 
 export type AnalyzeProjectInput = z.infer<typeof AnalyzeProjectInputSchema>;
@@ -148,13 +150,34 @@ function buildPrompt(input: AnalyzeProjectInput): string {
     })
     .join("\n");
 
+  // Build acceptance criteria section if available
+  let acceptanceCriteriaSection = "";
+  if (input.acceptanceCriteria && input.acceptanceCriteria.length > 0) {
+    acceptanceCriteriaSection = `
+**ACCEPTANCE CRITERIA (student must fulfill these):**
+${input.acceptanceCriteria.map((c, i) => `${i + 1}. ${c}`).join("\n")}
+`;
+  }
+
+  // Build technical stack section if available
+  let technicalStackSection = "";
+  if (input.technicalStack && input.technicalStack.length > 0) {
+    technicalStackSection = `
+**EXPECTED TECHNICAL STACK:**
+${input.technicalStack.join(", ")}
+`;
+  }
+
+  const hasDetailedCriteria =
+    input.acceptanceCriteria && input.acceptanceCriteria.length > 0;
+
   return `You are a senior software engineer and teaching assistant evaluating a coding project submission for a specific learning module.
 
 **LEARNING MODULE CONTEXT:**
 Module Title: "${input.topic}"
 Module Description: "${input.description}"
 Expected Skills/Topics: ${input.expectedSkills}
-
+${acceptanceCriteriaSection}${technicalStackSection}
 **SUBMITTED PROJECT:**
 Repository: ${input.repoUrl}
 
@@ -166,14 +189,10 @@ ${filesSummary}
 Before evaluating code quality, you MUST answer: Does the project use the CORRECT TECHNOLOGY/TOOLS and address the CORRECT PURPOSE?
 
 **Step 1: Check Technology Match**
-- Module asks for "Tableau dashboard" → Must use Tableau/Power BI
-- Module asks for "React app" → Must use React
-- Module asks for "Python script" → Must use Python
-- Module asks for "REST API with Node.js" → Must use Node.js
+${input.technicalStack && input.technicalStack.length > 0 ? `- Project must use technologies from the expected stack: ${input.technicalStack.join(", ")}` : `- Module asks for the technologies in: ${input.expectedSkills}`}
 
 **Step 2: Check Purpose Match**
-- Module asks for "To-Do List" → Must be a To-Do List (not Calculator)
-- Module asks for "Dashboard" → Must be a Dashboard (not CRUD app)
+- The project must address the module topic: "${input.topic}"
 
 **If EITHER technology OR purpose is WRONG:**
 - **Score: 0** (completely wrong technology/purpose)
@@ -186,11 +205,19 @@ Before evaluating code quality, you MUST answer: Does the project use the CORREC
 
 **EVALUATION CRITERIA (for relevant projects):**
 
-1. **Relevance (40%)**: Does it directly address the module topic and description?
+${
+  hasDetailedCriteria
+    ? `1. **Acceptance Criteria Fulfillment (40%)**: Does the project meet the specific acceptance criteria listed above? Check each criterion individually.
+2. **Code Quality (25%)**: Clean code, proper naming, organization, readability
+3. **Best Practices (20%)**: Design patterns, error handling, security considerations
+4. **Documentation (10%)**: README quality, code comments, setup instructions
+5. **Functionality (5%)**: Does it work? Is it complete?`
+    : `1. **Relevance (40%)**: Does it directly address the module topic and description?
 2. **Code Quality (25%)**: Clean code, proper naming, organization, readability
 3. **Best Practices (20%)**: Design patterns, error handling, security considerations
 4. **Documentation (10%)**: README quality, code comments
-5. **Functionality (5%)**: Does it work? Is it complete?
+5. **Functionality (5%)**: Does it work? Is it complete?`
+}
 
 **SCORING GUIDELINES:**
 
@@ -206,7 +233,7 @@ Before evaluating code quality, you MUST answer: Does the project use the CORREC
 **INSTRUCTIONS:**
 
 1. **Score (0-100)**: Strict score based on relevance FIRST, then quality
-2. **Feedback (2-4 sentences)**: Start with relevance assessment, then quality
+2. **Feedback (2-4 sentences)**: Start with relevance assessment, then quality${hasDetailedCriteria ? ". Mention which acceptance criteria were met and which were not." : ""}
 3. **Strengths (0-4 items)**: Specific things done well (empty if irrelevant)
 4. **Improvements (1-4 items)**: Actionable suggestions (or "match the topic" if irrelevant)
 

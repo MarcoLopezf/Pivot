@@ -8,6 +8,7 @@ import { JobRoleDTO } from "@application/dtos/learning/JobRoleDTO";
 import { RoadmapOverviewDTO } from "@application/use-cases/learning/GetRoadmapById";
 import { RoadmapItemDetailDTO } from "@application/use-cases/learning/GetRoadmapItemById";
 import { LearningResource } from "@domain/learning/repositories/IResourceRepository";
+import type { ProjectDetailsData } from "@domain/learning/repositories/IProjectDetailsRepository";
 import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 import { PdfService } from "@infrastructure/services/PdfService";
 import type { RoadmapListItemDTO } from "@application/use-cases/learning/GetUserRoadmaps";
@@ -603,7 +604,11 @@ export async function getRoadmapItemAction(
   itemId: string,
 ): Promise<{
   success: boolean;
-  data?: { detail: RoadmapItemDetailDTO; resources: LearningResource[] } | null;
+  data?: {
+    detail: RoadmapItemDetailDTO;
+    resources: LearningResource[];
+    projectDetails?: ProjectDetailsData;
+  } | null;
   error?: string;
 }> {
   try {
@@ -653,9 +658,28 @@ export async function getRoadmapItemAction(
       }
     }
 
+    // 5. Enrich project items with AI-generated details (lazy generation)
+    let projectDetails: ProjectDetailsData | undefined;
+    if (detail.item.type === "project") {
+      try {
+        const enrichUseCase =
+          learningContainer.getEnrichProjectDetailsUseCase();
+        projectDetails = await enrichUseCase.execute({
+          id: detail.item.id,
+          title: detail.item.title,
+          description: detail.item.description,
+          tags: detail.item.tags,
+          difficulty: detail.item.difficulty,
+        });
+      } catch (enrichError) {
+        // Enrichment is non-critical; log and continue with no details
+        console.error("Failed to enrich project details:", enrichError);
+      }
+    }
+
     return {
       success: true,
-      data: { detail, resources },
+      data: { detail, resources, projectDetails },
     };
   } catch (error) {
     console.error("Error in getRoadmapItemAction:", error);

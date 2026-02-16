@@ -1,5 +1,6 @@
 import { IProjectSubmissionRepository } from "@domain/assessment/repositories/IProjectSubmissionRepository";
 import { IRoadmapRepository } from "@domain/learning/repositories/IRoadmapRepository";
+import { IProjectDetailsRepository } from "@domain/learning/repositories/IProjectDetailsRepository";
 import { GitHubService } from "@infrastructure/services/GitHubService";
 import { ProjectSubmission } from "@domain/assessment/entities/ProjectSubmission";
 import { ProjectSubmissionId } from "@domain/assessment/value-objects/ProjectSubmissionId";
@@ -42,6 +43,8 @@ interface AnalyzeProjectInput {
   topic: string;
   description: string;
   expectedSkills: string;
+  acceptanceCriteria?: string[];
+  technicalStack?: string[];
 }
 
 interface AnalyzeProjectOutput {
@@ -76,6 +79,7 @@ export class SubmitProject {
     private readonly analyzeProjectFlow: (
       input: AnalyzeProjectInput,
     ) => Promise<AnalyzeProjectOutput>,
+    private readonly projectDetailsRepository?: IProjectDetailsRepository,
   ) {}
 
   async execute(input: SubmitProjectInputDTO): Promise<ProjectResultDTO> {
@@ -135,7 +139,25 @@ export class SubmitProject {
       // 8. Fetch repository code from GitHub
       const repoData = await this.githubService.analyzeRepository(repoUrl);
 
-      // 9. Analyze project using AI
+      // 9. Fetch project details (acceptance criteria & tech stack) if available
+      let acceptanceCriteria: string[] | undefined;
+      let technicalStack: string[] | undefined;
+      if (this.projectDetailsRepository) {
+        try {
+          const projectDetails =
+            await this.projectDetailsRepository.findByRoadmapItemId(
+              roadmapItemId,
+            );
+          if (projectDetails) {
+            acceptanceCriteria = projectDetails.acceptanceCriteria;
+            technicalStack = projectDetails.technicalStack;
+          }
+        } catch {
+          // Project details are non-critical; continue without them
+        }
+      }
+
+      // 10. Analyze project using AI
       const aiResult = await this.analyzeProjectFlow({
         repoUrl,
         files: repoData.files,
@@ -145,6 +167,8 @@ export class SubmitProject {
           roadmapItem.tags.length > 0
             ? roadmapItem.tags.join(", ")
             : roadmapItem.description,
+        acceptanceCriteria,
+        technicalStack,
       });
 
       // 10. Complete analysis with results

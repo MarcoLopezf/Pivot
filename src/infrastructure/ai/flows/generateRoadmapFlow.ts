@@ -65,7 +65,7 @@ export class GenkitRoadmapFlow implements IGenerateRoadmapFlow {
         title: item.title,
         description: item.description,
         order: item.order,
-        status: item.status,
+        status: item.type === "project" ? "pending" : item.status,
         type: item.type,
         tags: item.tags,
         difficulty: item.difficulty,
@@ -104,9 +104,10 @@ ${userContext}
 **CRITICAL INSTRUCTIONS FOR STATUS ASSIGNMENT:**
 - Analyze the user context carefully to understand what skills/topics they already know
 - Set "status" for each roadmap item based on their experience:
-  * "completed": User demonstrates clear experience with this topic (e.g., "I use React daily", "3 years with TypeScript")
-  * "in_progress": User has some exposure or basic knowledge (e.g., "learning React", "familiar with the basics")
+  * "completed": User demonstrates clear experience with this topic (e.g., "I use React daily", "3 years with TypeScript") — ONLY for "theory" items
+  * "in_progress": User has some exposure or basic knowledge (e.g., "learning React", "familiar with the basics") — ONLY for "theory" items
   * "pending": No evidence of knowledge/experience with this topic - they need to learn it from scratch
+- **IMPORTANT: Items with "type": "project" MUST ALWAYS have "status": "pending"**. Only "theory" items can be "in_progress" or "completed".
 
 - Tailor each item's description to fill THEIR SPECIFIC GAPS
 - If they already know something, acknowledge it in the description and focus on advanced aspects`;

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -17,7 +18,7 @@ export interface RoadmapTimelineProps {
   roadmap: RoadmapDTO;
 }
 
-function getEstimatedTime(difficulty: string): string {
+function getEstimatedTime(difficulty: DifficultyLevel): string {
   switch (difficulty) {
     case "beginner":
       return "2h 15m";

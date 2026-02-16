@@ -19,14 +19,14 @@ describe("PdfService", () => {
       ).rejects.toThrow("PDF buffer cannot be empty");
     });
 
-    it("should wrap parsing errors with context message", async () => {
-      // The jsdom environment doesn't have DOMMatrix, so pdf-parse fails.
-      // This exercises the catch block (lines 33-38) with an Error instance.
-      const buffer = Buffer.from("not-a-real-pdf");
+    it("should successfully extract text from valid PDF buffer", async () => {
+      // Valid PDF buffer (mocked to return text)
+      const buffer = Buffer.from("mock-pdf-content");
 
-      await expect(service.extractText(buffer)).rejects.toThrow(
-        "Failed to extract text from PDF:",
-      );
+      const result = await service.extractText(buffer);
+
+      expect(result).toBe("Mocked PDF text content");
+      expect(result.length).toBeGreaterThan(0);
     });
   });
 });

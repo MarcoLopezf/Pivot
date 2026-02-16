@@ -17,19 +17,15 @@ import {
 import {
   OnboardingInput,
   OnboardingTextarea,
-  OnboardingSelect,
-  OnboardingSelectTrigger,
-  OnboardingSelectValue,
-  OnboardingSelectContent,
-  OnboardingSelectItem,
 } from "@/interfaces/web/components/onboarding/OnboardingFormComponents";
+import { OnboardingCountryCombobox } from "@/interfaces/web/components/onboarding/OnboardingCountryCombobox";
 
 /**
  * Step1Profile - Onboarding Step 1: Profile Information
  *
  * Collects basic identity information from the user:
  * - Full name
- * - Region/Location (crucial for future market data)
+ * - Country (searchable combobox with ~250 countries)
  * - Short bio (optional)
  *
  * @layer Interface (Web)
@@ -41,7 +37,7 @@ const profileSchema = z.object({
     .string()
     .min(2, "Name must be at least 2 characters")
     .max(100, "Name must be less than 100 characters"),
-  region: z.string().min(1, "Region is required"),
+  region: z.string().min(1, "Country is required"),
   bio: z
     .string()
     .max(500, "Bio must be less than 500 characters")
@@ -123,44 +119,21 @@ export function Step1Profile() {
               )}
             />
 
-            {/* Region/Location Field */}
+            {/* Country Field */}
             <FormField
               control={form.control}
               name="region"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Region / Location</FormLabel>
-                  <OnboardingSelect
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isLoading}
-                  >
-                    <FormControl>
-                      <OnboardingSelectTrigger>
-                        <OnboardingSelectValue placeholder="Select your region" />
-                      </OnboardingSelectTrigger>
-                    </FormControl>
-                    <OnboardingSelectContent>
-                      <OnboardingSelectItem value="north-america">
-                        North America
-                      </OnboardingSelectItem>
-                      <OnboardingSelectItem value="europe">
-                        Europe
-                      </OnboardingSelectItem>
-                      <OnboardingSelectItem value="latam">
-                        LATAM
-                      </OnboardingSelectItem>
-                      <OnboardingSelectItem value="asia">
-                        Asia
-                      </OnboardingSelectItem>
-                      <OnboardingSelectItem value="argentina">
-                        Argentina
-                      </OnboardingSelectItem>
-                      <OnboardingSelectItem value="other">
-                        Other
-                      </OnboardingSelectItem>
-                    </OnboardingSelectContent>
-                  </OnboardingSelect>
+                <FormItem className="flex flex-col">
+                  <FormLabel>Country</FormLabel>
+                  <FormControl>
+                    <OnboardingCountryCombobox
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={isLoading}
+                      placeholder="Select your country..."
+                    />
+                  </FormControl>
                   <FormDescription>
                     Helps us provide relevant job market insights for your area.
                   </FormDescription>

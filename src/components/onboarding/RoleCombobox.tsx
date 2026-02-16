@@ -89,8 +89,8 @@ export function RoleCombobox({
           aria-expanded={open}
           disabled={disabled || loading}
           className={cn(
-            "w-full justify-between bg-white border-slate-300 text-slate-900 hover:bg-slate-50 hover:border-slate-400",
-            !value && "text-slate-500",
+            "w-full justify-between !bg-white border-slate-300 !text-slate-900 hover:!bg-slate-50 hover:!text-slate-900 hover:border-slate-400",
+            !value && "!text-slate-500",
           )}
         >
           <span className="truncate">
@@ -99,11 +99,14 @@ export function RoleCombobox({
           <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-white border-slate-300">
-        <Command className="bg-white">
+      <PopoverContent
+        className="p-0 !bg-white border-slate-300 shadow-lg"
+        style={{ width: "var(--radix-popover-trigger-width)" }}
+      >
+        <Command className="!bg-white">
           <CommandInput
             placeholder="Search tech roles..."
-            className="border-slate-200"
+            className="border-slate-200 !text-slate-900 placeholder:!text-slate-400"
           />
           <CommandList>
             <CommandEmpty>

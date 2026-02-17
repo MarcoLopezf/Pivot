@@ -41,6 +41,12 @@ export function SiteFooter(): React.ReactElement {
             Terms of Service
           </Link>
           <Link
+            href="/about"
+            className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+          >
+            About
+          </Link>
+          <Link
             href="/contact"
             className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
           >

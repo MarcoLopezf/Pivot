@@ -1,19 +1,41 @@
 import { notFound } from "next/navigation";
 import { RoadmapHeader } from "@interfaces/web/components/roadmap/RoadmapHeader";
 import { RoadmapTimelineClient } from "@interfaces/web/components/roadmap/RoadmapTimelineClient";
-import { getRoadmapByIdAction } from "@interfaces/web/actions/learningActions";
+import {
+  getRoadmapByIdAction,
+  getQuizStatsForRoadmapAction,
+} from "@interfaces/web/actions/learningActions";
+import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
+import type { RoadmapItemType } from "@application/dtos/learning/RoadmapDTO";
 
 interface RoadmapOverviewPageProps {
   params: Promise<{ roadmapId: string }>;
 }
 
-const ESTIMATED_HOURS_PER_MODULE = 2;
+const HOURS_ESTIMATE: Record<
+  RoadmapItemType,
+  Record<DifficultyLevel, number>
+> = {
+  theory: {
+    [DifficultyLevel.Beginner]: 1,
+    [DifficultyLevel.Intermediate]: 2,
+    [DifficultyLevel.Advanced]: 3,
+  },
+  project: {
+    [DifficultyLevel.Beginner]: 3,
+    [DifficultyLevel.Intermediate]: 5,
+    [DifficultyLevel.Advanced]: 8,
+  },
+};
 
 export default async function RoadmapOverviewPage({
   params,
 }: RoadmapOverviewPageProps): Promise<React.ReactElement> {
   const { roadmapId } = await params;
-  const result = await getRoadmapByIdAction(roadmapId);
+  const [result, quizStats] = await Promise.all([
+    getRoadmapByIdAction(roadmapId),
+    getQuizStatsForRoadmapAction(roadmapId),
+  ]);
 
   if (!result.success || !result.data) {
     notFound();
@@ -26,16 +48,13 @@ export default async function RoadmapOverviewPage({
     (item) => item.status === "completed",
   ).length;
 
-  let currentStreak = 0;
-  for (const item of roadmap.items) {
-    if (item.status === "completed") {
-      currentStreak++;
-    } else {
-      break;
-    }
-  }
+  const avgQuizScore = quizStats.success
+    ? (quizStats.data?.avgScore ?? null)
+    : null;
 
-  const totalHours = totalItems * ESTIMATED_HOURS_PER_MODULE;
+  const estimatedHoursLeft = roadmap.items
+    .filter((item) => item.status !== "completed")
+    .reduce((sum, item) => sum + HOURS_ESTIMATE[item.type][item.difficulty], 0);
 
   const description = `Master the skills required to transition from ${currentRole} to ${targetRole}. Follow this personalized learning path to build your expertise.`;
 
@@ -58,8 +77,8 @@ export default async function RoadmapOverviewPage({
         progress={roadmap.progress}
         totalItems={totalItems}
         completedItems={completedItems}
-        totalHours={totalHours}
-        currentStreak={currentStreak}
+        estimatedHoursLeft={estimatedHoursLeft}
+        avgQuizScore={avgQuizScore}
         roadmapId={roadmap.id}
         currentModule={currentModule}
       />

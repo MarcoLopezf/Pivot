@@ -2,6 +2,7 @@
 
 import { createClient } from "@infrastructure/auth/supabase/server";
 import { learningContainer } from "@infrastructure/di/LearningContainer";
+import { prisma } from "@infrastructure/database/PrismaClient";
 import { CareerGoalDTO } from "@application/dtos/learning/CareerGoalDTO";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
 import { JobRoleDTO } from "@application/dtos/learning/JobRoleDTO";
@@ -688,5 +689,50 @@ export async function getRoadmapItemAction(
       error:
         error instanceof Error ? error.message : "Failed to load roadmap item",
     };
+  }
+}
+
+/**
+ * Server Action: Get Quiz Stats for a Roadmap
+ *
+ * Returns the average quiz score (0-100) across all attempts for the given roadmap.
+ * Returns null if no attempts exist yet.
+ *
+ * @layer Interface (Web)
+ */
+export async function getQuizStatsForRoadmapAction(roadmapId: string): Promise<{
+  success: boolean;
+  data?: { avgScore: number | null };
+  error?: string;
+}> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const result = await prisma.quizAttempt.aggregate({
+      where: {
+        userId: user.id,
+        roadmapItem: { roadmapId },
+      },
+      _avg: { score: true },
+      _count: { id: true },
+    });
+
+    const avgScore =
+      result._count.id > 0 && result._avg.score !== null
+        ? Math.round(result._avg.score)
+        : null;
+
+    return { success: true, data: { avgScore } };
+  } catch (error) {
+    console.error("Error in getQuizStatsForRoadmapAction:", error);
+    return { success: false, error: "Failed to load quiz stats" };
   }
 }

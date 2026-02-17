@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useMemo, FormEvent } from "react";
 import { createClient } from "@/infrastructure/auth/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Github, Chrome, Mail, Loader2 } from "lucide-react";
+import { Github, Chrome, Mail, Loader2, Check, X } from "lucide-react";
 
 type MessageType = "error" | "success";
 
@@ -41,6 +41,52 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+
+  /**
+   * Password validation rules
+   */
+  const passwordRules = useMemo(
+    () => [
+      {
+        label: "At least 8 characters",
+        test: (pw: string): boolean => pw.length >= 8,
+      },
+      {
+        label: "One uppercase letter (A-Z)",
+        test: (pw: string): boolean => /[A-Z]/.test(pw),
+      },
+      {
+        label: "One lowercase letter (a-z)",
+        test: (pw: string): boolean => /[a-z]/.test(pw),
+      },
+      {
+        label: "One number (0-9)",
+        test: (pw: string): boolean => /[0-9]/.test(pw),
+      },
+    ],
+    [],
+  );
+
+  const passwordStrength = useMemo(() => {
+    const passed = passwordRules.filter((rule) => rule.test(password)).length;
+    return passed;
+  }, [password, passwordRules]);
+
+  const strengthLabel = useMemo((): string => {
+    if (password.length === 0) return "";
+    if (passwordStrength <= 1) return "Weak";
+    if (passwordStrength === 2) return "Fair";
+    if (passwordStrength === 3) return "Good";
+    return "Strong";
+  }, [password, passwordStrength]);
+
+  const strengthColor = useMemo((): string => {
+    if (passwordStrength <= 1) return "bg-red-500";
+    if (passwordStrength === 2) return "bg-orange-500";
+    if (passwordStrength === 3) return "bg-yellow-500";
+    return "bg-green-500";
+  }, [passwordStrength]);
 
   /**
    * Validates email format using regex
@@ -58,6 +104,7 @@ export default function LoginPage() {
     setEmail("");
     setPassword("");
     setConfirmPassword("");
+    setFullName("");
     setMessage(null);
   };
 
@@ -168,10 +215,21 @@ export default function LoginPage() {
       return;
     }
 
-    // Validate password length
-    if (password.length < 6) {
+    // Validate full name
+    if (fullName.trim().length < 2) {
       setMessage({
-        text: "Password must be at least 6 characters long",
+        text: "Full name must be at least 2 characters",
+        type: "error",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate password requirements
+    const failedRules = passwordRules.filter((rule) => !rule.test(password));
+    if (failedRules.length > 0) {
+      setMessage({
+        text: `Password requires: ${failedRules.map((r) => r.label).join(", ")}`,
         type: "error",
       });
       setIsLoading(false);
@@ -194,6 +252,9 @@ export default function LoginPage() {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+          data: {
+            name: fullName.trim(),
+          },
         },
       });
 
@@ -292,16 +353,19 @@ export default function LoginPage() {
             className="w-full"
             onValueChange={handleTabChange}
           >
-            <TabsList className="grid w-full grid-cols-2 bg-transparent border-b border-slate-600 rounded-none h-auto p-0">
+            <TabsList
+              variant="line"
+              className="grid w-full grid-cols-2 rounded-none h-auto p-0 border-b border-slate-600"
+            >
               <TabsTrigger
                 value="login"
-                className="rounded-none border-0 data-[state=active]:bg-[#1E5F74] data-[state=inactive]:bg-transparent text-slate-300 data-[state=active]:text-white py-2.5 data-[state=active]:shadow-none transition-colors"
+                className="rounded-none text-slate-400 data-[state=active]:text-white data-[state=active]:font-semibold py-2.5 after:bg-[#FCDAB7] after:h-[2px]"
               >
                 Login
               </TabsTrigger>
               <TabsTrigger
                 value="register"
-                className="rounded-none border-0 data-[state=active]:bg-[#1E5F74] data-[state=inactive]:bg-transparent text-slate-300 data-[state=active]:text-white py-2.5 data-[state=active]:shadow-none transition-colors"
+                className="rounded-none text-slate-400 data-[state=active]:text-white data-[state=active]:font-semibold py-2.5 after:bg-[#FCDAB7] after:h-[2px]"
               >
                 Register
               </TabsTrigger>
@@ -322,7 +386,7 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="bg-[#133B5C] border-slate-600 text-white placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74]"
+                    className="bg-[#EAF0FD] border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74] autofill:shadow-[inset_0_0_0px_1000px_#EAF0FD]"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -337,7 +401,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="bg-[#133B5C] border-slate-600 text-white placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74]"
+                    className="bg-[#EAF0FD] border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74] autofill:shadow-[inset_0_0_0px_1000px_#EAF0FD]"
                   />
                 </div>
                 <Button
@@ -364,6 +428,23 @@ export default function LoginPage() {
             <TabsContent value="register" className="space-y-4 mt-6">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="grid gap-2">
+                  <Label htmlFor="register-fullname" className="text-slate-300">
+                    Full Name
+                  </Label>
+                  <Input
+                    id="register-fullname"
+                    type="text"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    minLength={2}
+                    maxLength={100}
+                    disabled={isLoading}
+                    className="bg-[#EAF0FD] border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74] autofill:shadow-[inset_0_0_0px_1000px_#EAF0FD]"
+                  />
+                </div>
+                <div className="grid gap-2">
                   <Label htmlFor="register-email" className="text-slate-300">
                     Email
                   </Label>
@@ -375,7 +456,7 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="bg-[#133B5C] border-slate-600 text-white placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74]"
+                    className="bg-[#EAF0FD] border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74] autofill:shadow-[inset_0_0_0px_1000px_#EAF0FD]"
                   />
                 </div>
                 <div className="grid gap-2">
@@ -385,14 +466,66 @@ export default function LoginPage() {
                   <Input
                     id="register-password"
                     type="password"
-                    placeholder="Min. 6 characters"
+                    placeholder="Min. 8 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={8}
                     disabled={isLoading}
-                    className="bg-[#133B5C] border-slate-600 text-white placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74]"
+                    className="bg-[#EAF0FD] border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74] autofill:shadow-[inset_0_0_0px_1000px_#EAF0FD]"
                   />
+
+                  {/* Password Strength Indicator */}
+                  {password.length > 0 && (
+                    <div className="space-y-2">
+                      {/* Strength Bar */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 bg-slate-600 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${strengthColor}`}
+                            style={{
+                              width: `${(passwordStrength / 4) * 100}%`,
+                            }}
+                          />
+                        </div>
+                        <span
+                          className={`text-xs font-medium min-w-[45px] text-right ${
+                            passwordStrength <= 1
+                              ? "text-red-400"
+                              : passwordStrength === 2
+                                ? "text-orange-400"
+                                : passwordStrength === 3
+                                  ? "text-yellow-400"
+                                  : "text-green-400"
+                          }`}
+                        >
+                          {strengthLabel}
+                        </span>
+                      </div>
+
+                      {/* Requirements Checklist */}
+                      <ul className="space-y-1">
+                        {passwordRules.map((rule) => {
+                          const passed = rule.test(password);
+                          return (
+                            <li
+                              key={rule.label}
+                              className={`flex items-center gap-1.5 text-xs ${
+                                passed ? "text-green-400" : "text-slate-400"
+                              }`}
+                            >
+                              {passed ? (
+                                <Check className="h-3 w-3 shrink-0" />
+                              ) : (
+                                <X className="h-3 w-3 shrink-0" />
+                              )}
+                              {rule.label}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <Label
@@ -408,9 +541,9 @@ export default function LoginPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={8}
                     disabled={isLoading}
-                    className="bg-[#133B5C] border-slate-600 text-white placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74]"
+                    className="bg-[#EAF0FD] border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#1E5F74] focus-visible:border-[#1E5F74] autofill:shadow-[inset_0_0_0px_1000px_#EAF0FD]"
                   />
                 </div>
                 <Button

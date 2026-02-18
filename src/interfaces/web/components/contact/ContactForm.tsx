@@ -76,19 +76,23 @@ export function ContactForm(): React.ReactElement {
 
     setIsLoading(true);
 
-    const result = await submitContactAction(
-      fullName,
-      email,
-      inquiryType,
-      message,
-    );
+    try {
+      const result = await submitContactAction(
+        fullName,
+        email,
+        inquiryType,
+        message,
+      );
 
-    setIsLoading(false);
-
-    if (result.success) {
-      setIsSuccess(true);
-    } else {
-      setError(result.error ?? "Something went wrong");
+      if (result.success) {
+        setIsSuccess(true);
+      } else {
+        setError(result.error ?? "Something went wrong");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -139,6 +143,7 @@ export function ContactForm(): React.ReactElement {
           onChange={(e) => setFullName(e.target.value)}
           required
           maxLength={100}
+          disabled={isLoading}
           className="!bg-white border-slate-300 focus-visible:ring-0 focus-visible:border-[#1E5F74] text-slate-900 placeholder:text-slate-400"
         />
       </div>
@@ -152,15 +157,21 @@ export function ContactForm(): React.ReactElement {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          disabled={isLoading}
           className="!bg-white border-slate-300 focus-visible:ring-0 focus-visible:border-[#1E5F74] text-slate-900 placeholder:text-slate-400"
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="inquiryType">Inquiry Type</Label>
-        <Select value={inquiryType} onValueChange={setInquiryType}>
+        <Select
+          value={inquiryType}
+          onValueChange={setInquiryType}
+          disabled={isLoading}
+        >
           <SelectTrigger
             id="inquiryType"
+            disabled={isLoading}
             className="!bg-white border-slate-300 focus:ring-0 focus:border-[#1E5F74] text-slate-900"
           >
             <SelectValue placeholder="Select a topic" />
@@ -189,6 +200,7 @@ export function ContactForm(): React.ReactElement {
           required
           rows={5}
           maxLength={5000}
+          disabled={isLoading}
           className="!bg-white border-slate-300 focus-visible:ring-0 focus-visible:border-[#1E5F74] text-slate-900 placeholder:text-slate-400"
         />
         <p className="text-xs text-slate-500">

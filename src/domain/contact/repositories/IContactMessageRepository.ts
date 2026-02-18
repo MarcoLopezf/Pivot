@@ -9,4 +9,5 @@ export interface ContactMessageData {
 
 export interface IContactMessageRepository {
   save(data: ContactMessageData): Promise<void>;
+  softDeleteByEmail(email: string): Promise<void>;
 }

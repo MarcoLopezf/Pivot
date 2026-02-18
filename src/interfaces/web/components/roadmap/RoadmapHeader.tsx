@@ -122,7 +122,7 @@ export function RoadmapHeader({
                 <p className="text-lg font-bold">
                   {avgQuizScore !== null ? (
                     <>
-                      {avgQuizScore}
+                      {avgQuizScore.toFixed(1)}
                       <span className="text-sm font-normal text-slate-400">
                         %
                       </span>

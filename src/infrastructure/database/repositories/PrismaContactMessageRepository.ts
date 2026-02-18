@@ -29,4 +29,11 @@ export class PrismaContactMessageRepository implements IContactMessageRepository
       },
     });
   }
+
+  async softDeleteByEmail(email: string): Promise<void> {
+    await this.db.contactMessage.updateMany({
+      where: { email, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+  }
 }

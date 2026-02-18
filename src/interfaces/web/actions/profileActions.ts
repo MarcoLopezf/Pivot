@@ -1,9 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { createClient } from "@infrastructure/auth/supabase/server";
 import { profileContainer } from "@infrastructure/di/ProfileContainer";
 import { UserId } from "@domain/profile/value-objects/UserId";
+
+const ProfileInputSchema = z.object({
+  name: z.string().trim().min(2).max(100),
+  bio: z.string().trim().max(500).nullable().optional(),
+});
 
 /**
  * Server Action: Update Profile
@@ -27,18 +33,15 @@ export async function updateProfileAction(
       return { success: false, error: "Not authenticated" };
     }
 
-    const trimmedName = name.trim();
-    if (trimmedName.length < 2 || trimmedName.length > 100) {
+    const parsed = ProfileInputSchema.safeParse({ name, bio });
+    if (!parsed.success) {
       return {
         success: false,
-        error: "Name must be between 2 and 100 characters",
+        error: parsed.error.issues[0]?.message ?? "Invalid input",
       };
     }
-
-    const trimmedBio = bio?.trim() || null;
-    if (trimmedBio && trimmedBio.length > 500) {
-      return { success: false, error: "Bio must be 500 characters or less" };
-    }
+    const trimmedName = parsed.data.name;
+    const trimmedBio = parsed.data.bio ?? null;
 
     const userRepository = profileContainer.getUserRepository();
     const user = await userRepository.findById(UserId.create(authUser.id));

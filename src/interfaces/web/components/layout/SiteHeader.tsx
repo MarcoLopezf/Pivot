@@ -3,7 +3,7 @@ import { createClient } from "@infrastructure/auth/supabase/server";
 import { profileContainer } from "@infrastructure/di/ProfileContainer";
 import { UserId } from "@domain/profile/value-objects/UserId";
 import { getUserRoadmapsListAction } from "@interfaces/web/actions/learningActions";
-import { prisma } from "@infrastructure/database/PrismaClient";
+import { learningContainer } from "@infrastructure/di/LearningContainer";
 import { Button } from "@/components/ui/button";
 import { RoadmapSwitcher } from "./RoadmapSwitcher";
 import { UserMenu } from "./UserMenu";
@@ -45,15 +45,19 @@ export async function SiteHeader({
   }
 
   const userRepository = profileContainer.getUserRepository();
-  const [dbUser, roadmapsResult, latestGoal] = await Promise.all([
-    userRepository.findById(UserId.create(authUser.id)),
+  const careerGoalRepository = learningContainer.getCareerGoalRepository();
+  const userId = UserId.create(authUser.id);
+  const [dbUser, roadmapsResult, careerGoals] = await Promise.all([
+    userRepository.findById(userId).catch(() => null),
     getUserRoadmapsListAction(),
-    prisma.careerGoal.findFirst({
-      where: { userId: authUser.id },
-      orderBy: { createdAt: "desc" },
-      select: { currentRole: true },
-    }),
+    careerGoalRepository.findByUserId(userId).catch(() => []),
   ]);
+  const latestGoal =
+    careerGoals.length > 0
+      ? careerGoals.reduce((latest, g) =>
+          g.createdAt > latest.createdAt ? g : latest,
+        )
+      : null;
 
   const userName =
     dbUser?.name ||

@@ -1,3 +1,4 @@
+import type * as React from "react";
 import { Shield, Eye, Server, Lock, Mail, RefreshCw } from "lucide-react";
 import Link from "next/link";
 

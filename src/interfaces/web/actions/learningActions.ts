@@ -728,10 +728,8 @@ export async function getQuizStatsForRoadmapAction(
       return { success: false, error: "Unauthorized" };
     }
 
-    const repo = assessmentContainer.getQuizAttemptRepository();
-    const stats = await repo.getStatsForRoadmap(user.id, parsed.data);
-
-    return { success: true, data: stats };
+    const useCase = assessmentContainer.getGetQuizStatsForRoadmapUseCase();
+    return await useCase.execute({ userId: user.id, roadmapId: parsed.data });
   } catch (error) {
     console.error("Error in getQuizStatsForRoadmapAction:", error);
     return { success: false, error: "Failed to load quiz stats" };

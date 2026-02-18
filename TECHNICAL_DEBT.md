@@ -168,6 +168,76 @@ if (data.user) {
 
 ## 🟢 Low Priority
 
+### Password Reset Emails Not Delivered (Requires Custom Domain + SMTP)
+
+**Status:** Pending (code complete, infra pending)
+**Created:** 2026-02-18
+**Estimated Effort:** 1-2 hours (setup only, no code changes)
+**Impact:** Low (no code change needed — only external configuration)
+
+**Problem:**
+The full password reset flow is implemented in code (`/forgot-password`, `/update-password`, server action, middleware protection), but emails are not delivered in production because Supabase's built-in SMTP is rate-limited (2 emails/hour) and the configured SMTP provider (Resend) requires a verified custom domain. The project currently uses a Vercel-provided domain (`*.vercel.app`), which Resend does not allow as a sender domain.
+
+**Current State:**
+- All code is implemented and `pnpm verify` passes
+- `/forgot-password` shows the form and calls `supabase.auth.resetPasswordForEmail()`
+- `/update-password` sets the new password after session exchange via `/auth/callback`
+- Middleware protects `/update-password` (auth required) and redirects authenticated users away from `/forgot-password`
+- Emails are silently not delivered (Supabase default SMTP hits rate limit quickly)
+
+**What's Missing (external configuration only):**
+
+**Step 1 — Get a custom domain**
+Buy any domain (`.app`, `.dev`, `.io` are ~$10-15/year on Namecheap, Porkbun, etc.) and point it to Vercel. Vercel → Project Settings → Domains → add the domain.
+
+**Step 2 — Add and verify the domain in Resend**
+- Resend Dashboard → **Domains** → Add Domain → enter your domain (e.g. `pivotai.app`)
+- Add the DNS records Resend shows (MX, TXT/SPF, DKIM CNAME records) in your domain registrar's DNS settings
+- Wait for verification (usually minutes, up to a few hours)
+
+**Step 3 — Get a Resend API key**
+- Resend Dashboard → **API Keys** → Create API Key
+- Copy the key (`re_xxxxxxxxxxxxxxxx`)
+
+**Step 4 — Configure custom SMTP in Supabase**
+- Supabase Dashboard → **Project Settings** → **Auth** → **SMTP Settings**
+  - Enable Custom SMTP: **ON**
+  - Host: `smtp.resend.com`
+  - Port: `465`
+  - Username: `resend`
+  - Password: `re_xxxxxxxxxxxxxxxx` (Resend API key)
+  - Sender name: `PIVOT AI`
+  - Sender email: `noreply@yourdomain.com`
+
+**Step 5 — Add allowed redirect URLs in Supabase**
+- Supabase Dashboard → **Auth** → **URL Configuration**
+  - Site URL: `https://yourdomain.com`
+  - Redirect URLs: add both:
+    - `http://localhost:3000/auth/callback`
+    - `https://yourdomain.com/auth/callback`
+
+**Temporary workaround (no custom domain needed):**
+Use Resend's shared sender address `onboarding@resend.dev` as the sender email in Step 4. This allows sending without a custom domain, limited to 100 emails/day. Not suitable for production but works for early testing.
+
+**Implementation Checklist:**
+- [ ] Purchase a custom domain
+- [ ] Add domain to Vercel and configure DNS
+- [ ] Add and verify domain in Resend dashboard
+- [ ] Create Resend API key
+- [ ] Configure custom SMTP in Supabase with Resend credentials
+- [ ] Add redirect URLs in Supabase Auth URL Configuration
+- [ ] End-to-end test: request reset → receive email → set new password → login
+- [ ] Optionally: customize the password reset email template in Supabase Dashboard → Auth → Email Templates
+
+**Related Files (no changes needed):**
+- `src/interfaces/web/actions/passwordResetActions.ts` — server action
+- `src/interfaces/web/pages/forgot-password/ForgotPasswordPage.tsx`
+- `src/interfaces/web/pages/update-password/UpdatePasswordPage.tsx`
+- `src/app/auth/callback/route.ts` — already handles `?next=/update-password`
+- `src/middleware.ts` — `/update-password` protected, `/forgot-password` redirects authenticated users
+
+---
+
 ### Add Email Notification for Contact Form Submissions
 
 **Status:** Pending
@@ -221,4 +291,4 @@ _(Items will be moved here when completed)_
 
 ---
 
-**Last Updated:** 2026-02-17
+**Last Updated:** 2026-02-18

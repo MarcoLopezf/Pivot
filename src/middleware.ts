@@ -20,10 +20,15 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   // Protected routes that require authentication
   const isProtectedRoute =
-    pathname.startsWith("/roadmap") || pathname.startsWith("/onboarding");
+    pathname.startsWith("/roadmap") ||
+    pathname.startsWith("/onboarding") ||
+    pathname === "/update-password";
 
   // Auth pages that authenticated users shouldn't access
-  const isAuthPage = pathname === "/login" || pathname === "/register";
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/forgot-password";
 
   // If user is not authenticated and tries to access protected routes
   if (!user && isProtectedRoute) {

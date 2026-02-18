@@ -7,12 +7,12 @@ const hasTestDb = !!process.env.DATABASE_URL;
 
 // Mock GitHubService and AI flow to avoid external API calls
 // Use vi.hoisted() to ensure mocks are defined before imports
-const { mockGitHubAnalyzeRepository, mockAnalyzeProjectFlow } = vi.hoisted(
-  () => ({
+const { mockGitHubAnalyzeRepository, mockAnalyzeProjectFlow, mockGetUser } =
+  vi.hoisted(() => ({
     mockGitHubAnalyzeRepository: vi.fn(),
     mockAnalyzeProjectFlow: vi.fn(),
-  }),
-);
+    mockGetUser: vi.fn(),
+  }));
 
 vi.mock("@infrastructure/services/GitHubService", () => ({
   GitHubService: class {
@@ -22,6 +22,14 @@ vi.mock("@infrastructure/services/GitHubService", () => ({
 
 vi.mock("@infrastructure/ai/flows/analyzeProjectFlow", () => ({
   analyzeProjectFlow: mockAnalyzeProjectFlow,
+}));
+
+vi.mock("@infrastructure/auth/supabase/server", () => ({
+  createClient: vi.fn(() => ({
+    auth: {
+      getUser: mockGetUser,
+    },
+  })),
 }));
 
 describe.skipIf(!hasTestDb)(
@@ -37,6 +45,10 @@ describe.skipIf(!hasTestDb)(
       // Reset mocks
       mockGitHubAnalyzeRepository.mockReset();
       mockAnalyzeProjectFlow.mockReset();
+      mockGetUser.mockResolvedValue({
+        data: { user: { id: testUserId } },
+        error: null,
+      });
 
       // Configure default mock behavior
       mockGitHubAnalyzeRepository.mockImplementation(

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { assessmentContainer } from "@infrastructure/di/AssessmentContainer";
 import { ProjectResultDTO } from "@application/dtos/assessment/SubmitProjectDTO";
 import { createLogger } from "@infrastructure/logging/logger";
+import { createClient } from "@infrastructure/auth/supabase/server";
 
 const logger = createLogger(
   "POST /api/learning/roadmap/items/[itemId]/project",
@@ -57,6 +58,21 @@ export async function POST(
 ): Promise<
   NextResponse<ApiSuccessResponse<ProjectResultDTO> | ApiErrorResponse>
 > {
+  // Authenticate user
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Authentication required" },
+      },
+      { status: 401 },
+    );
+  }
+
   try {
     // Await params (Next.js 15 requirement)
     const { itemId } = await params;
@@ -85,6 +101,7 @@ export async function POST(
 
     // Execute use case
     const result = await submitProject.execute({
+      userId: user.id,
       roadmapId,
       roadmapItemId: itemId,
       repoUrl,
@@ -100,6 +117,17 @@ export async function POST(
   } catch (error) {
     // Handle known errors
     if (error instanceof Error) {
+      // Authorization errors
+      if (error.message.startsWith("AUTHORIZATION_ERROR:")) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: { code: "FORBIDDEN", message: "Access denied" },
+          },
+          { status: 403 },
+        );
+      }
+
       // Invalid GitHub URL or SSRF protection
       if (error.message.includes("Invalid GitHub repository URL")) {
         const response: ApiErrorResponse = {

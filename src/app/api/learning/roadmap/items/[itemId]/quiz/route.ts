@@ -4,6 +4,7 @@ import { assessmentContainer } from "@infrastructure/di/AssessmentContainer";
 import { QuizDTO } from "@application/dtos/assessment/QuizDTO";
 import { QuizResultDTO } from "@application/dtos/assessment/SubmitQuizDTO";
 import { createLogger } from "@infrastructure/logging/logger";
+import { createClient } from "@infrastructure/auth/supabase/server";
 
 const logger = createLogger("GET /api/learning/roadmap/items/[itemId]/quiz");
 const postLogger = createLogger(
@@ -61,6 +62,21 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ itemId: string }> },
 ): Promise<NextResponse<ApiSuccessResponse<QuizDTO> | ApiErrorResponse>> {
+  // Authenticate user
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Authentication required" },
+      },
+      { status: 401 },
+    );
+  }
+
   try {
     // Await params (Next.js 15 requirement)
     const { itemId } = await params;
@@ -88,7 +104,7 @@ export async function GET(
     const generateQuiz = assessmentContainer.getGenerateQuizUseCase();
 
     // Execute use case
-    const quizDTO = await generateQuiz.execute(roadmapId, itemId);
+    const quizDTO = await generateQuiz.execute(user.id, roadmapId, itemId);
 
     // Return success response
     const response: ApiSuccessResponse<QuizDTO> = {
@@ -100,6 +116,17 @@ export async function GET(
   } catch (error) {
     // Handle known errors
     if (error instanceof Error) {
+      // Authorization errors
+      if (error.message.startsWith("AUTHORIZATION_ERROR:")) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: { code: "FORBIDDEN", message: "Access denied" },
+          },
+          { status: 403 },
+        );
+      }
+
       // Validation errors
       if (
         error.message.includes("cannot be empty") ||
@@ -174,6 +201,21 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ itemId: string }> },
 ): Promise<NextResponse<ApiSuccessResponse<QuizResultDTO> | ApiErrorResponse>> {
+  // Authenticate user
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Authentication required" },
+      },
+      { status: 401 },
+    );
+  }
+
   try {
     // Await params (Next.js 15 requirement)
     const { itemId } = await params;
@@ -202,6 +244,7 @@ export async function POST(
 
     // Execute use case
     const result = await submitQuiz.execute({
+      userId: user.id,
       roadmapId,
       roadmapItemId: itemId,
       answers,
@@ -217,6 +260,17 @@ export async function POST(
   } catch (error) {
     // Handle known errors
     if (error instanceof Error) {
+      // Authorization errors
+      if (error.message.startsWith("AUTHORIZATION_ERROR:")) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: { code: "FORBIDDEN", message: "Access denied" },
+          },
+          { status: 403 },
+        );
+      }
+
       // Validation errors from use case
       if (error.message.startsWith("VALIDATION_ERROR:")) {
         const response: ApiErrorResponse = {

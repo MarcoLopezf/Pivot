@@ -208,6 +208,10 @@ Instead of giving you generic learning paths, PIVOT:
 - **[MSW 2](https://mswjs.io/)** - API mocking
 - **[Playwright](https://playwright.dev/)** - E2E testing (configured)
 
+### Infrastructure
+
+- **[Upstash Redis](https://upstash.com/)** - Serverless Redis for API rate limiting
+
 ### DevOps & Tooling
 
 - **[Husky](https://typicode.github.io/husky/)** - Git hooks (pre-commit, pre-push)
@@ -380,6 +384,10 @@ graph TB
    YOUTUBE_API_KEY="AIza..."        # https://console.cloud.google.com/
    TAVILY_API_KEY="tvly-..."        # https://tavily.com/
    GITHUB_ACCESS_TOKEN="ghp_..."    # https://github.com/settings/tokens
+
+   # Upstash Redis (Rate Limiting)
+   UPSTASH_REDIS_REST_URL="https://your-db.upstash.io"   # https://upstash.com
+   UPSTASH_REDIS_REST_TOKEN="your-token"
    ```
 
 4. **Set up the database**

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { headers } from "next/headers";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader } from "@interfaces/web/components/layout/SiteHeader";
-import { SiteFooter } from "@interfaces/web/components/layout/SiteFooter";
+import { FooterWrapper } from "@interfaces/web/components/layout/FooterWrapper";
 import "../globals.css";
 
 const geistSans = Geist({
@@ -21,17 +20,11 @@ export const metadata: Metadata = {
   description: "Your personalized career transition platform",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>): Promise<React.ReactElement> {
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") || "";
-
-  // Hide footer on onboarding pages
-  const hideFooter = pathname.startsWith("/onboarding");
-
+}>): React.ReactElement {
   return (
     <html lang="en">
       <body
@@ -39,7 +32,7 @@ export default async function RootLayout({
       >
         <SiteHeader />
         <main className="flex-1 bg-gray-100 text-slate-900">{children}</main>
-        {!hideFooter && <SiteFooter />}
+        <FooterWrapper />
         <Toaster />
       </body>
     </html>

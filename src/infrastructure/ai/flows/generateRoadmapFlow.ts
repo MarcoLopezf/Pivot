@@ -92,7 +92,6 @@ export class GenkitRoadmapFlow implements IGenerateRoadmapFlow {
     userContext?: string,
   ): string {
     let contextSection = "";
-    console.log("userContext", userContext);
     if (userContext) {
       contextSection = `
 

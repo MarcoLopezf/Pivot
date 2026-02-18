@@ -37,7 +37,7 @@ export async function updateProfileAction(
     if (!parsed.success) {
       return {
         success: false,
-        error: parsed.error.errors[0]?.message ?? "Invalid input",
+        error: parsed.error.issues[0]?.message ?? "Invalid input",
       };
     }
     const trimmedName = parsed.data.name;

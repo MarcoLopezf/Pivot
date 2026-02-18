@@ -2,6 +2,11 @@
 
 import { createClient } from "@infrastructure/auth/supabase/server";
 import { headers } from "next/headers";
+import { z } from "zod";
+
+const passwordResetSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
 
 /**
  * Server Action: Request Password Reset
@@ -17,6 +22,11 @@ import { headers } from "next/headers";
 export async function requestPasswordReset(
   email: string,
 ): Promise<{ success: boolean; error?: string }> {
+  const parsed = passwordResetSchema.safeParse({ email });
+  if (!parsed.success) {
+    return { success: false, error: "Invalid email address" };
+  }
+
   try {
     const supabase = await createClient();
     const headersList = await headers();

@@ -10,6 +10,7 @@ import { GitHubService } from "@infrastructure/services/GitHubService";
 import { GenerateQuiz } from "@application/use-cases/assessment/GenerateQuiz";
 import { SubmitQuiz } from "@application/use-cases/assessment/SubmitQuiz";
 import { SubmitProject } from "@application/use-cases/assessment/SubmitProject";
+import { GetQuizStatsForRoadmap } from "@application/use-cases/assessment/GetQuizStatsForRoadmap";
 
 /**
  * AssessmentContainer - Dependency Injection Container for Assessment bounded context
@@ -51,6 +52,10 @@ class AssessmentContainer {
       this.quizAttemptRepository,
       this.roadmapRepository,
     );
+  }
+
+  getGetQuizStatsForRoadmapUseCase(): GetQuizStatsForRoadmap {
+    return new GetQuizStatsForRoadmap(this.quizAttemptRepository);
   }
 
   getSubmitProjectUseCase(): SubmitProject {

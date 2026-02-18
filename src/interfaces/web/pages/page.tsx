@@ -122,87 +122,221 @@ export default async function HomePage(): Promise<React.ReactElement> {
             {/* Left: Text Content */}
             <div className="space-y-6">
               <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-                Powered by Advanced AI Models
+                Stop guessing. Start moving.
               </h2>
               <p className="text-lg text-slate-600">
-                Our engine analyzes millions of job descriptions and successful
-                career transitions to create the most effective roadmap for your
-                transition.
+                Most career changers fail not because of lack of effort — but
+                because they don&apos;t know what to learn, in what order, or
+                how long it will take.
               </p>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#1E5F74] text-white">
+                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1E5F74] text-white">
                     <span className="text-xs">✓</span>
                   </div>
-                  <div>
-                    <p className="font-medium text-slate-900">
-                      Dynamic skill gap analysis
-                    </p>
-                  </div>
+                  <p className="font-medium text-slate-900">
+                    A clear path from where you are to where you want to be
+                  </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#1E5F74] text-white">
+                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1E5F74] text-white">
                     <span className="text-xs">✓</span>
                   </div>
-                  <div>
-                    <p className="font-medium text-slate-900">
-                      Real-time market trend adaptation
-                    </p>
-                  </div>
+                  <p className="font-medium text-slate-900">
+                    No more &quot;what do I learn next?&quot;
+                  </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#1E5F74] text-white">
+                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1E5F74] text-white">
                     <span className="text-xs">✓</span>
                   </div>
-                  <div>
-                    <p className="font-medium text-slate-900">
-                      Mentor matching algorithm
-                    </p>
-                  </div>
+                  <p className="font-medium text-slate-900">
+                    Progress you can see and measure
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Right: Dashboard Preview Placeholder */}
+            {/* Right: Career Change Reality Stats */}
             <div className="relative">
-              <div className="overflow-hidden rounded-lg border border-slate-200 bg-[#1D2D50] p-6 shadow-xl">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-slate-300">
-                      Career Progress
+              <div className="overflow-hidden rounded-lg border border-slate-200 bg-[#1D2D50] p-8 shadow-xl">
+                <div className="space-y-6">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                    The Career Change Reality
+                  </p>
+
+                  <div className="space-y-4">
+                    <div className="rounded-lg bg-[#133B5C] p-5">
+                      <p className="text-5xl font-bold text-white">77%</p>
+                      <p className="mt-2 text-sm text-slate-400">
+                        of professionals consider a career change at some point
+                        in their life
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="rounded-lg bg-[#133B5C] p-5">
+                        <p className="text-4xl font-bold text-white">3×</p>
+                        <p className="mt-2 text-sm text-slate-400">
+                          more likely to succeed with a structured plan
+                        </p>
+                      </div>
+                      <div className="rounded-lg bg-[#133B5C] p-5">
+                        <p className="text-4xl font-bold text-[#4ECDC4]">23%</p>
+                        <p className="mt-2 text-sm text-slate-400">
+                          actually have a plan when making the transition
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-700 pt-4">
+                    <p className="text-sm text-slate-400">
+                      PIVOT gives you the structure the other 77% wish they had.
                     </p>
-                    <p className="text-xs text-slate-400">Last 6 months</p>
-                  </div>
-                  <div className="h-64 rounded bg-[#133B5C] p-4">
-                    {/* Placeholder Chart */}
-                    <div className="flex h-full items-end justify-between gap-2">
-                      {[40, 60, 45, 75, 55, 85, 70, 90].map((height, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 rounded-t bg-gradient-to-t from-[#1E5F74] to-[#1E5F74]/50"
-                          style={{ height: `${height}%` }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 pt-2">
-                    <div className="rounded bg-[#133B5C] p-3">
-                      <p className="text-xs text-slate-400">Completed</p>
-                      <p className="text-lg font-bold text-white">24</p>
-                    </div>
-                    <div className="rounded bg-[#133B5C] p-3">
-                      <p className="text-xs text-slate-400">In Progress</p>
-                      <p className="text-lg font-bold text-white">8</p>
-                    </div>
-                    <div className="rounded bg-[#133B5C] p-3">
-                      <p className="text-xs text-slate-400">Skills</p>
-                      <p className="text-lg font-bold text-white">32</p>
-                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Transition Examples Section */}
+      <section className="bg-slate-50 px-4 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900">
+              Every career change is different. Your roadmap should be too.
+            </h2>
+            <p className="mt-4 text-lg text-slate-600">
+              See how PIVOT adapts to different starting points and goals.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {/* Card 1: Tech → Tech */}
+            <div className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-2">
+                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">
+                  Tech → Tech
+                </span>
+              </div>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl">💻</span>
+                  <p className="mt-1 text-xs font-medium text-slate-500">
+                    Frontend Dev
+                  </p>
+                </div>
+                <span className="text-xl text-slate-300">→</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl">🤖</span>
+                  <p className="mt-1 text-xs font-medium text-slate-500">
+                    ML Engineer
+                  </p>
+                </div>
+              </div>
+              <p className="grow text-sm text-slate-600">
+                Already in tech but want to move into AI? PIVOT maps the skills
+                you&apos;re missing and builds a path around what you already
+                know — so you&apos;re not starting from zero.
+              </p>
+              <div className="mt-6 flex gap-6 border-t border-slate-100 pt-4">
+                <div>
+                  <p className="text-xs text-slate-400">Estimated</p>
+                  <p className="text-sm font-bold text-slate-900">10 months</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400">Milestones</p>
+                  <p className="text-sm font-bold text-slate-900">16</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Student → Developer */}
+            <div className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-2">
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+                  Student → Developer
+                </span>
+              </div>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl">🎓</span>
+                  <p className="mt-1 text-xs font-medium text-slate-500">
+                    CS Student
+                  </p>
+                </div>
+                <span className="text-xl text-slate-300">→</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl">⚙️</span>
+                  <p className="mt-1 text-xs font-medium text-slate-500">
+                    Full-Stack Dev
+                  </p>
+                </div>
+              </div>
+              <p className="grow text-sm text-slate-600">
+                No professional experience yet? PIVOT structures a path with
+                real-world projects and a portfolio that gives you something
+                concrete to show when you apply.
+              </p>
+              <div className="mt-6 flex gap-6 border-t border-slate-100 pt-4">
+                <div>
+                  <p className="text-xs text-slate-400">Estimated</p>
+                  <p className="text-sm font-bold text-slate-900">6 months</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400">Milestones</p>
+                  <p className="text-sm font-bold text-slate-900">12</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Non-tech → Tech */}
+            <div className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-2">
+                <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600">
+                  Non-tech → Tech
+                </span>
+              </div>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl">📊</span>
+                  <p className="mt-1 text-xs font-medium text-slate-500">
+                    Marketing Mgr
+                  </p>
+                </div>
+                <span className="text-xl text-slate-300">→</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl">🎨</span>
+                  <p className="mt-1 text-xs font-medium text-slate-500">
+                    UX Designer
+                  </p>
+                </div>
+              </div>
+              <p className="grow text-sm text-slate-600">
+                Coming from a different industry? Your background is an
+                advantage. PIVOT shows you how to leverage what you already know
+                and bridge the gap into tech.
+              </p>
+              <div className="mt-6 flex gap-6 border-t border-slate-100 pt-4">
+                <div>
+                  <p className="text-xs text-slate-400">Estimated</p>
+                  <p className="text-sm font-bold text-slate-900">8 months</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400">Milestones</p>
+                  <p className="text-sm font-bold text-slate-900">14</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-8 text-center text-xs text-slate-400">
+            * Timelines and milestones are illustrative estimates based on
+            typical career transitions.
+          </p>
         </div>
       </section>
 

@@ -1,7 +1,9 @@
 "use server";
 
+import { z } from "zod";
 import { createClient } from "@infrastructure/auth/supabase/server";
 import { learningContainer } from "@infrastructure/di/LearningContainer";
+import { assessmentContainer } from "@infrastructure/di/AssessmentContainer";
 import { CareerGoalDTO } from "@application/dtos/learning/CareerGoalDTO";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
 import { JobRoleDTO } from "@application/dtos/learning/JobRoleDTO";
@@ -688,5 +690,48 @@ export async function getRoadmapItemAction(
       error:
         error instanceof Error ? error.message : "Failed to load roadmap item",
     };
+  }
+}
+
+const roadmapIdSchema = z.string().uuid();
+
+export interface GetQuizStatsForRoadmapActionResult {
+  success: boolean;
+  data?: { avgScore: number | null };
+  error?: string;
+}
+
+/**
+ * Server Action: Get Quiz Stats for a Roadmap
+ *
+ * Returns the average quiz score (0-100) across all attempts for the given roadmap.
+ * Returns null if no attempts exist yet.
+ *
+ * @layer Interface (Web)
+ */
+export async function getQuizStatsForRoadmapAction(
+  roadmapId: string,
+): Promise<GetQuizStatsForRoadmapActionResult> {
+  const parsed = roadmapIdSchema.safeParse(roadmapId);
+  if (!parsed.success) {
+    return { success: false, error: "Invalid roadmap ID" };
+  }
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const useCase = assessmentContainer.getGetQuizStatsForRoadmapUseCase();
+    return await useCase.execute({ userId: user.id, roadmapId: parsed.data });
+  } catch (error) {
+    console.error("Error in getQuizStatsForRoadmapAction:", error);
+    return { success: false, error: "Failed to load quiz stats" };
   }
 }

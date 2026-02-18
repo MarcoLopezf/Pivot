@@ -168,7 +168,31 @@ if (data.user) {
 
 ## 🟢 Low Priority
 
-_(Empty - add items as they are identified)_
+### Add Email Notification for Contact Form Submissions
+
+**Status:** Pending
+**Created:** 2026-02-17
+**Estimated Effort:** 2-3 hours
+**Impact:** Low (user experience)
+
+**Problem:**
+Contact form submissions are stored in PostgreSQL but no email notification is sent to the team. Submissions can only be found by querying the database directly.
+
+**Desired State:**
+- Send an email notification to the team when a new contact message is submitted
+- Include the full message details (name, email, inquiry type, message)
+
+**Recommended Approach:**
+- Use [Resend](https://resend.com) as the email provider (excellent Next.js integration)
+- Create an email service in the infrastructure layer (`src/infrastructure/email/`)
+- Update `submitContactAction` to call the email service after DB insert
+- Add `RESEND_API_KEY` and `CONTACT_NOTIFICATION_EMAIL` to env config
+
+**Scope:**
+- **Create:** `src/infrastructure/email/ResendEmailService.ts`
+- **Update:** `src/interfaces/web/actions/contactActions.ts`
+- **Update:** `.env.example` with new env vars
+- **Total:** ~3 files affected
 
 ---
 
@@ -197,4 +221,4 @@ _(Items will be moved here when completed)_
 
 ---
 
-**Last Updated:** 2026-02-04
+**Last Updated:** 2026-02-17

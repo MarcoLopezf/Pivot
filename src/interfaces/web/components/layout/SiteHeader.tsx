@@ -3,6 +3,7 @@ import { createClient } from "@infrastructure/auth/supabase/server";
 import { profileContainer } from "@infrastructure/di/ProfileContainer";
 import { UserId } from "@domain/profile/value-objects/UserId";
 import { getUserRoadmapsListAction } from "@interfaces/web/actions/learningActions";
+import { learningContainer } from "@infrastructure/di/LearningContainer";
 import { Button } from "@/components/ui/button";
 import { RoadmapSwitcher } from "./RoadmapSwitcher";
 import { UserMenu } from "./UserMenu";
@@ -44,10 +45,19 @@ export async function SiteHeader({
   }
 
   const userRepository = profileContainer.getUserRepository();
-  const [dbUser, roadmapsResult] = await Promise.all([
-    userRepository.findById(UserId.create(authUser.id)),
+  const careerGoalRepository = learningContainer.getCareerGoalRepository();
+  const userId = UserId.create(authUser.id);
+  const [dbUser, roadmapsResult, careerGoals] = await Promise.all([
+    userRepository.findById(userId).catch(() => null),
     getUserRoadmapsListAction(),
+    careerGoalRepository.findByUserId(userId).catch(() => []),
   ]);
+  const latestGoal =
+    careerGoals.length > 0
+      ? careerGoals.reduce((latest, g) =>
+          g.createdAt > latest.createdAt ? g : latest,
+        )
+      : null;
 
   const userName =
     dbUser?.name ||
@@ -83,7 +93,15 @@ export async function SiteHeader({
         </div>
 
         {/* Right: User Menu */}
-        <UserMenu userName={userName} userEmail={userEmail} />
+        <UserMenu
+          userName={userName}
+          userEmail={userEmail}
+          userLocation={dbUser?.location ?? null}
+          userBio={dbUser?.bio ?? null}
+          userSeniority={dbUser?.currentSeniority ?? null}
+          userYearsExperience={dbUser?.yearsExperience ?? null}
+          userCurrentRole={latestGoal?.currentRole ?? null}
+        />
       </div>
     </header>
   );

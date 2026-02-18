@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Clock, Flame, Play, ArrowRight } from "lucide-react";
+import { Settings, Clock, Star, Play, ArrowRight } from "lucide-react";
 
 interface CurrentModuleInfo {
   id: string;
@@ -15,8 +15,8 @@ interface RoadmapHeaderProps {
   progress: number;
   totalItems: number;
   completedItems: number;
-  totalHours: number;
-  currentStreak: number;
+  estimatedHoursLeft: number;
+  avgQuizScore: number | null;
   roadmapId: string;
   currentModule: CurrentModuleInfo | null;
 }
@@ -27,15 +27,17 @@ export function RoadmapHeader({
   progress,
   totalItems,
   completedItems,
-  totalHours,
-  currentStreak,
+  estimatedHoursLeft,
+  avgQuizScore,
   roadmapId,
   currentModule,
 }: RoadmapHeaderProps): React.ReactElement {
-  const remainingItems = totalItems - completedItems;
-  const hoursPerModule =
-    totalItems > 0 ? Math.round(totalHours / totalItems) : 0;
-  const hoursLeft = remainingItems * hoursPerModule;
+  const timeLeftLabel =
+    estimatedHoursLeft === 0
+      ? "Done!"
+      : estimatedHoursLeft < 40
+        ? `${estimatedHoursLeft}h`
+        : `~${Math.ceil(estimatedHoursLeft / 8)} days`;
 
   return (
     <div className="max-w-5xl mx-auto px-6 pt-6">
@@ -106,22 +108,30 @@ export function RoadmapHeader({
                 <p className="text-[10px] uppercase tracking-wider text-slate-400">
                   Est. Time Left
                 </p>
-                <p className="text-lg font-bold">{hoursLeft}h</p>
+                <p className="text-lg font-bold">{timeLeftLabel}</p>
               </div>
             </div>
 
-            {/* Streak */}
+            {/* Avg Quiz Score */}
             <div className="flex items-center gap-3 md:pl-6">
-              <Flame className="h-4 w-4 text-orange-400" />
+              <Star className="h-4 w-4 text-yellow-400" />
               <div>
                 <p className="text-[10px] uppercase tracking-wider text-slate-400">
-                  Current Streak
+                  Avg Quiz Score
                 </p>
                 <p className="text-lg font-bold">
-                  {currentStreak}{" "}
-                  <span className="text-sm font-normal text-slate-400">
-                    Days
-                  </span>
+                  {avgQuizScore !== null ? (
+                    <>
+                      {avgQuizScore}
+                      <span className="text-sm font-normal text-slate-400">
+                        %
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-sm font-normal text-slate-400">
+                      No quizzes yet
+                    </span>
+                  )}
                 </p>
               </div>
             </div>

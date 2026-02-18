@@ -129,7 +129,7 @@ Create 5-8 sequential learning milestones that form a clear path from current sk
 - "type": Classify each item as either:
   * "theory": Knowledge-based learning (concepts, patterns, fundamentals) — validated later via quiz
   * "project": Hands-on practice (build something, implement a feature) — validated later via URL submission
-  * A good roadmap should have a MIX of both types (roughly 80% theory, 20% project)
+  * A good roadmap should have a MIX of both types: mostly theory with a MAXIMUM of 3 project items total
 
 **CRITICAL RULES FOR PROJECT-TYPE ITEMS:**
 For items where "type": "project", follow these strict rules:

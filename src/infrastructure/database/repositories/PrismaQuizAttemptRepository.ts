@@ -1,5 +1,8 @@
 import { type PrismaClient } from "@prisma/client";
-import { IQuizAttemptRepository } from "@domain/assessment/repositories/IQuizAttemptRepository";
+import {
+  IQuizAttemptRepository,
+  QuizStats,
+} from "@domain/assessment/repositories/IQuizAttemptRepository";
 import { QuizAttempt } from "@domain/assessment/entities/QuizAttempt";
 import { UserId } from "@domain/profile/value-objects/UserId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
@@ -46,5 +49,26 @@ export class PrismaQuizAttemptRepository implements IQuizAttemptRepository {
     });
 
     return prismaAttempts.map((a) => QuizAttemptMapper.toDomain(a));
+  }
+
+  async getStatsForRoadmap(
+    userId: string,
+    roadmapId: string,
+  ): Promise<QuizStats> {
+    const result = await this.db.quizAttempt.aggregate({
+      where: {
+        userId,
+        roadmapItem: { roadmapId },
+      },
+      _avg: { score: true },
+      _count: { id: true },
+    });
+
+    const avgScore =
+      result._count.id > 0 && result._avg.score !== null
+        ? Math.round(result._avg.score)
+        : null;
+
+    return { avgScore };
   }
 }

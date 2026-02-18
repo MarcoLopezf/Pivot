@@ -57,6 +57,7 @@ describe("SubmitQuiz Use Case", () => {
       save: vi.fn(),
       findByRoadmapItemId: vi.fn(),
       findByUserId: vi.fn(),
+      getStatsForRoadmap: vi.fn(),
     };
     mockRoadmapRepo = {
       save: vi.fn(),

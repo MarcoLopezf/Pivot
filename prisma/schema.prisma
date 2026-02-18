@@ -235,3 +235,23 @@ model JobRole {
   @@index([isEnabled])
   @@index([popularity])
 }
+
+enum InquiryType {
+  FEEDBACK
+  BUG_REPORT
+  FEATURE_REQUEST
+  SUGGESTION
+  GENERAL_INQUIRY
+}
+
+model ContactMessage {
+  id          String      @id @default(uuid())
+  fullName    String
+  email       String
+  inquiryType InquiryType
+  message     String
+  createdAt   DateTime    @default(now())
+
+  @@index([createdAt])
+  @@index([inquiryType])
+}

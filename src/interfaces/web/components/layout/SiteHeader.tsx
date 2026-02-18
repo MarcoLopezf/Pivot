@@ -3,6 +3,7 @@ import { createClient } from "@infrastructure/auth/supabase/server";
 import { profileContainer } from "@infrastructure/di/ProfileContainer";
 import { UserId } from "@domain/profile/value-objects/UserId";
 import { getUserRoadmapsListAction } from "@interfaces/web/actions/learningActions";
+import { prisma } from "@infrastructure/database/PrismaClient";
 import { Button } from "@/components/ui/button";
 import { RoadmapSwitcher } from "./RoadmapSwitcher";
 import { UserMenu } from "./UserMenu";
@@ -44,9 +45,14 @@ export async function SiteHeader({
   }
 
   const userRepository = profileContainer.getUserRepository();
-  const [dbUser, roadmapsResult] = await Promise.all([
+  const [dbUser, roadmapsResult, latestGoal] = await Promise.all([
     userRepository.findById(UserId.create(authUser.id)),
     getUserRoadmapsListAction(),
+    prisma.careerGoal.findFirst({
+      where: { userId: authUser.id },
+      orderBy: { createdAt: "desc" },
+      select: { currentRole: true },
+    }),
   ]);
 
   const userName =
@@ -83,7 +89,15 @@ export async function SiteHeader({
         </div>
 
         {/* Right: User Menu */}
-        <UserMenu userName={userName} userEmail={userEmail} />
+        <UserMenu
+          userName={userName}
+          userEmail={userEmail}
+          userLocation={dbUser?.location ?? null}
+          userBio={dbUser?.bio ?? null}
+          userSeniority={dbUser?.currentSeniority ?? null}
+          userYearsExperience={dbUser?.yearsExperience ?? null}
+          userCurrentRole={latestGoal?.currentRole ?? null}
+        />
       </div>
     </header>
   );

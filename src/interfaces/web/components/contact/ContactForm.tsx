@@ -14,13 +14,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { submitContactAction } from "@interfaces/web/actions/contactActions";
+import { InquiryType } from "@domain/contact/InquiryType";
 
-const INQUIRY_OPTIONS = [
-  { value: "FEEDBACK", label: "Feedback" },
-  { value: "BUG_REPORT", label: "Bug Report" },
-  { value: "FEATURE_REQUEST", label: "Feature Request" },
-  { value: "SUGGESTION", label: "Suggestion" },
-  { value: "GENERAL_INQUIRY", label: "General Inquiry" },
+const INQUIRY_OPTIONS: { value: InquiryType; label: string }[] = [
+  { value: InquiryType.FEEDBACK, label: "Feedback" },
+  { value: InquiryType.BUG_REPORT, label: "Bug Report" },
+  { value: InquiryType.FEATURE_REQUEST, label: "Feature Request" },
+  { value: InquiryType.SUGGESTION, label: "Suggestion" },
+  { value: InquiryType.GENERAL_INQUIRY, label: "General Inquiry" },
 ];
 
 /**

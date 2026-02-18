@@ -53,6 +53,10 @@ class AssessmentContainer {
     );
   }
 
+  getQuizAttemptRepository(): PrismaQuizAttemptRepository {
+    return this.quizAttemptRepository;
+  }
+
   getSubmitProjectUseCase(): SubmitProject {
     return new SubmitProject(
       this.projectSubmissionRepository,

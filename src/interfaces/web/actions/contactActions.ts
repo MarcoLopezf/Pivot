@@ -1,15 +1,28 @@
 "use server";
 
-import { prisma } from "@infrastructure/database/PrismaClient";
-import { InquiryType } from "@prisma/client";
+import { z } from "zod";
+import { InquiryType } from "@domain/contact/InquiryType";
+import { contactContainer } from "@infrastructure/di/ContactContainer";
 
-const VALID_INQUIRY_TYPES: InquiryType[] = [
-  "FEEDBACK",
-  "BUG_REPORT",
-  "FEATURE_REQUEST",
-  "SUGGESTION",
-  "GENERAL_INQUIRY",
-];
+const contactFormSchema = z.object({
+  fullName: z
+    .string()
+    .min(2, "Name must be between 2 and 100 characters")
+    .max(100, "Name must be between 2 and 100 characters")
+    .transform((v) => v.trim()),
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .transform((v) => v.trim().toLowerCase()),
+  inquiryType: z.nativeEnum(InquiryType, {
+    error: "Please select a valid inquiry type",
+  }),
+  message: z
+    .string()
+    .min(10, "Message must be between 10 and 5000 characters")
+    .max(5000, "Message must be between 10 and 5000 characters")
+    .transform((v) => v.trim()),
+});
 
 /**
  * Server Action: Submit Contact Message
@@ -25,45 +38,23 @@ export async function submitContactAction(
   inquiryType: string,
   message: string,
 ): Promise<{ success: boolean; error?: string }> {
+  const result = contactFormSchema.safeParse({
+    fullName,
+    email,
+    inquiryType,
+    message,
+  });
+
+  if (!result.success) {
+    const firstError = result.error.issues[0];
+    return { success: false, error: firstError?.message ?? "Invalid input" };
+  }
+
   try {
-    const trimmedName = fullName.trim();
-    if (trimmedName.length < 2 || trimmedName.length > 100) {
-      return {
-        success: false,
-        error: "Name must be between 2 and 100 characters",
-      };
-    }
-
-    const trimmedEmail = email.trim().toLowerCase();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(trimmedEmail)) {
-      return { success: false, error: "Please enter a valid email address" };
-    }
-
-    if (!VALID_INQUIRY_TYPES.includes(inquiryType as InquiryType)) {
-      return { success: false, error: "Please select a valid inquiry type" };
-    }
-
-    const trimmedMessage = message.trim();
-    if (trimmedMessage.length < 10 || trimmedMessage.length > 5000) {
-      return {
-        success: false,
-        error: "Message must be between 10 and 5000 characters",
-      };
-    }
-
-    await prisma.contactMessage.create({
-      data: {
-        fullName: trimmedName,
-        email: trimmedEmail,
-        inquiryType: inquiryType as InquiryType,
-        message: trimmedMessage,
-      },
-    });
-
+    const useCase = contactContainer.getSubmitContactMessageUseCase();
+    await useCase.execute(result.data);
     return { success: true };
-  } catch (error) {
-    console.error("Failed to submit contact message:", error);
+  } catch {
     return {
       success: false,
       error: "Failed to send message. Please try again later.",

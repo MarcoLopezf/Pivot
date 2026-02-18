@@ -1,8 +1,9 @@
 "use server";
 
+import { z } from "zod";
 import { createClient } from "@infrastructure/auth/supabase/server";
 import { learningContainer } from "@infrastructure/di/LearningContainer";
-import { prisma } from "@infrastructure/database/PrismaClient";
+import { assessmentContainer } from "@infrastructure/di/AssessmentContainer";
 import { CareerGoalDTO } from "@application/dtos/learning/CareerGoalDTO";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
 import { JobRoleDTO } from "@application/dtos/learning/JobRoleDTO";
@@ -692,6 +693,14 @@ export async function getRoadmapItemAction(
   }
 }
 
+const roadmapIdSchema = z.string().uuid();
+
+export interface GetQuizStatsForRoadmapActionResult {
+  success: boolean;
+  data?: { avgScore: number | null };
+  error?: string;
+}
+
 /**
  * Server Action: Get Quiz Stats for a Roadmap
  *
@@ -700,11 +709,14 @@ export async function getRoadmapItemAction(
  *
  * @layer Interface (Web)
  */
-export async function getQuizStatsForRoadmapAction(roadmapId: string): Promise<{
-  success: boolean;
-  data?: { avgScore: number | null };
-  error?: string;
-}> {
+export async function getQuizStatsForRoadmapAction(
+  roadmapId: string,
+): Promise<GetQuizStatsForRoadmapActionResult> {
+  const parsed = roadmapIdSchema.safeParse(roadmapId);
+  if (!parsed.success) {
+    return { success: false, error: "Invalid roadmap ID" };
+  }
+
   try {
     const supabase = await createClient();
     const {
@@ -716,21 +728,10 @@ export async function getQuizStatsForRoadmapAction(roadmapId: string): Promise<{
       return { success: false, error: "Unauthorized" };
     }
 
-    const result = await prisma.quizAttempt.aggregate({
-      where: {
-        userId: user.id,
-        roadmapItem: { roadmapId },
-      },
-      _avg: { score: true },
-      _count: { id: true },
-    });
+    const repo = assessmentContainer.getQuizAttemptRepository();
+    const stats = await repo.getStatsForRoadmap(user.id, parsed.data);
 
-    const avgScore =
-      result._count.id > 0 && result._avg.score !== null
-        ? Math.round(result._avg.score)
-        : null;
-
-    return { success: true, data: { avgScore } };
+    return { success: true, data: stats };
   } catch (error) {
     console.error("Error in getQuizStatsForRoadmapAction:", error);
     return { success: false, error: "Failed to load quiz stats" };

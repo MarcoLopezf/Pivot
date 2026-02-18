@@ -56,6 +56,7 @@ export default function ContactPage(): React.ReactElement {
                 href="https://github.com/MarcoLopezf"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="GitHub — Marco Lopez Farias"
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
               >
                 <Github className="h-5 w-5" />
@@ -64,6 +65,7 @@ export default function ContactPage(): React.ReactElement {
                 href="https://linkedin.com/in/marcolopezfarias"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="LinkedIn — Marco Lopez Farias"
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
               >
                 <Linkedin className="h-5 w-5" />

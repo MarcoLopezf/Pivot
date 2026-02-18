@@ -50,7 +50,7 @@
     "@supabase/supabase-js": "^2.94.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.2",
-    "axios": "^1.13.4",
+    "axios": "^1.13.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -72,6 +72,11 @@
     "unpdf": "^1.4.0",
     "zod": "^4.3.6",
     "zustand": "^5.0.11"
+  },
+  "pnpm": {
+    "overrides": {
+      "fast-xml-parser": ">=5.3.6"
+    }
   },
   "devDependencies": {
     "@commitlint/cli": "^20.3.1",

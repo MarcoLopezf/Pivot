@@ -123,89 +123,84 @@ export default async function HomePage(): Promise<React.ReactElement> {
         </div>
       </section>
 
-      {/* Powered by AI Section */}
       <section className="bg-white px-4 py-20">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             {/* Left: Text Content */}
             <div className="space-y-6">
               <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-                Powered by Advanced AI Models
+                Stop guessing. Start moving.
               </h2>
               <p className="text-lg text-slate-600">
-                Our engine analyzes millions of job descriptions and successful
-                career transitions to create the most effective roadmap for your
-                transition.
+                Most career changers fail not because of lack of effort — but
+                because they don&apos;t know what to learn, in what order, or
+                how long it will take.
               </p>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#1E5F74] text-white">
+                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1E5F74] text-white">
                     <span className="text-xs">✓</span>
                   </div>
-                  <div>
-                    <p className="font-medium text-slate-900">
-                      Dynamic skill gap analysis
-                    </p>
-                  </div>
+                  <p className="font-medium text-slate-900">
+                    A clear path from where you are to where you want to be
+                  </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#1E5F74] text-white">
+                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1E5F74] text-white">
                     <span className="text-xs">✓</span>
                   </div>
-                  <div>
-                    <p className="font-medium text-slate-900">
-                      Real-time market trend adaptation
-                    </p>
-                  </div>
+                  <p className="font-medium text-slate-900">
+                    No more &quot;what do I learn next?&quot;
+                  </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#1E5F74] text-white">
+                  <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1E5F74] text-white">
                     <span className="text-xs">✓</span>
                   </div>
-                  <div>
-                    <p className="font-medium text-slate-900">
-                      Mentor matching algorithm
-                    </p>
-                  </div>
+                  <p className="font-medium text-slate-900">
+                    Progress you can see and measure
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Right: Dashboard Preview Placeholder */}
+            {/* Right: Career Change Reality Stats */}
             <div className="relative">
-              <div className="overflow-hidden rounded-lg border border-slate-200 bg-[#1D2D50] p-6 shadow-xl">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-slate-300">
-                      Career Progress
+              <div className="overflow-hidden rounded-lg border border-slate-200 bg-[#1D2D50] p-8 shadow-xl">
+                <div className="space-y-6">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                    The Career Change Reality
+                  </p>
+
+                  <div className="space-y-4">
+                    <div className="rounded-lg bg-[#133B5C] p-5">
+                      <p className="text-5xl font-bold text-white">77%</p>
+                      <p className="mt-2 text-sm text-slate-400">
+                        of professionals consider a career change at some point
+                        in their life
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="rounded-lg bg-[#133B5C] p-5">
+                        <p className="text-4xl font-bold text-white">3×</p>
+                        <p className="mt-2 text-sm text-slate-400">
+                          more likely to succeed with a structured plan
+                        </p>
+                      </div>
+                      <div className="rounded-lg bg-[#133B5C] p-5">
+                        <p className="text-4xl font-bold text-[#4ECDC4]">23%</p>
+                        <p className="mt-2 text-sm text-slate-400">
+                          actually have a plan when making the transition
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-700 pt-4">
+                    <p className="text-sm text-slate-400">
+                      PIVOT gives you the structure the other 77% wish they had.
                     </p>
-                    <p className="text-xs text-slate-400">Last 6 months</p>
-                  </div>
-                  <div className="h-64 rounded bg-[#133B5C] p-4">
-                    {/* Placeholder Chart */}
-                    <div className="flex h-full items-end justify-between gap-2">
-                      {[40, 60, 45, 75, 55, 85, 70, 90].map((height, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 rounded-t bg-gradient-to-t from-[#1E5F74] to-[#1E5F74]/50"
-                          style={{ height: `${height}%` }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 pt-2">
-                    <div className="rounded bg-[#133B5C] p-3">
-                      <p className="text-xs text-slate-400">Completed</p>
-                      <p className="text-lg font-bold text-white">24</p>
-                    </div>
-                    <div className="rounded bg-[#133B5C] p-3">
-                      <p className="text-xs text-slate-400">In Progress</p>
-                      <p className="text-lg font-bold text-white">8</p>
-                    </div>
-                    <div className="rounded bg-[#133B5C] p-3">
-                      <p className="text-xs text-slate-400">Skills</p>
-                      <p className="text-lg font-bold text-white">32</p>
-                    </div>
                   </div>
                 </div>
               </div>

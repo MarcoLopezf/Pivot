@@ -33,6 +33,7 @@
 - [Available Scripts](#-available-scripts)
 - [Testing Strategy](#-testing-strategy)
 - [Project Structure](#-project-structure)
+- [Security](#-security)
 - [Deployment](#-deployment)
 - [Roadmap](#-roadmap)
 - [FAQ](#-faq)
@@ -596,6 +597,45 @@ pivot/
 ├── tsconfig.json         # TypeScript configuration
 └── vitest.config.ts      # Vitest configuration
 ```
+
+---
+
+## 🔒 Security
+
+PIVOT underwent a complete **OWASP Top 10 (2021)** security audit before its first public release. Below is a summary of findings and the measures implemented.
+
+| # | Vulnerability | Status | Summary |
+|---|--------------|--------|---------|
+| A01 | Broken Access Control | ✅ Resolved | All API routes now verify Supabase session. Use cases enforce ownership via `findOwnerUserId()` before any read/write. Returns 401 (unauthenticated) or 403 (unauthorized). |
+| A02 | Cryptographic Failures | ✅ Resolved | No hardcoded secrets. All credentials loaded from environment variables. Auth cookies managed by Supabase SSR with `Secure`/`HttpOnly` flags. Removed a debug log that was leaking user context. |
+| A03 | Injection | ✅ Mitigated | Prisma ORM uses parameterized queries throughout — SQL injection not possible. |
+| A04 | Insecure Design | ✅ Resolved | Added Zod email validation to password reset. Added `take: 100` limit to unbounded DB query. Applied UUID schema validation to all roadmap/item ID parameters in server actions. |
+| A05 | Security Misconfiguration | ✅ Resolved | HTTP security headers added via `next.config.ts`: `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-DNS-Prefetch-Control`, and CSP in report-only mode. |
+| A06 | Vulnerable Components | ✅ Resolved | `pnpm audit` run and remediated: `axios` updated to patch a HIGH DoS CVE; `fast-xml-parser` pinned via `pnpm overrides` to patch a HIGH XML entity expansion CVE. Remaining warnings are dev-only dependencies (ESLint, Prisma CLI) that do not reach the production bundle. |
+| A07 | Identification & Auth Failures | ✅ Resolved | Sliding-window rate limiting via Upstash Redis: 60 req/min for general API routes, 10 req/min for AI-intensive routes (`/quiz`, `/project`, `/resources`). Applied in Next.js middleware before any route processing. |
+| A08 | Software & Data Integrity | ✅ Resolved | User-controlled input wrapped in `<user_context>` XML delimiters in AI prompts to prevent prompt injection. Zod schemas added to validate all AI-generated JSON responses (field types, string lengths, enum values, array bounds) before data reaches the database. |
+| A09 | Security Logging & Monitoring | ✅ Resolved | Structured `security()` log level added to the logger. Security events now logged with IP, user ID, and endpoint: `UNAUTHORIZED_ACCESS` (401), `AUTHORIZATION_DENIED` (403), `RATE_LIMIT_EXCEEDED` (429), and `PASSWORD_RESET_FAILED`. Outputs JSON in production for log aggregators. |
+| A10 | SSRF | ✅ Mitigated | `GitHubService` validates all URLs with a Zod schema that enforces HTTPS protocol and `github.com` hostname — arbitrary internal URLs cannot be reached. |
+
+### Security Event Logging
+
+In production, security events are emitted as structured JSON and visible in Vercel's log stream (or any log aggregator you connect):
+
+```json
+{
+  "level": "security",
+  "context": "middleware",
+  "message": "RATE_LIMIT_EXCEEDED",
+  "timestamp": "2026-02-19T18:42:00.000Z",
+  "ip": "203.0.113.42",
+  "endpoint": "/api/learning/roadmap/items/abc/quiz",
+  "limiter": "ai"
+}
+```
+
+### Responsible Disclosure
+
+Found a security issue? Please report it privately via [marcolopezf00@gmail.com](mailto:marcolopezf00@gmail.com) before opening a public issue.
 
 ---
 

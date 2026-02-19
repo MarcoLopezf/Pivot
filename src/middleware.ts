@@ -4,6 +4,9 @@ import {
   aiRateLimiter,
   apiRateLimiter,
 } from "@/infrastructure/ratelimit/rateLimiter";
+import { createLogger } from "@/infrastructure/logging/logger";
+
+const logger = createLogger("middleware");
 
 /**
  * Next.js Middleware - Runs on every request
@@ -36,6 +39,11 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     const { success, limit, remaining, reset } = await limiter.limit(ip);
 
     if (!success) {
+      logger.security("RATE_LIMIT_EXCEEDED", {
+        ip,
+        endpoint: pathname,
+        limiter: isAiRoute ? "ai" : "api",
+      });
       return new NextResponse(
         JSON.stringify({
           success: false,

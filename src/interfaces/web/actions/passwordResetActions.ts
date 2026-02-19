@@ -3,6 +3,9 @@
 import { createClient } from "@infrastructure/auth/supabase/server";
 import { headers } from "next/headers";
 import { z } from "zod";
+import { createLogger } from "@infrastructure/logging/logger";
+
+const logger = createLogger("passwordResetActions");
 
 const passwordResetSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -39,6 +42,7 @@ export async function requestPasswordReset(
     });
 
     if (error) {
+      logger.security("PASSWORD_RESET_FAILED", { reason: error.message });
       return { success: false, error: error.message };
     }
 

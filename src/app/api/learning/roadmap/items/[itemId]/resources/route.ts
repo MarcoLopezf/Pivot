@@ -70,6 +70,13 @@ export async function GET(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
+    logger.security("UNAUTHORIZED_ACCESS", {
+      ip,
+      endpoint: "GET /api/learning/roadmap/items/[itemId]/resources",
+    });
     return NextResponse.json(
       {
         success: false,

@@ -64,6 +64,13 @@ export async function POST(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
+    logger.security("UNAUTHORIZED_ACCESS", {
+      ip,
+      endpoint: "POST /api/learning/roadmap/items/[itemId]/project",
+    });
     return NextResponse.json(
       {
         success: false,
@@ -119,6 +126,15 @@ export async function POST(
     if (error instanceof Error) {
       // Authorization errors
       if (error.message.startsWith("AUTHORIZATION_ERROR:")) {
+        const ip =
+          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+          "unknown";
+        logger.security("AUTHORIZATION_DENIED", {
+          ip,
+          userId: user.id,
+          endpoint: "POST /api/learning/roadmap/items/[itemId]/project",
+          itemId: (await params).itemId,
+        });
         return NextResponse.json(
           {
             success: false,

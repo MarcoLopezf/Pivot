@@ -63,6 +63,13 @@ export async function PATCH(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
+    logger.security("UNAUTHORIZED_ACCESS", {
+      ip,
+      endpoint: "PATCH /api/learning/roadmap/items/[itemId]",
+    });
     return NextResponse.json(
       {
         success: false,
@@ -131,6 +138,15 @@ export async function PATCH(
       error instanceof Error &&
       error.message.startsWith("AUTHORIZATION_ERROR:")
     ) {
+      const ip =
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+        "unknown";
+      logger.security("AUTHORIZATION_DENIED", {
+        ip,
+        userId: user.id,
+        endpoint: "PATCH /api/learning/roadmap/items/[itemId]",
+        itemId: await params.then((p) => p.itemId),
+      });
       const response: ApiErrorResponse = {
         success: false,
         error: { code: "FORBIDDEN", message: "Access denied" },

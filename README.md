@@ -29,6 +29,7 @@
 - [Demo](#-demo)
 - [Built With](#-built-with)
 - [Architecture](#-architecture)
+- [Database Schema](#️-database-schema)
 - [Getting Started](#-getting-started)
 - [Available Scripts](#-available-scripts)
 - [Testing Strategy](#-testing-strategy)
@@ -332,6 +333,149 @@ graph TB
 - **Learning**: Roadmaps, milestones, skill gaps, dependencies
 - **Assessment**: Quizzes, projects, progress tracking, validation
 - **Marketplace**: Resources, job stats, career transitions (future)
+
+---
+
+## 🗄️ Database Schema
+
+PIVOT uses **PostgreSQL 15+** managed via **Prisma ORM**. The schema is organized around the four bounded contexts defined in the DDD architecture.
+
+### Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    User {
+        uuid    id                  PK
+        string  email
+        string  name
+        enum    role
+        boolean onboardingCompleted
+        string  currentSeniority
+    }
+    CareerGoal {
+        uuid   id          PK
+        string userId      FK
+        string targetRole
+        string currentRole
+    }
+    Roadmap {
+        uuid   id     PK
+        string goalId FK
+        string title
+    }
+    RoadmapItem {
+        uuid   id         PK
+        string roadmapId  FK
+        string title
+        int    order
+        enum   status
+        enum   type
+        string difficulty
+    }
+    ProjectDetails {
+        uuid     id            PK
+        string   roadmapItemId FK
+        string[] acceptanceCriteria
+        string[] technicalStack
+        string[] keyConcepts
+    }
+    Question {
+        uuid     id         PK
+        string   text
+        string   difficulty
+        string[] tags
+        int      usageCount
+    }
+    QuestionOption {
+        uuid    id         PK
+        string  questionId FK
+        string  text
+        boolean isCorrect
+    }
+    QuizAttempt {
+        uuid   id            PK
+        string userId        FK
+        string roadmapItemId FK
+        float  score
+        bool   passed
+    }
+    ProjectSubmission {
+        uuid   id            PK
+        string userId        FK
+        string roadmapItemId FK
+        string repoUrl
+        float  score
+        enum   status
+    }
+    LearningResource {
+        uuid     id    PK
+        string   title
+        string   url
+        enum     type
+        string[] tags
+        int      votes
+    }
+    OnboardingProgress {
+        cuid   id          PK
+        string userId      FK
+        int    currentStep
+        string path
+        json   partialData
+    }
+    JobRole {
+        cuid    id        PK
+        string  name
+        string  category
+        boolean isEnabled
+        int     popularity
+    }
+
+    User          ||--o{ CareerGoal         : "has"
+    User          ||--o| OnboardingProgress  : "tracks"
+    User          ||--o{ QuizAttempt         : "makes"
+    User          ||--o{ ProjectSubmission   : "submits"
+    CareerGoal    ||--o{ Roadmap             : "generates"
+    Roadmap       ||--o{ RoadmapItem         : "contains"
+    RoadmapItem   ||--o| ProjectDetails      : "has"
+    RoadmapItem   ||--o{ QuizAttempt         : "assessed via"
+    RoadmapItem   ||--o{ ProjectSubmission   : "evaluated via"
+    Question      ||--o{ QuestionOption      : "has"
+```
+
+### Models by Bounded Context
+
+#### 🧑 Profile Context
+
+| Model | Purpose |
+|-------|---------|
+| `User` | Core identity (auth via Supabase). Tracks seniority, location, and onboarding state. |
+| `CareerGoal` | Captures the user's `currentRole → targetRole` transition. A user can have multiple goals. |
+| `OnboardingProgress` | Persists the multi-step wizard state (current step, path choice, partial data as JSON). |
+
+#### 🗺️ Learning Context
+
+| Model | Purpose |
+|-------|---------|
+| `Roadmap` | AI-generated learning plan tied to a `CareerGoal`. |
+| `RoadmapItem` | Individual step in a roadmap (`THEORY` or `PROJECT` type). Tracks `status` (PENDING / IN_PROGRESS / COMPLETED) and `order`. |
+| `ProjectDetails` | AI-generated acceptance criteria, tech stack, and key concepts for a `PROJECT` item — generated once and cached. |
+| `JobRole` | Seeded catalog of curated tech roles used during onboarding (e.g., "Frontend Developer", "Data Analyst"). |
+
+#### 📝 Assessment Context
+
+| Model | Purpose |
+|-------|---------|
+| `Question` | Reusable quiz question pool with tags, difficulty, and usage tracking. |
+| `QuestionOption` | Answer options for a question (1 correct, n incorrect). |
+| `QuizAttempt` | Records a user's quiz result for a `RoadmapItem` (score 0–100, pass/fail). |
+| `ProjectSubmission` | Records a GitHub repo submission for a `PROJECT` item. Goes through `PENDING → ANALYZING → COMPLETED/FAILED` lifecycle. |
+
+#### 📦 Shared / Standalone
+
+| Model | Purpose |
+|-------|---------|
+| `LearningResource` | Curated videos, articles, and courses fetched from YouTube/external APIs and stored by tag for reuse. |
+| `ContactMessage` | Stores user feedback, bug reports, and feature requests submitted via the contact form. |
 
 ---
 

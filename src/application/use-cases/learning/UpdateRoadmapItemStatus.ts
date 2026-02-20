@@ -4,6 +4,7 @@ import { RoadmapId } from "@domain/learning/value-objects/RoadmapId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
 
 export interface UpdateRoadmapItemStatusDTO {
+  userId: string;
   roadmapId: string;
   itemId: string;
   status: "pending" | "in_progress" | "completed";
@@ -20,10 +21,21 @@ export class UpdateRoadmapItemStatus {
   constructor(private readonly roadmapRepository: IRoadmapRepository) {}
 
   async execute(dto: UpdateRoadmapItemStatusDTO): Promise<RoadmapDTO> {
-    // Find the roadmap
     const roadmapId = RoadmapId.create(dto.roadmapId);
-    const roadmap = await this.roadmapRepository.findById(roadmapId);
 
+    // Verify ownership before loading the full roadmap
+    const ownerUserId = await this.roadmapRepository.findOwnerUserId(roadmapId);
+    if (!ownerUserId) {
+      throw new Error("Roadmap not found");
+    }
+    if (ownerUserId.value !== dto.userId) {
+      throw new Error(
+        "AUTHORIZATION_ERROR: Not authorized to update this roadmap",
+      );
+    }
+
+    // Find the roadmap
+    const roadmap = await this.roadmapRepository.findById(roadmapId);
     if (!roadmap) {
       throw new Error("Roadmap not found");
     }

@@ -76,7 +76,12 @@ describe("SubmitQuiz Use Case", () => {
 
   it("should throw when no answers provided", async () => {
     await expect(
-      useCase.execute({ roadmapId: "r-1", roadmapItemId: "i-1", answers: [] }),
+      useCase.execute({
+        userId: "user-1",
+        roadmapId: "r-1",
+        roadmapItemId: "i-1",
+        answers: [],
+      }),
     ).rejects.toThrow("No answers provided");
   });
 
@@ -85,11 +90,27 @@ describe("SubmitQuiz Use Case", () => {
 
     await expect(
       useCase.execute({
+        userId: "user-1",
         roadmapId: "r-1",
         roadmapItemId: "i-1",
         answers: [{ questionId: "q-1", selectedOptionId: "opt-1" }],
       }),
     ).rejects.toThrow("Roadmap not found or has no owner");
+  });
+
+  it("should throw authorization error when userId does not match roadmap owner", async () => {
+    vi.mocked(mockRoadmapRepo.findOwnerUserId).mockResolvedValue(
+      UserId.create("owner-user"),
+    );
+
+    await expect(
+      useCase.execute({
+        userId: "different-user",
+        roadmapId: "r-1",
+        roadmapItemId: "i-1",
+        answers: [{ questionId: "q-1", selectedOptionId: "opt-1" }],
+      }),
+    ).rejects.toThrow("AUTHORIZATION_ERROR");
   });
 
   it("should throw when some questions not found", async () => {
@@ -100,6 +121,7 @@ describe("SubmitQuiz Use Case", () => {
 
     await expect(
       useCase.execute({
+        userId: "user-1",
         roadmapId: "r-1",
         roadmapItemId: "i-1",
         answers: [{ questionId: "q-1", selectedOptionId: "opt-1" }],
@@ -132,6 +154,7 @@ describe("SubmitQuiz Use Case", () => {
     vi.mocked(mockRoadmapRepo.save).mockResolvedValue(undefined);
 
     const result = await useCase.execute({
+      userId: "user-1",
       roadmapId: "r-1",
       roadmapItemId: "i-1",
       answers: [
@@ -163,6 +186,7 @@ describe("SubmitQuiz Use Case", () => {
 
     // Answer 1 of 3 correctly → 33%
     const result = await useCase.execute({
+      userId: "user-1",
       roadmapId: "r-1",
       roadmapItemId: "i-1",
       answers: [
@@ -186,6 +210,7 @@ describe("SubmitQuiz Use Case", () => {
     vi.mocked(mockAttemptRepo.save).mockResolvedValue(undefined);
 
     await useCase.execute({
+      userId: "user-1",
       roadmapId: "r-1",
       roadmapItemId: "i-1",
       answers: [{ questionId: "q-1", selectedOptionId: "wrong" }],
@@ -225,6 +250,7 @@ describe("SubmitQuiz Use Case", () => {
     }));
 
     const result = await useCase.execute({
+      userId: "user-1",
       roadmapId: "r-1",
       roadmapItemId: "i-1",
       answers,
@@ -248,6 +274,7 @@ describe("SubmitQuiz Use Case", () => {
     vi.mocked(mockAttemptRepo.save).mockResolvedValue(undefined);
 
     const result = await useCase.execute({
+      userId: "user-1",
       roadmapId: "r-1",
       roadmapItemId: "i-1",
       answers: [

@@ -12,9 +12,10 @@ export interface SubmitQuizAnswerDTO {
  * SubmitQuizInputDTO
  *
  * Input for submitting quiz answers.
- * Note: userId is obtained from roadmap ownership (Roadmap -> CareerGoal -> User)
+ * userId must be the authenticated user — verified against roadmap ownership in the use case.
  */
 export interface SubmitQuizInputDTO {
+  userId: string;
   roadmapId: string;
   roadmapItemId: string;
   answers: SubmitQuizAnswerDTO[];

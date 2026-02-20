@@ -2,9 +2,10 @@
  * SubmitProjectInputDTO
  *
  * Input for submitting a project for validation.
- * Note: userId is obtained from roadmap ownership (Roadmap -> CareerGoal -> User)
+ * userId must be the authenticated user — verified against roadmap ownership in the use case.
  */
 export interface SubmitProjectInputDTO {
+  userId: string;
   roadmapId: string;
   roadmapItemId: string;
   repoUrl: string;

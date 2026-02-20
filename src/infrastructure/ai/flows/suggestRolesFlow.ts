@@ -94,8 +94,11 @@ export class GenkitRoleRecommender implements IRoleRecommender {
     resumeText: string | undefined,
     validRoleNames: string[],
   ): string {
-    // Build context section with optional resume
-    let contextSection = `User Interests: ${interests}`;
+    // Build context section with optional resume.
+    // User-provided content is wrapped in XML tags so the model treats it
+    // as data, not as instructions (prompt injection defense).
+    let contextSection = `<user_context>
+User Interests: ${interests}`;
 
     if (resumeText) {
       contextSection += `
@@ -103,6 +106,9 @@ export class GenkitRoleRecommender implements IRoleRecommender {
 Resume/CV Context:
 ${resumeText.substring(0, 3000)}`;
     }
+
+    contextSection += `
+</user_context>`;
 
     return `You are a career advisor for tech professionals. Based on the user's interests${resumeText ? " and resume" : ""}, recommend the top 3 matches from the provided "Valid Job Roles" list.
 

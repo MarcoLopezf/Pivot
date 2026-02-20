@@ -40,12 +40,17 @@ export class SubmitQuiz {
       throw new Error("VALIDATION_ERROR: No answers provided");
     }
 
-    // Get userId from roadmap ownership (Roadmap -> CareerGoal -> User)
+    // Verify authenticated user owns this roadmap
     const roadmapIdVO = RoadmapId.create(roadmapId);
     const ownerUserId =
       await this.roadmapRepository.findOwnerUserId(roadmapIdVO);
     if (!ownerUserId) {
       throw new Error("VALIDATION_ERROR: Roadmap not found or has no owner");
+    }
+    if (ownerUserId.value !== input.userId) {
+      throw new Error(
+        "AUTHORIZATION_ERROR: Not authorized to submit quiz for this roadmap",
+      );
     }
 
     // 1. Fetch all questions for the submitted answers

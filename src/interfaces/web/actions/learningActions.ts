@@ -515,11 +515,9 @@ export async function getRoadmapByIdAction(roadmapId: string): Promise<{
     }
 
     // 2. Validate input
-    if (!roadmapId || typeof roadmapId !== "string" || !roadmapId.trim()) {
-      return {
-        success: false,
-        error: "Roadmap ID is required",
-      };
+    const parsedRoadmapId = roadmapIdSchema.safeParse(roadmapId);
+    if (!parsedRoadmapId.success) {
+      return { success: false, error: "Invalid roadmap ID" };
     }
 
     // 3. Get use case from DI container
@@ -628,11 +626,11 @@ export async function getRoadmapItemAction(
     }
 
     // 2. Validate inputs
-    if (!roadmapId || !itemId) {
-      return {
-        success: false,
-        error: "Roadmap ID and Item ID are required",
-      };
+    const parsedIds = z
+      .object({ roadmapId: z.string().uuid(), itemId: z.string().uuid() })
+      .safeParse({ roadmapId, itemId });
+    if (!parsedIds.success) {
+      return { success: false, error: "Invalid roadmap or item ID" };
     }
 
     // 3. Fetch item with ownership check

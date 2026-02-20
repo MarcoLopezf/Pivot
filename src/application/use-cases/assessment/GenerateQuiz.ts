@@ -30,11 +30,27 @@ export class GenerateQuiz {
     private readonly generateQuestionsFlow: IGenerateQuestionsFlow,
   ) {}
 
-  async execute(roadmapId: string, roadmapItemId: string): Promise<QuizDTO> {
-    // 1. Validate roadmap item exists and is THEORY type
+  async execute(
+    userId: string,
+    roadmapId: string,
+    roadmapItemId: string,
+  ): Promise<QuizDTO> {
     const roadmapIdVO = RoadmapId.create(roadmapId);
     const itemIdVO = RoadmapItemId.create(roadmapItemId);
 
+    // 1. Verify ownership before loading full roadmap
+    const ownerUserId =
+      await this.roadmapRepository.findOwnerUserId(roadmapIdVO);
+    if (!ownerUserId) {
+      throw new Error("Roadmap not found");
+    }
+    if (ownerUserId.value !== userId) {
+      throw new Error(
+        "AUTHORIZATION_ERROR: Not authorized to access this roadmap",
+      );
+    }
+
+    // 2. Load roadmap and validate item
     const roadmap = await this.roadmapRepository.findById(roadmapIdVO);
     if (!roadmap) {
       throw new Error("Roadmap not found");

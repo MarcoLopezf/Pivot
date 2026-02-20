@@ -93,6 +93,7 @@ describe("SubmitProject Use Case", () => {
 
       await expect(
         submitProject.execute({
+          userId: "user-123",
           roadmapId: "roadmap-123",
           roadmapItemId: "item-123",
           repoUrl: "https://github.com/user/repo",
@@ -138,6 +139,7 @@ describe("SubmitProject Use Case", () => {
       });
 
       const result = await submitProject.execute({
+        userId: "user-123",
         roadmapId: "roadmap-123",
         roadmapItemId: "item-123",
         repoUrl: "https://github.com/user/repo",
@@ -148,10 +150,49 @@ describe("SubmitProject Use Case", () => {
     });
   });
 
+  describe("Authorization", () => {
+    it("should throw authorization error when userId does not match roadmap owner", async () => {
+      const roadmapId = RoadmapId.create("roadmap-123");
+      const roadmapItemId = RoadmapItemId.create("item-123");
+
+      const projectItem = RoadmapItem.create(
+        roadmapItemId,
+        "Build REST API",
+        "Description",
+        1,
+        { type: "project" },
+      );
+
+      const roadmap = Roadmap.reconstitute(
+        roadmapId,
+        CareerGoalId.create("goal-123"),
+        "Roadmap",
+        [projectItem],
+        new Date(),
+        new Date(),
+      );
+
+      vi.mocked(mockRoadmapRepo.findById).mockResolvedValue(roadmap);
+      vi.mocked(mockRoadmapRepo.findOwnerUserId).mockResolvedValue(
+        UserId.create("owner-user"),
+      );
+
+      await expect(
+        submitProject.execute({
+          userId: "different-user",
+          roadmapId: "roadmap-123",
+          roadmapItemId: "item-123",
+          repoUrl: "https://github.com/user/repo",
+        }),
+      ).rejects.toThrow("AUTHORIZATION_ERROR");
+    });
+  });
+
   describe("GitHub URL Validation", () => {
     it("should reject invalid GitHub URLs", async () => {
       await expect(
         submitProject.execute({
+          userId: "user-123",
           roadmapId: "roadmap-123",
           roadmapItemId: "item-123",
           repoUrl: "https://evil.com/user/repo",
@@ -162,6 +203,7 @@ describe("SubmitProject Use Case", () => {
     it("should reject empty URLs", async () => {
       await expect(
         submitProject.execute({
+          userId: "user-123",
           roadmapId: "roadmap-123",
           roadmapItemId: "item-123",
           repoUrl: "",
@@ -206,6 +248,7 @@ describe("SubmitProject Use Case", () => {
       });
 
       const result = await submitProject.execute({
+        userId: "user-123",
         roadmapId: "roadmap-123",
         roadmapItemId: "item-123",
         repoUrl: "https://github.com/user/repo",
@@ -273,6 +316,7 @@ describe("SubmitProject Use Case", () => {
       vi.mocked(mockAnalyzeProjectFlow).mockResolvedValue(mockAIResult);
 
       const result = await submitProject.execute({
+        userId: "user-123",
         roadmapId: "roadmap-123",
         roadmapItemId: "item-123",
         repoUrl: "https://github.com/user/ecommerce-api",
@@ -339,6 +383,7 @@ describe("SubmitProject Use Case", () => {
       });
 
       await submitProject.execute({
+        userId: "user-123",
         roadmapId: "roadmap-123",
         roadmapItemId: "item-123",
         repoUrl: "https://github.com/user/repo",
@@ -391,6 +436,7 @@ describe("SubmitProject Use Case", () => {
       });
 
       const result = await submitProject.execute({
+        userId: "user-123",
         roadmapId: "roadmap-123",
         roadmapItemId: "item-123",
         repoUrl: "https://github.com/user/repo",
@@ -416,6 +462,7 @@ describe("SubmitProject Use Case", () => {
 
       await expect(
         submitProject.execute({
+          userId: "user-123",
           roadmapId: "invalid-roadmap",
           roadmapItemId: "item-123",
           repoUrl: "https://github.com/user/repo",
@@ -438,6 +485,7 @@ describe("SubmitProject Use Case", () => {
 
       await expect(
         submitProject.execute({
+          userId: "user-123",
           roadmapId: "roadmap-123",
           roadmapItemId: "nonexistent-item",
           repoUrl: "https://github.com/user/repo",
@@ -476,6 +524,7 @@ describe("SubmitProject Use Case", () => {
 
       await expect(
         submitProject.execute({
+          userId: "user-123",
           roadmapId: "roadmap-123",
           roadmapItemId: "item-123",
           repoUrl: "https://github.com/user/private-repo",
@@ -518,6 +567,7 @@ describe("SubmitProject Use Case", () => {
 
       await expect(
         submitProject.execute({
+          userId: "user-123",
           roadmapId: "roadmap-123",
           roadmapItemId: "item-123",
           repoUrl: "https://github.com/user/repo",

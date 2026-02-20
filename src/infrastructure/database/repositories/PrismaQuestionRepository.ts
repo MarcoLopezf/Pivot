@@ -19,6 +19,7 @@ export class PrismaQuestionRepository implements IQuestionRepository {
       },
       include: { options: true },
       orderBy: { usageCount: "asc" },
+      take: 100,
     });
 
     return prismaQuestions.map((q) => QuestionMapper.toDomain(q));

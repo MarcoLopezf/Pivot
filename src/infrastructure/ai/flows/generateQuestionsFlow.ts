@@ -5,19 +5,29 @@ import {
   GeneratedQuestion,
 } from "@domain/assessment/services/IGenerateQuestionsFlow";
 import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
+import { z } from "zod";
 
-/**
- * Interface for AI response structure
- */
-interface QuestionGenerationResponse {
-  questions: Array<{
-    text: string;
-    options: Array<{
-      text: string;
-      isCorrect: boolean;
-    }>;
-  }>;
-}
+const QuestionResponseSchema = z.object({
+  questions: z
+    .array(
+      z.object({
+        text: z.string().min(1).max(500),
+        options: z
+          .array(
+            z.object({
+              text: z.string().min(1).max(300),
+              isCorrect: z.boolean(),
+            }),
+          )
+          .length(4)
+          .refine((opts) => opts.filter((o) => o.isCorrect).length === 1, {
+            message: "Exactly one option must be correct",
+          }),
+      }),
+    )
+    .min(1)
+    .max(20),
+});
 
 /**
  * GenkitQuestionsFlow
@@ -44,37 +54,16 @@ export class GenkitQuestionsFlow implements IGenerateQuestionsFlow {
 
       const cleaned = this.stripMarkdownCodeBlock(text);
 
-      let response: QuestionGenerationResponse;
+      let parsed: z.infer<typeof QuestionResponseSchema>;
       try {
-        response = JSON.parse(cleaned);
+        parsed = QuestionResponseSchema.parse(JSON.parse(cleaned));
       } catch {
         throw new Error(
           `AI_RESPONSE_FORMAT_ERROR: Failed to parse AI response as JSON. Raw output: ${text}`,
         );
       }
 
-      if (!response.questions || response.questions.length === 0) {
-        throw new Error(
-          "AI_RESPONSE_FORMAT_ERROR: No questions received from AI model",
-        );
-      }
-
-      // Validate each question has exactly 4 options with exactly 1 correct
-      for (const q of response.questions) {
-        if (!q.options || q.options.length !== 4) {
-          throw new Error(
-            `AI_RESPONSE_FORMAT_ERROR: Question must have exactly 4 options. Got: ${q.options?.length ?? 0}`,
-          );
-        }
-        const correctCount = q.options.filter((opt) => opt.isCorrect).length;
-        if (correctCount !== 1) {
-          throw new Error(
-            `AI_RESPONSE_FORMAT_ERROR: Question must have exactly 1 correct answer. Got: ${correctCount}`,
-          );
-        }
-      }
-
-      return response.questions;
+      return parsed.questions;
     } catch (error) {
       console.error("Error generating questions:", error);
       throw error;

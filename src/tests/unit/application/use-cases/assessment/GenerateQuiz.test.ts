@@ -19,6 +19,7 @@ import { QuestionOption } from "@domain/assessment/entities/QuestionOption";
 import { QuestionId } from "@domain/assessment/value-objects/QuestionId";
 import { QuestionOptionId } from "@domain/assessment/value-objects/QuestionOptionId";
 import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
+import { UserId } from "@domain/profile/value-objects/UserId";
 
 function createQuestions(count: number): Question[] {
   return Array.from({ length: count }, (_, i) =>
@@ -68,11 +69,21 @@ describe("GenerateQuiz Use Case", () => {
   });
 
   it("should throw when roadmap not found", async () => {
-    vi.mocked(mockRoadmapRepo.findById).mockResolvedValue(null);
+    vi.mocked(mockRoadmapRepo.findOwnerUserId).mockResolvedValue(null);
 
-    await expect(useCase.execute("roadmap-1", "item-1")).rejects.toThrow(
-      "Roadmap not found",
+    await expect(
+      useCase.execute("user-1", "roadmap-1", "item-1"),
+    ).rejects.toThrow("Roadmap not found");
+  });
+
+  it("should throw authorization error when userId does not match owner", async () => {
+    vi.mocked(mockRoadmapRepo.findOwnerUserId).mockResolvedValue(
+      UserId.create("owner-user"),
     );
+
+    await expect(
+      useCase.execute("different-user", "r-1", "item-1"),
+    ).rejects.toThrow("AUTHORIZATION_ERROR");
   });
 
   it("should throw when item not found", async () => {
@@ -81,11 +92,14 @@ describe("GenerateQuiz Use Case", () => {
       CareerGoalId.create("g-1"),
       "Test",
     );
+    vi.mocked(mockRoadmapRepo.findOwnerUserId).mockResolvedValue(
+      UserId.create("user-1"),
+    );
     vi.mocked(mockRoadmapRepo.findById).mockResolvedValue(roadmap);
 
-    await expect(useCase.execute("r-1", "nonexistent")).rejects.toThrow(
-      "Roadmap item not found",
-    );
+    await expect(
+      useCase.execute("user-1", "r-1", "nonexistent"),
+    ).rejects.toThrow("Roadmap item not found");
   });
 
   it("should throw when item is project type", async () => {
@@ -106,9 +120,12 @@ describe("GenerateQuiz Use Case", () => {
       new Date(),
       new Date(),
     );
+    vi.mocked(mockRoadmapRepo.findOwnerUserId).mockResolvedValue(
+      UserId.create("user-1"),
+    );
     vi.mocked(mockRoadmapRepo.findById).mockResolvedValue(roadmap);
 
-    await expect(useCase.execute("r-1", "item-1")).rejects.toThrow(
+    await expect(useCase.execute("user-1", "r-1", "item-1")).rejects.toThrow(
       "Cannot generate quiz for PROJECT items",
     );
   });
@@ -133,13 +150,16 @@ describe("GenerateQuiz Use Case", () => {
       new Date(),
       new Date(),
     );
+    vi.mocked(mockRoadmapRepo.findOwnerUserId).mockResolvedValue(
+      UserId.create("user-1"),
+    );
     vi.mocked(mockRoadmapRepo.findById).mockResolvedValue(roadmap);
     vi.mocked(mockQuestionRepo.findByTags).mockResolvedValue(
       createQuestions(10),
     );
     vi.mocked(mockQuestionRepo.saveMany).mockResolvedValue(undefined);
 
-    const result = await useCase.execute("r-1", "item-1");
+    const result = await useCase.execute("user-1", "r-1", "item-1");
 
     expect(result.roadmapItemId).toBe("item-1");
     expect(result.title).toBe("Quiz: Learn TS");
@@ -169,6 +189,9 @@ describe("GenerateQuiz Use Case", () => {
       new Date(),
       new Date(),
     );
+    vi.mocked(mockRoadmapRepo.findOwnerUserId).mockResolvedValue(
+      UserId.create("user-1"),
+    );
     vi.mocked(mockRoadmapRepo.findById).mockResolvedValue(roadmap);
     vi.mocked(mockQuestionRepo.findByTags).mockResolvedValue(
       createQuestions(3),
@@ -184,7 +207,7 @@ describe("GenerateQuiz Use Case", () => {
       })),
     );
 
-    const result = await useCase.execute("r-1", "item-1");
+    const result = await useCase.execute("user-1", "r-1", "item-1");
 
     expect(mockFlow.generate).toHaveBeenCalledWith(
       "typescript",
@@ -214,6 +237,9 @@ describe("GenerateQuiz Use Case", () => {
       new Date(),
       new Date(),
     );
+    vi.mocked(mockRoadmapRepo.findOwnerUserId).mockResolvedValue(
+      UserId.create("user-1"),
+    );
     vi.mocked(mockRoadmapRepo.findById).mockResolvedValue(roadmap);
     vi.mocked(mockQuestionRepo.findByTags).mockResolvedValue(
       createQuestions(2),
@@ -221,7 +247,7 @@ describe("GenerateQuiz Use Case", () => {
     vi.mocked(mockQuestionRepo.saveMany).mockResolvedValue(undefined);
     vi.mocked(mockFlow.generate).mockResolvedValue([]);
 
-    const result = await useCase.execute("r-1", "item-1");
+    const result = await useCase.execute("user-1", "r-1", "item-1");
 
     expect(result.questions).toHaveLength(2);
   });
@@ -246,6 +272,9 @@ describe("GenerateQuiz Use Case", () => {
       new Date(),
       new Date(),
     );
+    vi.mocked(mockRoadmapRepo.findOwnerUserId).mockResolvedValue(
+      UserId.create("user-1"),
+    );
     vi.mocked(mockRoadmapRepo.findById).mockResolvedValue(roadmap);
     vi.mocked(mockQuestionRepo.findByTags).mockResolvedValue([]);
     vi.mocked(mockQuestionRepo.saveMany).mockResolvedValue(undefined);
@@ -259,7 +288,7 @@ describe("GenerateQuiz Use Case", () => {
       })),
     );
 
-    await useCase.execute("r-1", "item-1");
+    await useCase.execute("user-1", "r-1", "item-1");
 
     expect(mockFlow.generate).toHaveBeenCalledWith(
       "Closures",

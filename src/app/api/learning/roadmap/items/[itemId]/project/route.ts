@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { assessmentContainer } from "@infrastructure/di/AssessmentContainer";
 import { ProjectResultDTO } from "@application/dtos/assessment/SubmitProjectDTO";
+import { AuthorizationError } from "@application/errors/AuthorizationError";
 import { createLogger } from "@infrastructure/logging/logger";
 import { createClient } from "@infrastructure/auth/supabase/server";
 
@@ -122,28 +123,28 @@ export async function POST(
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    // Handle known errors
-    if (error instanceof Error) {
-      // Authorization errors
-      if (error.message.startsWith("AUTHORIZATION_ERROR:")) {
-        const ip =
-          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-          "unknown";
-        logger.security("AUTHORIZATION_DENIED", {
-          ip,
-          userId: user.id,
-          endpoint: "POST /api/learning/roadmap/items/[itemId]/project",
-          itemId: (await params).itemId,
-        });
-        return NextResponse.json(
-          {
-            success: false,
-            error: { code: "FORBIDDEN", message: "Access denied" },
-          },
-          { status: 403 },
-        );
-      }
+    // Authorization errors
+    if (error instanceof AuthorizationError) {
+      const ip =
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+        "unknown";
+      logger.security("AUTHORIZATION_DENIED", {
+        ip,
+        userId: user.id,
+        endpoint: "POST /api/learning/roadmap/items/[itemId]/project",
+        itemId: (await params).itemId,
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          error: { code: "FORBIDDEN", message: "Access denied" },
+        },
+        { status: 403 },
+      );
+    }
 
+    // Handle known Error instances
+    if (error instanceof Error) {
       // Invalid GitHub URL or SSRF protection
       if (error.message.includes("Invalid GitHub repository URL")) {
         const response: ApiErrorResponse = {

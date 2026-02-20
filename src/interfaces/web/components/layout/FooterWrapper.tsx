@@ -1,5 +1,6 @@
 "use client";
 
+import { type ReactElement } from "react";
 import { usePathname } from "next/navigation";
 import { SiteFooter } from "./SiteFooter";
 
@@ -11,7 +12,7 @@ import { SiteFooter } from "./SiteFooter";
  *
  * @layer Interface (Web)
  */
-export function FooterWrapper(): React.ReactElement | null {
+export function FooterWrapper(): ReactElement | null {
   const pathname = usePathname();
 
   if (pathname.startsWith("/onboarding")) return null;

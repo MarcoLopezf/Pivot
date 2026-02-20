@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { AuthorizationError } from "@application/errors/AuthorizationError";
 import { SubmitProject } from "@application/use-cases/assessment/SubmitProject";
 import { IProjectSubmissionRepository } from "@domain/assessment/repositories/IProjectSubmissionRepository";
 import { IRoadmapRepository } from "@domain/learning/repositories/IRoadmapRepository";
@@ -184,7 +185,7 @@ describe("SubmitProject Use Case", () => {
           roadmapItemId: "item-123",
           repoUrl: "https://github.com/user/repo",
         }),
-      ).rejects.toThrow("AUTHORIZATION_ERROR");
+      ).rejects.toThrow(AuthorizationError);
     });
   });
 

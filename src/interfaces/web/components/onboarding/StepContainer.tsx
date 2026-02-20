@@ -166,7 +166,11 @@ export function StepContainer({
           </div>
 
           {/* Step Content - Only this area scrolls if needed */}
-          <div className="flex-1 overflow-y-auto min-h-0">{children}</div>
+          <div className="relative flex-1 min-h-0">
+            <div className="h-full overflow-y-auto pb-8">{children}</div>
+            {/* Scroll hint gradient - only on mobile */}
+            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-slate-50 to-transparent md:hidden" />
+          </div>
 
           {/* Navigation Buttons - Always visible bottom */}
           <div className="flex items-center justify-between gap-4 py-6 border-t border-slate-200 flex-shrink-0">

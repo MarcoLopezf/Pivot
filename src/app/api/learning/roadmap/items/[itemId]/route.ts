@@ -3,6 +3,7 @@ import { z } from "zod";
 import { learningContainer } from "@infrastructure/di/LearningContainer";
 import { RoadmapDTO } from "@application/dtos/learning/RoadmapDTO";
 import { createLogger } from "@infrastructure/logging/logger";
+import { createClient } from "@infrastructure/auth/supabase/server";
 
 const logger = createLogger("PATCH /api/learning/roadmap/items/[itemId]");
 
@@ -56,6 +57,28 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ itemId: string }> },
 ): Promise<NextResponse<ApiSuccessResponse<RoadmapDTO> | ApiErrorResponse>> {
+  // Authenticate user
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
+    logger.security("UNAUTHORIZED_ACCESS", {
+      ip,
+      endpoint: "PATCH /api/learning/roadmap/items/[itemId]",
+    });
+    return NextResponse.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Authentication required" },
+      },
+      { status: 401 },
+    );
+  }
+
   try {
     const { itemId } = await params;
 
@@ -96,6 +119,7 @@ export async function PATCH(
 
     // Execute use case
     const roadmapDTO: RoadmapDTO = await updateRoadmapItemStatus.execute({
+      userId: user.id,
       roadmapId: body.roadmapId,
       itemId,
       status: body.status,
@@ -109,6 +133,27 @@ export async function PATCH(
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
+    // Handle authorization errors
+    if (
+      error instanceof Error &&
+      error.message.startsWith("AUTHORIZATION_ERROR:")
+    ) {
+      const ip =
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+        "unknown";
+      logger.security("AUTHORIZATION_DENIED", {
+        ip,
+        userId: user.id,
+        endpoint: "PATCH /api/learning/roadmap/items/[itemId]",
+        itemId: await params.then((p) => p.itemId),
+      });
+      const response: ApiErrorResponse = {
+        success: false,
+        error: { code: "FORBIDDEN", message: "Access denied" },
+      };
+      return NextResponse.json(response, { status: 403 });
+    }
+
     // Handle "not found" errors
     if (error instanceof Error && error.message.includes("not found")) {
       const isItemNotFound =

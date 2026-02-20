@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, FormEvent } from "react";
+import Link from "next/link";
 import { createClient } from "@/infrastructure/auth/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -390,9 +391,17 @@ export default function LoginPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="login-password" className="text-slate-300">
-                    Password
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="login-password" className="text-slate-300">
+                      Password
+                    </Label>
+                    <Link
+                      href="/forgot-password"
+                      className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                    >
+                      Forgot your password?
+                    </Link>
+                  </div>
                   <Input
                     id="login-password"
                     type="password"

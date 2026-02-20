@@ -1,9 +1,18 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { prisma } from "@infrastructure/database/PrismaClient";
 import { PATCH } from "@/app/api/learning/roadmap/items/[itemId]/route";
 import { NextRequest } from "next/server";
 
 const hasTestDb = !!process.env.DATABASE_URL;
+
+const mockGetUser = vi.fn();
+vi.mock("@infrastructure/auth/supabase/server", () => ({
+  createClient: vi.fn(() => ({
+    auth: {
+      getUser: mockGetUser,
+    },
+  })),
+}));
 
 describe.skipIf(!hasTestDb)(
   "PATCH /api/learning/roadmap/items/[itemId] (integration) — requires DATABASE_URL",
@@ -13,6 +22,12 @@ describe.skipIf(!hasTestDb)(
     const testRoadmapId = "roadmap-patch-test-001";
 
     beforeEach(async () => {
+      // Mock authenticated user
+      mockGetUser.mockResolvedValue({
+        data: { user: { id: testUserId } },
+        error: null,
+      });
+
       // Clean up test data
       await prisma.roadmapItem.deleteMany({
         where: { roadmap: { goalId: testGoalId } },

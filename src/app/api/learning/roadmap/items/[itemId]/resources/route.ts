@@ -4,6 +4,7 @@ import { learningContainer } from "@infrastructure/di/LearningContainer";
 import { LearningResource } from "@domain/learning/repositories/IResourceRepository";
 import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 import { createLogger } from "@infrastructure/logging/logger";
+import { createClient } from "@infrastructure/auth/supabase/server";
 
 const logger = createLogger(
   "GET /api/learning/roadmap/items/[itemId]/resources",
@@ -63,6 +64,28 @@ export async function GET(
 ): Promise<
   NextResponse<ApiSuccessResponse<LearningResource[]> | ApiErrorResponse>
 > {
+  // Authenticate user
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
+    logger.security("UNAUTHORIZED_ACCESS", {
+      ip,
+      endpoint: "GET /api/learning/roadmap/items/[itemId]/resources",
+    });
+    return NextResponse.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Authentication required" },
+      },
+      { status: 401 },
+    );
+  }
+
   try {
     // Await params (Next.js 15 requirement)
     const { itemId } = await params;

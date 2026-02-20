@@ -3,6 +3,14 @@ import Link from "next/link";
 import { createClient } from "@infrastructure/auth/supabase/server";
 import { getLastActiveRoadmapIdAction } from "@interfaces/web/actions/learningActions";
 import { Button } from "@/components/ui/button";
+import {
+  Laptop,
+  Bot,
+  GraduationCap,
+  Settings,
+  BarChart3,
+  Palette,
+} from "lucide-react";
 
 /**
  * Root Page (Server Component)
@@ -61,7 +69,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
               variant="outline"
               className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors"
             >
-              View Demo
+              <Link href="/demo">View Demo</Link>
             </Button>
           </div>
         </div>
@@ -115,7 +123,6 @@ export default async function HomePage(): Promise<React.ReactElement> {
         </div>
       </section>
 
-      {/* Powered by AI Section */}
       <section className="bg-white px-4 py-20">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
@@ -224,14 +231,14 @@ export default async function HomePage(): Promise<React.ReactElement> {
               </div>
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex flex-col items-center">
-                  <span className="text-3xl">💻</span>
+                  <Laptop className="h-8 w-8 text-[#133B5C]" />
                   <p className="mt-1 text-xs font-medium text-slate-500">
                     Frontend Dev
                   </p>
                 </div>
                 <span className="text-xl text-slate-300">→</span>
                 <div className="flex flex-col items-center">
-                  <span className="text-3xl">🤖</span>
+                  <Bot className="h-8 w-8 text-[#133B5C]" />
                   <p className="mt-1 text-xs font-medium text-slate-500">
                     ML Engineer
                   </p>
@@ -263,14 +270,14 @@ export default async function HomePage(): Promise<React.ReactElement> {
               </div>
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex flex-col items-center">
-                  <span className="text-3xl">🎓</span>
+                  <GraduationCap className="h-8 w-8 text-[#133B5C]" />
                   <p className="mt-1 text-xs font-medium text-slate-500">
                     CS Student
                   </p>
                 </div>
                 <span className="text-xl text-slate-300">→</span>
                 <div className="flex flex-col items-center">
-                  <span className="text-3xl">⚙️</span>
+                  <Settings className="h-8 w-8 text-[#133B5C]" />
                   <p className="mt-1 text-xs font-medium text-slate-500">
                     Full-Stack Dev
                   </p>
@@ -302,14 +309,14 @@ export default async function HomePage(): Promise<React.ReactElement> {
               </div>
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex flex-col items-center">
-                  <span className="text-3xl">📊</span>
+                  <BarChart3 className="h-8 w-8 text-[#133B5C]" />
                   <p className="mt-1 text-xs font-medium text-slate-500">
                     Marketing Mgr
                   </p>
                 </div>
                 <span className="text-xl text-slate-300">→</span>
                 <div className="flex flex-col items-center">
-                  <span className="text-3xl">🎨</span>
+                  <Palette className="h-8 w-8 text-[#133B5C]" />
                   <p className="mt-1 text-xs font-medium text-slate-500">
                     UX Designer
                   </p>
@@ -332,11 +339,6 @@ export default async function HomePage(): Promise<React.ReactElement> {
               </div>
             </div>
           </div>
-
-          <p className="mt-8 text-center text-xs text-slate-400">
-            * Timelines and milestones are illustrative estimates based on
-            typical career transitions.
-          </p>
         </div>
       </section>
 

@@ -7,7 +7,7 @@
  * TODO: Replace with Pino or Winston for advanced features (transports, log rotation, etc.)
  */
 
-type LogLevel = "info" | "warn" | "error" | "debug";
+type LogLevel = "info" | "warn" | "error" | "debug" | "security";
 
 interface LogContext {
   [key: string]: unknown;
@@ -68,6 +68,17 @@ class Logger {
     if (process.env.NODE_ENV !== "production") {
       this.log("debug", message, meta);
     }
+  }
+
+  /**
+   * Log a security event (auth failures, access denied, rate limits, etc.)
+   * Always outputs in both dev and production.
+   */
+  security(
+    event: string,
+    meta?: { ip?: string; userId?: string; endpoint?: string } & LogContext,
+  ): void {
+    this.log("security", event, meta);
   }
 }
 

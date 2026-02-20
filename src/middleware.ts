@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/infrastructure/auth/supabase/middleware";
+import {
+  aiRateLimiter,
+  apiRateLimiter,
+} from "@/infrastructure/ratelimit/rateLimiter";
+import { createLogger } from "@/infrastructure/logging/logger";
+
+const logger = createLogger("middleware");
 
 /**
  * Next.js Middleware - Runs on every request
@@ -14,16 +21,64 @@ import { updateSession } from "@/infrastructure/auth/supabase/middleware";
  * - Authenticated users trying to access /login or /register → redirect to /
  */
 export async function middleware(request: NextRequest): Promise<NextResponse> {
-  const { response, user } = await updateSession(request);
-
   const { pathname } = request.nextUrl;
+
+  // Apply rate limiting to all API routes
+  if (pathname.startsWith("/api/")) {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "anonymous";
+
+    // Stricter limit for AI-intensive routes
+    const isAiRoute =
+      pathname.endsWith("/quiz") ||
+      pathname.endsWith("/project") ||
+      pathname.endsWith("/resources");
+
+    const limiter = isAiRoute ? aiRateLimiter : apiRateLimiter;
+    const { success, limit, remaining, reset } = await limiter.limit(ip);
+
+    if (!success) {
+      logger.security("RATE_LIMIT_EXCEEDED", {
+        ip,
+        endpoint: pathname,
+        limiter: isAiRoute ? "ai" : "api",
+      });
+      return new NextResponse(
+        JSON.stringify({
+          success: false,
+          error: {
+            code: "RATE_LIMIT_EXCEEDED",
+            message: "Too many requests. Please try again later.",
+          },
+        }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+          },
+        },
+      );
+    }
+  }
+
+  const { response, user } = await updateSession(request);
 
   // Protected routes that require authentication
   const isProtectedRoute =
-    pathname.startsWith("/roadmap") || pathname.startsWith("/onboarding");
+    pathname.startsWith("/roadmap") ||
+    pathname.startsWith("/onboarding") ||
+    pathname === "/update-password";
 
   // Auth pages that authenticated users shouldn't access
-  const isAuthPage = pathname === "/login" || pathname === "/register";
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/forgot-password";
 
   // If user is not authenticated and tries to access protected routes
   if (!user && isProtectedRoute) {

@@ -10,6 +10,7 @@ import {
   SubmitProjectInputDTO,
   ProjectResultDTO,
 } from "@application/dtos/assessment/SubmitProjectDTO";
+import { AuthorizationError } from "@application/errors/AuthorizationError";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 
@@ -116,10 +117,15 @@ export class SubmitProject {
       );
     }
 
-    // 5. Get userId from roadmap ownership
+    // 5. Verify authenticated user owns this roadmap
     const userId = await this.roadmapRepository.findOwnerUserId(roadmapIdVO);
     if (!userId) {
-      throw new Error("Roadmap has no owner");
+      throw new AuthorizationError("Roadmap has no owner");
+    }
+    if (userId.value !== input.userId) {
+      throw new AuthorizationError(
+        "Not authorized to submit project for this roadmap",
+      );
     }
 
     // 6. Create initial submission entity

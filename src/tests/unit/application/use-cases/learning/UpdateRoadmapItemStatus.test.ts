@@ -6,6 +6,7 @@ import { RoadmapItem } from "@domain/learning/entities/RoadmapItem";
 import { RoadmapId } from "@domain/learning/value-objects/RoadmapId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
 import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
+import { UserId } from "@domain/profile/value-objects/UserId";
 
 describe("UpdateRoadmapItemStatus Use Case", () => {
   let mockRepository: IRoadmapRepository;
@@ -24,15 +25,31 @@ describe("UpdateRoadmapItemStatus Use Case", () => {
   });
 
   it("should throw error when roadmap not found", async () => {
-    vi.mocked(mockRepository.findById).mockResolvedValue(null);
+    vi.mocked(mockRepository.findOwnerUserId).mockResolvedValue(null);
 
     const dto = {
+      userId: "user-001",
       roadmapId: "nonexistent",
       itemId: "item-001",
       status: "in_progress" as const,
     };
 
     await expect(useCase.execute(dto)).rejects.toThrow();
+  });
+
+  it("should throw authorization error when userId does not match owner", async () => {
+    vi.mocked(mockRepository.findOwnerUserId).mockResolvedValue(
+      UserId.create("owner-user"),
+    );
+
+    const dto = {
+      userId: "different-user",
+      roadmapId: "roadmap-001",
+      itemId: "item-001",
+      status: "in_progress" as const,
+    };
+
+    await expect(useCase.execute(dto)).rejects.toThrow("AUTHORIZATION_ERROR");
   });
 
   it("should throw error when item not found", async () => {
@@ -45,9 +62,13 @@ describe("UpdateRoadmapItemStatus Use Case", () => {
       RoadmapItem.create(RoadmapItemId.create("item-001"), "Item 1", "desc", 1),
     );
 
+    vi.mocked(mockRepository.findOwnerUserId).mockResolvedValue(
+      UserId.create("user-001"),
+    );
     vi.mocked(mockRepository.findById).mockResolvedValue(roadmap);
 
     const dto = {
+      userId: "user-001",
       roadmapId: "roadmap-001",
       itemId: "nonexistent",
       status: "in_progress" as const,
@@ -70,10 +91,14 @@ describe("UpdateRoadmapItemStatus Use Case", () => {
     );
     roadmap.addItem(item);
 
+    vi.mocked(mockRepository.findOwnerUserId).mockResolvedValue(
+      UserId.create("user-001"),
+    );
     vi.mocked(mockRepository.findById).mockResolvedValue(roadmap);
     vi.mocked(mockRepository.save).mockResolvedValue(undefined);
 
     const dto = {
+      userId: "user-001",
       roadmapId: "roadmap-001",
       itemId: "item-001",
       status: "in_progress" as const,
@@ -100,10 +125,14 @@ describe("UpdateRoadmapItemStatus Use Case", () => {
     item.markInProgress();
     roadmap.addItem(item);
 
+    vi.mocked(mockRepository.findOwnerUserId).mockResolvedValue(
+      UserId.create("user-001"),
+    );
     vi.mocked(mockRepository.findById).mockResolvedValue(roadmap);
     vi.mocked(mockRepository.save).mockResolvedValue(undefined);
 
     const dto = {
+      userId: "user-001",
       roadmapId: "roadmap-001",
       itemId: "item-001",
       status: "completed" as const,
@@ -130,10 +159,14 @@ describe("UpdateRoadmapItemStatus Use Case", () => {
     item.markCompleted();
     roadmap.addItem(item);
 
+    vi.mocked(mockRepository.findOwnerUserId).mockResolvedValue(
+      UserId.create("user-001"),
+    );
     vi.mocked(mockRepository.findById).mockResolvedValue(roadmap);
     vi.mocked(mockRepository.save).mockResolvedValue(undefined);
 
     const dto = {
+      userId: "user-001",
       roadmapId: "roadmap-001",
       itemId: "item-001",
       status: "in_progress" as const,
@@ -168,10 +201,14 @@ describe("UpdateRoadmapItemStatus Use Case", () => {
 
     expect(roadmap.progress).toBe(0);
 
+    vi.mocked(mockRepository.findOwnerUserId).mockResolvedValue(
+      UserId.create("user-001"),
+    );
     vi.mocked(mockRepository.findById).mockResolvedValue(roadmap);
     vi.mocked(mockRepository.save).mockResolvedValue(undefined);
 
     const dto = {
+      userId: "user-001",
       roadmapId: "roadmap-001",
       itemId: "item-001",
       status: "completed" as const,
@@ -192,10 +229,14 @@ describe("UpdateRoadmapItemStatus Use Case", () => {
       RoadmapItem.create(RoadmapItemId.create("item-001"), "Item 1", "desc", 1),
     );
 
+    vi.mocked(mockRepository.findOwnerUserId).mockResolvedValue(
+      UserId.create("user-001"),
+    );
     vi.mocked(mockRepository.findById).mockResolvedValue(roadmap);
     vi.mocked(mockRepository.save).mockResolvedValue(undefined);
 
     const dto = {
+      userId: "user-001",
       roadmapId: "roadmap-001",
       itemId: "item-001",
       status: "in_progress" as const,

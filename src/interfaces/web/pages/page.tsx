@@ -42,16 +42,22 @@ export default async function HomePage(): Promise<React.ReactElement> {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col">
       {/* Hero Section */}
-      <section className="flex flex-1 flex-col items-center justify-center gap-8 bg-white px-4 py-24 text-center">
+      <section
+        className="flex flex-1 flex-col items-center justify-center gap-8 px-4 py-24 text-center"
+        style={{
+          background:
+            "radial-gradient(ellipse at top center, #243B5E 0%, #1D2D50 50%, #162340 100%)",
+        }}
+      >
         <div className="max-w-3xl space-y-6">
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-            ONE PIVOT AT TIMES UNIVERSITY
+          <p className="inline-block rounded-full border border-slate-500 px-4 py-1.5 text-xs font-medium uppercase tracking-wider text-slate-400">
+            YOUR NEXT CAREER MOVE STARTS HERE
           </p>
-          <h1 className="text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl">
-            Your career transition,{" "}
-            <span className="text-[#1D2D50]">reimagined with AI</span>
+          <h1 className="text-5xl font-bold tracking-tight text-white sm:text-6xl">
+            Your career transition, <br />
+            <span className="text-[#FCDAB7]">reimagined with AI</span>
           </h1>
-          <p className="mx-auto max-w-xl text-lg text-slate-600">
+          <p className="mx-auto max-w-xl text-lg text-slate-300">
             PIVOT AI creates personalized learning roadmaps powered by
             artificial intelligence. Set your career goal, and we build the path
             to get you there.
@@ -60,14 +66,15 @@ export default async function HomePage(): Promise<React.ReactElement> {
             <Button
               size="lg"
               asChild
-              className="bg-[#1D2D50] text-white hover:bg-[#152340] transition-colors"
+              className="bg-[#FCDAB7] text-[#1D2D50] font-semibold hover:bg-[#f5c9a0] transition-colors"
             >
               <Link href="/login">Get Started</Link>
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors"
+              asChild
+              className="border-slate-500 bg-transparent text-white hover:bg-white/10 transition-colors"
             >
               <Link href="/demo">View Demo</Link>
             </Button>

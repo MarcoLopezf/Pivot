@@ -40,6 +40,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    staleTimes: {
+      dynamic: 300, // 5 minutes (default is 30 seconds)
+    },
+  },
   images: {
     remotePatterns: [
       {

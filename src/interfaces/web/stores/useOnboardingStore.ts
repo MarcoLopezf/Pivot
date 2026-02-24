@@ -231,7 +231,7 @@ export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
     set({ isLoading: true });
 
     // Minimum display time so transition doesn't flash
-    const minDelay = new Promise((r) => setTimeout(r, 600));
+    const minDelay = new Promise((r) => setTimeout(r, 150));
 
     try {
       // Call server action to persist to database

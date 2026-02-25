@@ -20,6 +20,7 @@ describe("GetUserRoadmaps Use Case", () => {
       findByGoalId: vi.fn(),
       findLatestByUserId: vi.fn(),
       findAllByUserId: vi.fn(),
+      countByUserId: vi.fn(),
       findOwnerUserId: vi.fn(),
     };
     mockGoalRepo = { save: vi.fn(), findById: vi.fn(), findByUserId: vi.fn() };

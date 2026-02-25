@@ -5,6 +5,7 @@ import {
   GeneratedProjectDetails,
 } from "@domain/learning/services/IProjectEnrichmentFlow";
 import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
+import { stripMarkdownCodeBlock, wrapUserContent } from "../utils";
 
 /**
  * Interface for AI response structure
@@ -40,7 +41,7 @@ export class GenkitProjectEnrichmentFlow implements IProjectEnrichmentFlow {
         },
       });
 
-      const cleaned = this.stripMarkdownCodeBlock(text);
+      const cleaned = stripMarkdownCodeBlock(text);
 
       let response: ProjectEnrichmentResponse;
       try {
@@ -90,16 +91,6 @@ export class GenkitProjectEnrichmentFlow implements IProjectEnrichmentFlow {
     }
   }
 
-  private stripMarkdownCodeBlock(raw: string): string {
-    const trimmed = raw.trim();
-    const codeBlockRegex = /^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/;
-    const match = codeBlockRegex.exec(trimmed);
-    if (match) {
-      return match[1].trim();
-    }
-    return trimmed;
-  }
-
   private buildPrompt(
     title: string,
     description: string,
@@ -109,9 +100,9 @@ export class GenkitProjectEnrichmentFlow implements IProjectEnrichmentFlow {
     return `You are an expert software engineering educator creating detailed project specifications for students.
 
 PROJECT CONTEXT:
-- Title: "${title}"
-- Description: "${description}"
-- Tags/Technologies: ${tags.join(", ")}
+- Title: ${wrapUserContent("project_title", title)}
+- Description: ${wrapUserContent("project_description", description)}
+- Tags/Technologies: ${wrapUserContent("project_tags", tags.join(", "))}
 - Difficulty Level: ${difficulty}
 
 TASK: Generate comprehensive project details with three sections:
@@ -127,7 +118,7 @@ TASK: Generate comprehensive project details with three sections:
    - DO NOT use vague language like "should work well" or "must be good"
 
 2. TECHNICAL STACK (3-8 specific technologies):
-   - Base it on the tags provided: ${tags.join(", ")}
+   - Base it on the tags provided above
    - Include specific tools: programming language, framework, database, testing tools
    - Be specific with versions or variants when helpful (e.g., "Flask 2.x" not just "Python")
    - Only include technologies directly relevant to the project

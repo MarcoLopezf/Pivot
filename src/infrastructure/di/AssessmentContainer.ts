@@ -5,7 +5,7 @@ import { PrismaQuizAttemptRepository } from "@infrastructure/database/repositori
 import { PrismaProjectSubmissionRepository } from "@infrastructure/database/repositories/PrismaProjectSubmissionRepository";
 import { PrismaProjectDetailsRepository } from "@infrastructure/database/repositories/PrismaProjectDetailsRepository";
 import { GenkitQuestionsFlow } from "@infrastructure/ai/flows/generateQuestionsFlow";
-import { analyzeProjectFlow } from "@infrastructure/ai/flows/analyzeProjectFlow";
+import { GenkitProjectAnalysisFlow } from "@infrastructure/ai/flows/analyzeProjectFlow";
 import { GitHubService } from "@infrastructure/services/GitHubService";
 import { GenerateQuiz } from "@application/use-cases/assessment/GenerateQuiz";
 import { SubmitQuiz } from "@application/use-cases/assessment/SubmitQuiz";
@@ -23,6 +23,7 @@ class AssessmentContainer {
   private quizAttemptRepository: PrismaQuizAttemptRepository;
   private projectSubmissionRepository: PrismaProjectSubmissionRepository;
   private questionsFlow: GenkitQuestionsFlow;
+  private projectAnalysisFlow: GenkitProjectAnalysisFlow;
   private githubService: GitHubService;
   private projectDetailsRepository: PrismaProjectDetailsRepository;
 
@@ -34,6 +35,7 @@ class AssessmentContainer {
       prisma,
     );
     this.questionsFlow = new GenkitQuestionsFlow();
+    this.projectAnalysisFlow = new GenkitProjectAnalysisFlow();
     this.githubService = new GitHubService();
     this.projectDetailsRepository = new PrismaProjectDetailsRepository(prisma);
   }
@@ -63,7 +65,7 @@ class AssessmentContainer {
       this.projectSubmissionRepository,
       this.roadmapRepository,
       this.githubService,
-      analyzeProjectFlow,
+      this.projectAnalysisFlow,
       this.projectDetailsRepository,
     );
   }

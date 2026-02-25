@@ -21,7 +21,9 @@ vi.mock("@infrastructure/services/GitHubService", () => ({
 }));
 
 vi.mock("@infrastructure/ai/flows/analyzeProjectFlow", () => ({
-  analyzeProjectFlow: mockAnalyzeProjectFlow,
+  GenkitProjectAnalysisFlow: class {
+    analyze = mockAnalyzeProjectFlow;
+  },
 }));
 
 vi.mock("@infrastructure/auth/supabase/server", () => ({

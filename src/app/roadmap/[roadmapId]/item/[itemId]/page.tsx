@@ -58,9 +58,11 @@ export default async function ClassroomPage({
   const primaryVideo = resources.find((r) => r.type === "video");
 
   // Filter out the displayed video from Related Sources
-  const sidebarResources = primaryVideo
-    ? resources.filter((r) => r.url !== primaryVideo.url)
-    : resources;
+  const sidebarResources = (
+    primaryVideo
+      ? resources.filter((r) => r.url !== primaryVideo.url)
+      : resources
+  ).slice(0, 5);
 
   // Project items: Redesigned layout with AI-generated details
   if (item.type === "project") {

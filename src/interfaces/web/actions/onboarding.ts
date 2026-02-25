@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@infrastructure/auth/supabase/server";
 import { onboardingContainer } from "@infrastructure/di/OnboardingContainer";
 import { prisma } from "@infrastructure/database/PrismaClient";
+import { RoadmapLimitExceededError } from "@domain/learning/errors/RoadmapLimitExceededError";
 
 /**
  * Server Action: Save Onboarding Step
@@ -190,6 +191,9 @@ export async function completeOnboardingAction(): Promise<{
     return { success: true, redirectUrl: `/roadmap/${roadmapId}` };
   } catch (error) {
     console.error("Onboarding completion failed:", error);
+    if (error instanceof RoadmapLimitExceededError) {
+      return { success: false, error: error.message };
+    }
     return { success: false, error: "Failed to generate roadmap" };
   }
 }

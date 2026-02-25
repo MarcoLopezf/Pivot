@@ -1,4 +1,5 @@
 import { IProjectSubmissionRepository } from "@domain/assessment/repositories/IProjectSubmissionRepository";
+import { IAnalyzeProjectFlow } from "@domain/assessment/services/IAnalyzeProjectFlow";
 import { IRoadmapRepository } from "@domain/learning/repositories/IRoadmapRepository";
 import { IProjectDetailsRepository } from "@domain/learning/repositories/IProjectDetailsRepository";
 import { GitHubService } from "@infrastructure/services/GitHubService";
@@ -36,26 +37,6 @@ const githubRepoUrlSchema = z
   );
 
 /**
- * AI Flow Input/Output Types
- */
-interface AnalyzeProjectInput {
-  repoUrl: string;
-  files: Array<{ path: string; content: string }>;
-  topic: string;
-  description: string;
-  expectedSkills: string;
-  acceptanceCriteria?: string[];
-  technicalStack?: string[];
-}
-
-interface AnalyzeProjectOutput {
-  score: number;
-  feedback: string;
-  strengths: string[];
-  improvements: string[];
-}
-
-/**
  * SubmitProject Use Case
  *
  * Validates and analyzes a GitHub project submission for a roadmap item.
@@ -77,9 +58,7 @@ export class SubmitProject {
     private readonly projectSubmissionRepository: IProjectSubmissionRepository,
     private readonly roadmapRepository: IRoadmapRepository,
     private readonly githubService: GitHubService,
-    private readonly analyzeProjectFlow: (
-      input: AnalyzeProjectInput,
-    ) => Promise<AnalyzeProjectOutput>,
+    private readonly analyzeProjectFlow: IAnalyzeProjectFlow,
     private readonly projectDetailsRepository?: IProjectDetailsRepository,
   ) {}
 
@@ -164,7 +143,7 @@ export class SubmitProject {
       }
 
       // 10. Analyze project using AI
-      const aiResult = await this.analyzeProjectFlow({
+      const aiResult = await this.analyzeProjectFlow.analyze({
         repoUrl,
         files: repoData.files,
         topic: roadmapItem.title,

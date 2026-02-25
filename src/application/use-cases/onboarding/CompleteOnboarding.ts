@@ -1,9 +1,12 @@
 import { type IOnboardingRepository } from "@domain/onboarding/repositories/IOnboardingRepository";
 import { type ICareerGoalRepository } from "@domain/learning/repositories/ICareerGoalRepository";
+import { type IRoadmapRepository } from "@domain/learning/repositories/IRoadmapRepository";
 import { type IUserRepository } from "@domain/profile/repositories/IUserRepository";
 import { CareerGoal } from "@domain/learning/entities/CareerGoal";
 import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
 import { UserId } from "@domain/profile/value-objects/UserId";
+import { RoadmapLimitExceededError } from "@domain/learning/errors/RoadmapLimitExceededError";
+import { MAX_ROADMAPS_PER_USER } from "@domain/learning/constants";
 import { GenerateUserRoadmap } from "@application/use-cases/learning/GenerateUserRoadmap";
 import { randomUUID } from "crypto";
 
@@ -25,6 +28,7 @@ export class CompleteOnboarding {
     private readonly onboardingRepository: IOnboardingRepository,
     private readonly careerGoalRepository: ICareerGoalRepository,
     private readonly generateUserRoadmap: GenerateUserRoadmap,
+    private readonly roadmapRepository?: IRoadmapRepository,
   ) {}
 
   /**
@@ -43,6 +47,16 @@ export class CompleteOnboarding {
 
     if (!user) {
       throw new Error("User not found");
+    }
+
+    // 1b. Check roadmap limit
+    if (this.roadmapRepository) {
+      const currentCount = await this.roadmapRepository.countByUserId(
+        UserId.create(userId),
+      );
+      if (currentCount >= MAX_ROADMAPS_PER_USER) {
+        throw new RoadmapLimitExceededError(MAX_ROADMAPS_PER_USER);
+      }
     }
 
     // 2. Retrieve onboarding session

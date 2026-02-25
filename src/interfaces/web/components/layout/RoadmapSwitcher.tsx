@@ -10,7 +10,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronsUpDown, MapPin, Plus, Check } from "lucide-react";
+import { ChevronsUpDown, MapPin, Plus, Check, Lock } from "lucide-react";
+import { MAX_ROADMAPS_PER_USER } from "@domain/learning/constants";
 import type { RoadmapListItemDTO } from "@application/use-cases/learning/GetUserRoadmaps";
 
 interface RoadmapSwitcherProps {
@@ -26,6 +27,7 @@ export function RoadmapSwitcher({
 
   const currentRoadmap = roadmaps.find((r) => r.id === currentRoadmapId);
   const otherRoadmaps = roadmaps.filter((r) => r.id !== currentRoadmapId);
+  const isAtLimit = roadmaps.length >= MAX_ROADMAPS_PER_USER;
 
   const displayTitle = currentRoadmap?.title ?? "Select a path";
   const displayRole = currentRoadmap?.role;
@@ -103,13 +105,28 @@ export function RoadmapSwitcher({
 
         <DropdownMenuSeparator className="bg-slate-200" />
 
-        <DropdownMenuItem
-          className="flex items-center gap-2 cursor-pointer text-[#1E5F74] focus:bg-slate-100 focus:text-[#1E5F74]"
-          onSelect={() => router.push("/onboarding")}
-        >
-          <Plus className="h-4 w-4 shrink-0" />
-          <span className="text-sm font-medium">Create New Path</span>
-        </DropdownMenuItem>
+        {isAtLimit ? (
+          <DropdownMenuItem
+            disabled
+            className="flex items-center gap-2 text-slate-400 cursor-not-allowed"
+          >
+            <Lock className="h-4 w-4 shrink-0" />
+            <div className="flex flex-col">
+              <span className="text-sm font-medium">Create New Path</span>
+              <span className="text-xs">
+                Limit of {MAX_ROADMAPS_PER_USER} roadmaps reached
+              </span>
+            </div>
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem
+            className="flex items-center gap-2 cursor-pointer text-[#1E5F74] focus:bg-slate-100 focus:text-[#1E5F74]"
+            onSelect={() => router.push("/onboarding")}
+          >
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className="text-sm font-medium">Create New Path</span>
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

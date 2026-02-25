@@ -5,6 +5,7 @@ import {
   RoleRecommendation,
 } from "@domain/learning/services/IRoleRecommender";
 import { IJobRoleRepository } from "@domain/learning/repositories/IJobRoleRepository";
+import { stripMarkdownCodeBlock, wrapUserContent } from "../utils";
 
 /**
  * Interface for AI response structure
@@ -51,8 +52,9 @@ export class GenkitRoleRecommender implements IRoleRecommender {
         },
       });
 
-      // Parse JSON response from the model
-      const response: RoleSuggestionResponse = JSON.parse(text);
+      // Parse JSON response from the model (strip markdown in case AI wraps it)
+      const cleaned = stripMarkdownCodeBlock(text);
+      const response: RoleSuggestionResponse = JSON.parse(cleaned);
 
       if (!response.recommendations || response.recommendations.length === 0) {
         throw new Error("No recommendations received from AI model");
@@ -95,20 +97,14 @@ export class GenkitRoleRecommender implements IRoleRecommender {
     validRoleNames: string[],
   ): string {
     // Build context section with optional resume.
-    // User-provided content is wrapped in XML tags so the model treats it
-    // as data, not as instructions (prompt injection defense).
-    let contextSection = `<user_context>
-User Interests: ${interests}`;
+    // User-provided content is wrapped with wrapUserContent for prompt injection defense.
+    let userContent = `User Interests: ${interests}`;
 
     if (resumeText) {
-      contextSection += `
-
-Resume/CV Context:
-${resumeText.substring(0, 3000)}`;
+      userContent += `\n\nResume/CV Context:\n${resumeText.substring(0, 3000)}`;
     }
 
-    contextSection += `
-</user_context>`;
+    const contextSection = wrapUserContent("user_profile", userContent);
 
     return `You are a career advisor for tech professionals. Based on the user's interests${resumeText ? " and resume" : ""}, recommend the top 3 matches from the provided "Valid Job Roles" list.
 

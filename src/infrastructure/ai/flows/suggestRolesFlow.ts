@@ -6,17 +6,20 @@ import {
 } from "@domain/learning/services/IRoleRecommender";
 import { IJobRoleRepository } from "@domain/learning/repositories/IJobRoleRepository";
 import { stripMarkdownCodeBlock, wrapUserContent } from "../utils";
+import { z } from "zod";
 
-/**
- * Interface for AI response structure
- */
-interface RoleSuggestionResponse {
-  recommendations: Array<{
-    role: string;
-    matchPercentage: number;
-    reasoning: string;
-  }>;
-}
+const RoleSuggestionResponseSchema = z.object({
+  recommendations: z
+    .array(
+      z.object({
+        role: z.string().min(1),
+        matchPercentage: z.number().min(0).max(100),
+        reasoning: z.string().min(1).max(300),
+      }),
+    )
+    .min(1)
+    .max(5),
+});
 
 /**
  * GenkitRoleRecommender
@@ -52,17 +55,19 @@ export class GenkitRoleRecommender implements IRoleRecommender {
         },
       });
 
-      // Parse JSON response from the model (strip markdown in case AI wraps it)
       const cleaned = stripMarkdownCodeBlock(text);
-      const response: RoleSuggestionResponse = JSON.parse(cleaned);
 
-      if (!response.recommendations || response.recommendations.length === 0) {
-        throw new Error("No recommendations received from AI model");
+      let parsed: z.infer<typeof RoleSuggestionResponseSchema>;
+      try {
+        parsed = RoleSuggestionResponseSchema.parse(JSON.parse(cleaned));
+      } catch {
+        throw new Error(
+          `AI_RESPONSE_FORMAT_ERROR: Failed to parse AI response as JSON. Raw output: ${text}`,
+        );
       }
 
-      // Validate that AI returned exact matches from valid roles list
       const validRoleSet = new Set(validRoleNames);
-      const invalidRoles = response.recommendations.filter(
+      const invalidRoles = parsed.recommendations.filter(
         (rec) => !validRoleSet.has(rec.role),
       );
 
@@ -77,8 +82,7 @@ export class GenkitRoleRecommender implements IRoleRecommender {
         );
       }
 
-      // Return top 3 recommendations (all guaranteed to match database entries)
-      return response.recommendations.slice(0, 3);
+      return parsed.recommendations.slice(0, 3);
     } catch (error) {
       console.error("Error generating role suggestions:", error);
       throw new Error("Failed to generate role recommendations");

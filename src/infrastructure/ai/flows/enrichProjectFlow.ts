@@ -6,15 +6,13 @@ import {
 } from "@domain/learning/services/IProjectEnrichmentFlow";
 import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
 import { stripMarkdownCodeBlock, wrapUserContent } from "../utils";
+import { z } from "zod";
 
-/**
- * Interface for AI response structure
- */
-interface ProjectEnrichmentResponse {
-  acceptanceCriteria: string[];
-  technicalStack: string[];
-  keyConcepts: string[];
-}
+const ProjectEnrichmentResponseSchema = z.object({
+  acceptanceCriteria: z.array(z.string().min(1)).min(3).max(6),
+  technicalStack: z.array(z.string().min(1)).min(2).max(8),
+  keyConcepts: z.array(z.string().min(1)).min(2).max(5),
+});
 
 /**
  * GenkitProjectEnrichmentFlow
@@ -43,47 +41,19 @@ export class GenkitProjectEnrichmentFlow implements IProjectEnrichmentFlow {
 
       const cleaned = stripMarkdownCodeBlock(text);
 
-      let response: ProjectEnrichmentResponse;
+      let parsed: z.infer<typeof ProjectEnrichmentResponseSchema>;
       try {
-        response = JSON.parse(cleaned);
+        parsed = ProjectEnrichmentResponseSchema.parse(JSON.parse(cleaned));
       } catch {
         throw new Error(
           `AI_RESPONSE_FORMAT_ERROR: Failed to parse project enrichment response as JSON. Raw output: ${text}`,
         );
       }
 
-      // Validate structure
-      if (
-        !Array.isArray(response.acceptanceCriteria) ||
-        response.acceptanceCriteria.length < 3
-      ) {
-        throw new Error(
-          `AI_RESPONSE_FORMAT_ERROR: acceptanceCriteria must be an array with at least 3 items. Got: ${response.acceptanceCriteria?.length ?? 0}`,
-        );
-      }
-
-      if (
-        !Array.isArray(response.technicalStack) ||
-        response.technicalStack.length < 2
-      ) {
-        throw new Error(
-          `AI_RESPONSE_FORMAT_ERROR: technicalStack must be an array with at least 2 items. Got: ${response.technicalStack?.length ?? 0}`,
-        );
-      }
-
-      if (
-        !Array.isArray(response.keyConcepts) ||
-        response.keyConcepts.length < 2
-      ) {
-        throw new Error(
-          `AI_RESPONSE_FORMAT_ERROR: keyConcepts must be an array with at least 2 items. Got: ${response.keyConcepts?.length ?? 0}`,
-        );
-      }
-
       return {
-        acceptanceCriteria: response.acceptanceCriteria.slice(0, 6),
-        technicalStack: response.technicalStack.slice(0, 8),
-        keyConcepts: response.keyConcepts.slice(0, 5),
+        acceptanceCriteria: parsed.acceptanceCriteria,
+        technicalStack: parsed.technicalStack,
+        keyConcepts: parsed.keyConcepts,
       };
     } catch (error) {
       console.error("Error enriching project details:", error);

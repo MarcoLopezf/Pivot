@@ -1,3 +1,5 @@
+import { DomainError } from "@domain/shared/errors/DomainError";
+
 export class CareerGoalId {
   private readonly _value: string;
 
@@ -7,7 +9,7 @@ export class CareerGoalId {
 
   public static create(value: string): CareerGoalId {
     if (!value || value.trim().length === 0) {
-      throw new Error("CareerGoalId cannot be empty");
+      throw new DomainError("CareerGoalId cannot be empty");
     }
     return new CareerGoalId(value);
   }

@@ -1,3 +1,5 @@
+import { DomainError } from "@domain/shared/errors/DomainError";
+
 export class RoadmapId {
   private readonly _value: string;
 
@@ -7,7 +9,7 @@ export class RoadmapId {
 
   public static create(value: string): RoadmapId {
     if (!value || value.trim().length === 0) {
-      throw new Error("RoadmapId cannot be empty");
+      throw new DomainError("RoadmapId cannot be empty");
     }
     return new RoadmapId(value);
   }

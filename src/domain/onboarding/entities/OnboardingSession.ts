@@ -1,3 +1,5 @@
+import { DomainError } from "@domain/shared/errors/DomainError";
+
 /**
  * OnboardingSession - Domain Entity
  *
@@ -42,11 +44,11 @@ export class OnboardingSession {
     data: Record<string, unknown> = {},
   ): OnboardingSession {
     if (!userId || userId.trim().length === 0) {
-      throw new Error("User ID cannot be empty");
+      throw new DomainError("User ID cannot be empty");
     }
 
     if (currentStep < 1) {
-      throw new Error("Current step must be at least 1");
+      throw new DomainError("Current step must be at least 1");
     }
 
     const now = new Date();
@@ -94,7 +96,7 @@ export class OnboardingSession {
    */
   public updateStep(step: number): void {
     if (step < 1) {
-      throw new Error("Step must be at least 1");
+      throw new DomainError("Step must be at least 1");
     }
 
     this._currentStep = step;

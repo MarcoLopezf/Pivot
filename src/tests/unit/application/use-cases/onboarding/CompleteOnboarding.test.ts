@@ -8,6 +8,7 @@ import { CompleteOnboarding } from "@application/use-cases/onboarding/CompleteOn
 import { IUserRepository } from "@domain/profile/repositories/IUserRepository";
 import { IOnboardingRepository } from "@domain/onboarding/repositories/IOnboardingRepository";
 import { ICareerGoalRepository } from "@domain/learning/repositories/ICareerGoalRepository";
+import { IRoadmapRepository } from "@domain/learning/repositories/IRoadmapRepository";
 import { GenerateUserRoadmap } from "@application/use-cases/learning/GenerateUserRoadmap";
 import { User } from "@domain/profile/entities/User";
 import { UserId } from "@domain/profile/value-objects/UserId";
@@ -30,6 +31,7 @@ describe("CompleteOnboarding Use Case", () => {
   let mockUserRepo: IUserRepository;
   let mockOnboardingRepo: IOnboardingRepository;
   let mockGoalRepo: ICareerGoalRepository;
+  let mockRoadmapRepo: IRoadmapRepository;
   let mockGenerateRoadmap: GenerateUserRoadmap;
   let useCase: CompleteOnboarding;
 
@@ -42,6 +44,15 @@ describe("CompleteOnboarding Use Case", () => {
       delete: vi.fn(),
     };
     mockGoalRepo = { save: vi.fn(), findById: vi.fn(), findByUserId: vi.fn() };
+    mockRoadmapRepo = {
+      save: vi.fn(),
+      findById: vi.fn(),
+      findByGoalId: vi.fn(),
+      findLatestByUserId: vi.fn(),
+      findAllByUserId: vi.fn(),
+      countByUserId: vi.fn().mockResolvedValue(0),
+      findOwnerUserId: vi.fn(),
+    };
     mockGenerateRoadmap = {
       execute: vi.fn(),
     } as unknown as GenerateUserRoadmap;
@@ -50,6 +61,7 @@ describe("CompleteOnboarding Use Case", () => {
       mockOnboardingRepo,
       mockGoalRepo,
       mockGenerateRoadmap,
+      mockRoadmapRepo,
     );
   });
 

@@ -28,7 +28,7 @@ export class CompleteOnboarding {
     private readonly onboardingRepository: IOnboardingRepository,
     private readonly careerGoalRepository: ICareerGoalRepository,
     private readonly generateUserRoadmap: GenerateUserRoadmap,
-    private readonly roadmapRepository?: IRoadmapRepository,
+    private readonly roadmapRepository: IRoadmapRepository,
   ) {}
 
   /**
@@ -50,13 +50,11 @@ export class CompleteOnboarding {
     }
 
     // 1b. Check roadmap limit
-    if (this.roadmapRepository) {
-      const currentCount = await this.roadmapRepository.countByUserId(
-        UserId.create(userId),
-      );
-      if (currentCount >= MAX_ROADMAPS_PER_USER) {
-        throw new RoadmapLimitExceededError(MAX_ROADMAPS_PER_USER);
-      }
+    const currentCount = await this.roadmapRepository.countByUserId(
+      UserId.create(userId),
+    );
+    if (currentCount >= MAX_ROADMAPS_PER_USER) {
+      throw new RoadmapLimitExceededError(MAX_ROADMAPS_PER_USER);
     }
 
     // 2. Retrieve onboarding session

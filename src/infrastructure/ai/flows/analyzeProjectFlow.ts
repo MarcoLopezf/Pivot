@@ -1,11 +1,18 @@
 import { ai } from "../genkit.config";
 import { openAI } from "@genkit-ai/compat-oai/openai";
+import {
+  IAnalyzeProjectFlow,
+  AnalyzeProjectInput,
+  AnalyzeProjectOutput,
+} from "@domain/assessment/services/IAnalyzeProjectFlow";
+import {
+  stripMarkdownCodeBlock,
+  sanitizeForPrompt,
+  wrapUserContent,
+} from "../utils";
 import { z } from "zod";
 
-/**
- * Input schema for project analysis
- */
-export const AnalyzeProjectInputSchema = z.object({
+const AnalyzeProjectInputSchema = z.object({
   repoUrl: z.string().url(),
   files: z.array(
     z.object({
@@ -20,171 +27,94 @@ export const AnalyzeProjectInputSchema = z.object({
   technicalStack: z.array(z.string()).optional(),
 });
 
-export type AnalyzeProjectInput = z.infer<typeof AnalyzeProjectInputSchema>;
-
-/**
- * Output schema for project analysis
- */
-export const AnalyzeProjectOutputSchema = z.object({
+const AnalyzeProjectOutputSchema = z.object({
   score: z.number().min(0).max(100),
   feedback: z.string(),
   strengths: z.array(z.string()),
   improvements: z.array(z.string()),
 });
 
-export type AnalyzeProjectOutput = z.infer<typeof AnalyzeProjectOutputSchema>;
-
 /**
- * AI response structure (internal)
+ * GenkitProjectAnalysisFlow
+ *
+ * Infrastructure adapter that implements IAnalyzeProjectFlow using Genkit and OpenAI.
+ * Analyzes a GitHub project submission against expected skills and best practices.
  */
-interface ProjectAnalysisResponse {
-  score: number;
-  feedback: string;
-  strengths: string[];
-  improvements: string[];
-}
+export class GenkitProjectAnalysisFlow implements IAnalyzeProjectFlow {
+  async analyze(input: AnalyzeProjectInput): Promise<AnalyzeProjectOutput> {
+    const validatedInput = AnalyzeProjectInputSchema.parse(input);
 
-/**
- * analyzeProjectFlow
- *
- * Analyzes a GitHub project submission using AI.
- *
- * Infrastructure Layer - Uses Genkit and OpenAI to evaluate project quality
- * against expected skills and best practices.
- *
- * Evaluation Criteria:
- * - Code quality and organization
- * - Documentation (README, comments)
- * - Best practices and patterns
- * - Test coverage (if applicable)
- * - Relevance to expected skills
- *
- * @param input - Repository URL, files, and expected skills
- * @returns Analysis with score (0-100), feedback, strengths, and improvements
- */
-export async function analyzeProjectFlow(
-  input: AnalyzeProjectInput,
-): Promise<AnalyzeProjectOutput> {
-  // Validate input
-  const validatedInput = AnalyzeProjectInputSchema.parse(input);
-
-  try {
-    const prompt = buildPrompt(validatedInput);
-
-    const { text } = await ai.generate({
-      model: openAI.model("gpt-4o-mini"),
-      prompt,
-      config: {
-        temperature: 0.3, // Lower temperature for more consistent evaluations
-      },
-    });
-
-    const cleaned = stripMarkdownCodeBlock(text);
-
-    let response: ProjectAnalysisResponse;
     try {
-      response = JSON.parse(cleaned);
-    } catch {
-      throw new Error(
-        `AI_RESPONSE_FORMAT_ERROR: Failed to parse AI response as JSON. Raw output: ${text}`,
-      );
-    }
+      const prompt = this.buildPrompt(validatedInput);
 
-    // Validate response structure
-    if (
-      typeof response.score !== "number" ||
-      response.score < 0 ||
-      response.score > 100
-    ) {
-      throw new Error(
-        `AI_RESPONSE_FORMAT_ERROR: Invalid score: ${response.score}`,
-      );
-    }
+      const { text } = await ai.generate({
+        model: openAI.model("gpt-4.1-mini"),
+        prompt,
+        config: {
+          temperature: 0.3,
+        },
+      });
 
-    if (!response.feedback || typeof response.feedback !== "string") {
-      throw new Error("AI_RESPONSE_FORMAT_ERROR: Missing or invalid feedback");
-    }
+      const cleaned = stripMarkdownCodeBlock(text);
 
-    if (
-      !Array.isArray(response.strengths) ||
-      !Array.isArray(response.improvements)
-    ) {
-      throw new Error(
-        "AI_RESPONSE_FORMAT_ERROR: strengths and improvements must be arrays",
-      );
-    }
+      let parsed: z.infer<typeof AnalyzeProjectOutputSchema>;
+      try {
+        parsed = AnalyzeProjectOutputSchema.parse(JSON.parse(cleaned));
+      } catch {
+        throw new Error(
+          `AI_RESPONSE_FORMAT_ERROR: Failed to parse AI response as JSON. Raw output: ${text}`,
+        );
+      }
 
-    // Return validated output
-    return AnalyzeProjectOutputSchema.parse(response);
-  } catch (error) {
-    console.error("Error analyzing project:", error);
-    throw error;
+      return parsed;
+    } catch (error) {
+      console.error("Error analyzing project:", error);
+      throw error;
+    }
   }
-}
 
-/**
- * Strips markdown code block formatting from AI response
- */
-function stripMarkdownCodeBlock(raw: string): string {
-  const trimmed = raw.trim();
-  const codeBlockRegex = /^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/;
-  const match = codeBlockRegex.exec(trimmed);
-  if (match) {
-    return match[1].trim();
-  }
-  return trimmed;
-}
+  private buildPrompt(input: AnalyzeProjectInput): string {
+    const filesSummary = input.files
+      .map((file) => {
+        const sanitizedPath = sanitizeForPrompt(file.path, 500);
+        const contentPreview = sanitizeForPrompt(file.content, 2000);
+        return `<file_content path="${sanitizedPath}">\n${contentPreview}\n</file_content>`;
+      })
+      .join("\n\n");
 
-/**
- * Builds the AI prompt for project analysis
- */
-function buildPrompt(input: AnalyzeProjectInput): string {
-  // Format files for prompt (limit content length to avoid token limits)
-  const filesSummary = input.files
-    .map((file) => {
-      const contentPreview =
-        file.content.length > 500
-          ? file.content.substring(0, 500) + "... (truncated)"
-          : file.content;
-      return `--- ${file.path} ---\n${contentPreview}\n`;
-    })
-    .join("\n");
-
-  // Build acceptance criteria section if available
-  let acceptanceCriteriaSection = "";
-  if (input.acceptanceCriteria && input.acceptanceCriteria.length > 0) {
-    acceptanceCriteriaSection = `
+    let acceptanceCriteriaSection = "";
+    if (input.acceptanceCriteria && input.acceptanceCriteria.length > 0) {
+      acceptanceCriteriaSection = `
 **ACCEPTANCE CRITERIA (student must fulfill these):**
 ${input.acceptanceCriteria.map((c, i) => `${i + 1}. ${c}`).join("\n")}
 `;
-  }
+    }
 
-  // Build technical stack section if available
-  let technicalStackSection = "";
-  if (input.technicalStack && input.technicalStack.length > 0) {
-    technicalStackSection = `
+    let technicalStackSection = "";
+    if (input.technicalStack && input.technicalStack.length > 0) {
+      technicalStackSection = `
 **EXPECTED TECHNICAL STACK:**
 ${input.technicalStack.join(", ")}
 `;
-  }
+    }
 
-  const hasDetailedCriteria =
-    input.acceptanceCriteria && input.acceptanceCriteria.length > 0;
+    const hasDetailedCriteria =
+      input.acceptanceCriteria && input.acceptanceCriteria.length > 0;
 
-  return `You are a senior software engineer and teaching assistant evaluating a coding project submission for a specific learning module.
+    return `You are a senior software engineer and teaching assistant evaluating a coding project submission for a specific learning module.
 
 **LEARNING MODULE CONTEXT:**
-Module Title: "${input.topic}"
-Module Description: "${input.description}"
+${wrapUserContent("module_topic", input.topic)}
+${wrapUserContent("module_description", input.description)}
 Expected Skills/Topics: ${input.expectedSkills}
 ${acceptanceCriteriaSection}${technicalStackSection}
 **SUBMITTED PROJECT:**
-Repository: ${input.repoUrl}
+${wrapUserContent("repository_url", input.repoUrl)}
 
 **PROJECT FILES:**
 ${filesSummary}
 
-**🚨 CRITICAL INSTRUCTION - RELEVANCE CHECK FIRST:**
+**CRITICAL INSTRUCTION - RELEVANCE CHECK FIRST:**
 
 Before evaluating code quality, you MUST answer: Does the project use the CORRECT TECHNOLOGY/TOOLS and address the CORRECT PURPOSE?
 
@@ -258,4 +188,5 @@ Return ONLY a JSON object with this exact structure (no markdown, no code blocks
 }
 
 Analyze the project now.`;
+  }
 }

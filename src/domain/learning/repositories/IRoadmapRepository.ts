@@ -37,6 +37,11 @@ export interface IRoadmapRepository {
   findAllByUserId(userId: UserId): Promise<Roadmap[]>;
 
   /**
+   * Count roadmaps owned by a user
+   */
+  countByUserId(userId: UserId): Promise<number>;
+
+  /**
    * Find the owner user ID for a roadmap
    */
   findOwnerUserId(roadmapId: RoadmapId): Promise<UserId | null>;

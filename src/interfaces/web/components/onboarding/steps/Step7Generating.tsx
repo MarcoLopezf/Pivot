@@ -6,7 +6,21 @@ import { completeOnboardingAction } from "@interfaces/web/actions/onboarding";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { InfoBox } from "@/interfaces/web/components/onboarding/InfoBox";
-import { BrainCircuit, Sparkles, RefreshCw } from "lucide-react";
+import {
+  BrainCircuit,
+  Sparkles,
+  RefreshCw,
+  User,
+  Target,
+  Search,
+  BookOpen,
+  Map,
+  Bot,
+  Zap,
+  CheckCircle2,
+  XCircle,
+  type LucideIcon,
+} from "lucide-react";
 
 /**
  * Step7Generating - Final Onboarding Step (7 of 7)
@@ -24,15 +38,15 @@ import { BrainCircuit, Sparkles, RefreshCw } from "lucide-react";
  */
 
 /** Rotating phrases that describe AI processing steps */
-const GENERATING_PHRASES = [
-  { text: "Finalizing your profile...", emoji: "👤" },
-  { text: "Setting your career goals...", emoji: "🎯" },
-  { text: "Analyzing your skill gaps...", emoji: "🔍" },
-  { text: "Finding the best learning resources...", emoji: "📚" },
-  { text: "Mapping out milestones and projects...", emoji: "🗺️" },
-  { text: "Crafting your personalized roadmap...", emoji: "🤖" },
-  { text: "Fine-tuning recommendations...", emoji: "⚡" },
-  { text: "Almost there...", emoji: "✨" },
+const GENERATING_PHRASES: { text: string; icon: LucideIcon }[] = [
+  { text: "Finalizing your profile...", icon: User },
+  { text: "Setting your career goals...", icon: Target },
+  { text: "Analyzing your skill gaps...", icon: Search },
+  { text: "Finding the best learning resources...", icon: BookOpen },
+  { text: "Mapping out milestones and projects...", icon: Map },
+  { text: "Crafting your personalized roadmap...", icon: Bot },
+  { text: "Fine-tuning recommendations...", icon: Zap },
+  { text: "Almost there...", icon: Sparkles },
 ];
 
 /** Interval in ms between phrase rotations */
@@ -215,7 +229,7 @@ export function Step7Generating(): React.ReactElement {
                     isFading ? "opacity-0" : "opacity-100"
                   }`}
                 >
-                  <span className="text-lg">{currentPhrase.emoji}</span>
+                  <currentPhrase.icon className="h-5 w-5 text-[#1E5F74]" />
                   <span className="text-sm font-medium text-slate-600">
                     {currentPhrase.text}
                   </span>
@@ -231,7 +245,7 @@ export function Step7Generating(): React.ReactElement {
             {/* Complete State */}
             {status === "complete" && (
               <div className="flex flex-col items-center gap-3 py-8">
-                <span className="text-5xl">✅</span>
+                <CheckCircle2 className="h-12 w-12 text-emerald-500" />
                 <p className="text-lg font-semibold text-[#1E5F74]">All set!</p>
                 <p className="text-sm text-slate-500">
                   Redirecting to your dashboard...
@@ -242,7 +256,7 @@ export function Step7Generating(): React.ReactElement {
             {/* Error State */}
             {status === "error" && (
               <div className="flex flex-col items-center gap-4 py-8">
-                <span className="text-5xl">❌</span>
+                <XCircle className="h-12 w-12 text-red-500" />
                 <p className="text-lg font-semibold text-slate-900">
                   Something went wrong
                 </p>

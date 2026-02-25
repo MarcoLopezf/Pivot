@@ -1,3 +1,5 @@
+import { DomainError } from "@domain/shared/errors/DomainError";
+
 /**
  * JobRoleId Value Object
  *
@@ -21,7 +23,7 @@ export class JobRoleId {
    */
   public static create(value: string): JobRoleId {
     if (!value || value.trim().length === 0) {
-      throw new Error("JobRoleId cannot be empty");
+      throw new DomainError("JobRoleId cannot be empty");
     }
     return new JobRoleId(value);
   }

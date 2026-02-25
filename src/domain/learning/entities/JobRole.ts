@@ -1,4 +1,5 @@
 import { JobRoleId } from "@domain/learning/value-objects/JobRoleId";
+import { DomainError } from "@domain/shared/errors/DomainError";
 
 /**
  * JobRole Entity
@@ -55,13 +56,13 @@ export class JobRole {
     popularity: number,
   ): JobRole {
     if (name.trim().length === 0) {
-      throw new Error("Job role name cannot be empty");
+      throw new DomainError("Job role name cannot be empty");
     }
     if (popularity < 0) {
-      throw new Error("Popularity cannot be negative");
+      throw new DomainError("Popularity cannot be negative");
     }
     if (popularity > 100) {
-      throw new Error("Popularity cannot exceed 100");
+      throw new DomainError("Popularity cannot exceed 100");
     }
     const now = new Date();
     return new JobRole(id, name, category, true, popularity, now);

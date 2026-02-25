@@ -5,6 +5,7 @@ import {
   GeneratedQuestion,
 } from "@domain/assessment/services/IGenerateQuestionsFlow";
 import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
+import { stripMarkdownCodeBlock, wrapUserContent } from "../utils";
 import { z } from "zod";
 
 const QuestionResponseSchema = z.object({
@@ -45,14 +46,14 @@ export class GenkitQuestionsFlow implements IGenerateQuestionsFlow {
       const prompt = this.buildPrompt(topic, difficulty, count);
 
       const { text } = await ai.generate({
-        model: openAI.model("gpt-4o-mini"),
+        model: openAI.model("gpt-4.1-mini"),
         prompt,
         config: {
-          temperature: 0.8, // Higher temperature for diverse questions
+          temperature: 0.7,
         },
       });
 
-      const cleaned = this.stripMarkdownCodeBlock(text);
+      const cleaned = stripMarkdownCodeBlock(text);
 
       let parsed: z.infer<typeof QuestionResponseSchema>;
       try {
@@ -70,24 +71,16 @@ export class GenkitQuestionsFlow implements IGenerateQuestionsFlow {
     }
   }
 
-  private stripMarkdownCodeBlock(raw: string): string {
-    const trimmed = raw.trim();
-    const codeBlockRegex = /^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/;
-    const match = codeBlockRegex.exec(trimmed);
-    if (match) {
-      return match[1].trim();
-    }
-    return trimmed;
-  }
-
   private buildPrompt(
     topic: string,
     difficulty: DifficultyLevel,
     count: number,
   ): string {
-    return `You are an expert educational content creator specializing in technical assessments. Generate ${count} high-quality multiple-choice quiz questions for the topic "${topic}" at "${difficulty}" difficulty level.
+    return `You are an expert educational content creator specializing in technical assessments. Generate ${count} high-quality multiple-choice quiz questions at "${difficulty}" difficulty level for the following topic:
 
-Note: The topic "${topic}" is an atomic, canonical tag (e.g., "react", "typescript", "docker"). Focus on the core concepts of this technology.
+${wrapUserContent("quiz_topic", topic)}
+
+Note: The topic is an atomic, canonical tag (e.g., "react", "typescript", "docker"). Focus on the core concepts of this technology.
 
 **CRITICAL REQUIREMENTS:**
 - Each question must test practical understanding, not just memorization

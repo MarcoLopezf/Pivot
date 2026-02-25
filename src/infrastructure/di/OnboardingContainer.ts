@@ -48,6 +48,7 @@ class OnboardingContainer {
       this._onboardingRepository,
       learningContainer.getCareerGoalRepository(),
       learningContainer.getGenerateUserRoadmapUseCase(),
+      learningContainer.getRoadmapRepository(),
     );
   }
 

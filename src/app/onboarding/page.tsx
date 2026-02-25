@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { OnboardingLayout } from "@/interfaces/web/layouts/OnboardingLayout";
 import { Step1Profile } from "@/interfaces/web/components/onboarding/steps/Step1Profile";
 import { Step2Experience } from "@/interfaces/web/components/onboarding/steps/Step2Experience";
@@ -12,6 +13,7 @@ import { StepReview } from "@/interfaces/web/components/onboarding/steps/StepRev
 import { Step7Generating } from "@/interfaces/web/components/onboarding/steps/Step7Generating";
 import { useOnboardingStore } from "@/interfaces/web/stores/useOnboardingStore";
 import { StepTransitionLoading } from "@/interfaces/web/components/onboarding/StepTransitionLoading";
+import { checkRoadmapLimitAction } from "@/interfaces/web/actions/learningActions";
 
 /**
  * Onboarding Page - Main Entry Point for Onboarding Wizard
@@ -33,8 +35,20 @@ import { StepTransitionLoading } from "@/interfaces/web/components/onboarding/St
  * @layer Interface (Web)
  */
 export default function OnboardingPage() {
+  const router = useRouter();
   const { step, currentStep, totalSteps, isLoading, syncWithServer } =
     useOnboardingStore();
+
+  /**
+   * On mount, check roadmap limit and redirect if exceeded
+   */
+  useEffect(() => {
+    checkRoadmapLimitAction().then((result) => {
+      if (result.success && result.data && !result.data.canCreate) {
+        router.replace("/");
+      }
+    });
+  }, [router]);
 
   /**
    * On mount, sync onboarding state from server

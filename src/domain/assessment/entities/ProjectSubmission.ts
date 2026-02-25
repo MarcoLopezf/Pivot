@@ -1,6 +1,7 @@
 import { ProjectSubmissionId } from "@domain/assessment/value-objects/ProjectSubmissionId";
 import { UserId } from "@domain/profile/value-objects/UserId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
+import { DomainError } from "@domain/shared/errors/DomainError";
 
 export enum ProjectSubmissionStatus {
   Pending = "pending",
@@ -52,7 +53,7 @@ export class ProjectSubmission {
     repoUrl: string,
   ): ProjectSubmission {
     if (!repoUrl || repoUrl.trim().length === 0) {
-      throw new Error("ProjectSubmission repoUrl cannot be empty");
+      throw new DomainError("ProjectSubmission repoUrl cannot be empty");
     }
 
     const now = new Date();
@@ -101,7 +102,7 @@ export class ProjectSubmission {
    */
   public markAsAnalyzing(): void {
     if (this._status !== ProjectSubmissionStatus.Pending) {
-      throw new Error(
+      throw new DomainError(
         "Cannot mark as analyzing: submission is not in pending state",
       );
     }
@@ -114,15 +115,17 @@ export class ProjectSubmission {
    */
   public completeAnalysis(score: number, feedback: string): void {
     if (this._status !== ProjectSubmissionStatus.Analyzing) {
-      throw new Error(
+      throw new DomainError(
         "Cannot complete analysis: submission is not in analyzing state",
       );
     }
     if (score < 0 || score > 100) {
-      throw new Error("ProjectSubmission score must be between 0 and 100");
+      throw new DomainError(
+        "ProjectSubmission score must be between 0 and 100",
+      );
     }
     if (!feedback || feedback.trim().length === 0) {
-      throw new Error("ProjectSubmission feedback cannot be empty");
+      throw new DomainError("ProjectSubmission feedback cannot be empty");
     }
 
     this._score = score;
@@ -136,7 +139,7 @@ export class ProjectSubmission {
    */
   public markAsFailed(feedback: string): void {
     if (!feedback || feedback.trim().length === 0) {
-      throw new Error("Failure feedback cannot be empty");
+      throw new DomainError("Failure feedback cannot be empty");
     }
 
     this._feedback = feedback.trim();

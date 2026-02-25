@@ -5,17 +5,21 @@ import {
   RoleRecommendation,
 } from "@domain/learning/services/IRoleRecommender";
 import { IJobRoleRepository } from "@domain/learning/repositories/IJobRoleRepository";
+import { stripMarkdownCodeBlock, wrapUserContent } from "../utils";
+import { z } from "zod";
 
-/**
- * Interface for AI response structure
- */
-interface RoleSuggestionResponse {
-  recommendations: Array<{
-    role: string;
-    matchPercentage: number;
-    reasoning: string;
-  }>;
-}
+const RoleSuggestionResponseSchema = z.object({
+  recommendations: z
+    .array(
+      z.object({
+        role: z.string().min(1),
+        matchPercentage: z.number().min(0).max(100),
+        reasoning: z.string().min(1).max(300),
+      }),
+    )
+    .min(1)
+    .max(5),
+});
 
 /**
  * GenkitRoleRecommender
@@ -51,16 +55,19 @@ export class GenkitRoleRecommender implements IRoleRecommender {
         },
       });
 
-      // Parse JSON response from the model
-      const response: RoleSuggestionResponse = JSON.parse(text);
+      const cleaned = stripMarkdownCodeBlock(text);
 
-      if (!response.recommendations || response.recommendations.length === 0) {
-        throw new Error("No recommendations received from AI model");
+      let parsed: z.infer<typeof RoleSuggestionResponseSchema>;
+      try {
+        parsed = RoleSuggestionResponseSchema.parse(JSON.parse(cleaned));
+      } catch {
+        throw new Error(
+          `AI_RESPONSE_FORMAT_ERROR: Failed to parse AI response as JSON. Raw output: ${text}`,
+        );
       }
 
-      // Validate that AI returned exact matches from valid roles list
       const validRoleSet = new Set(validRoleNames);
-      const invalidRoles = response.recommendations.filter(
+      const invalidRoles = parsed.recommendations.filter(
         (rec) => !validRoleSet.has(rec.role),
       );
 
@@ -75,8 +82,7 @@ export class GenkitRoleRecommender implements IRoleRecommender {
         );
       }
 
-      // Return top 3 recommendations (all guaranteed to match database entries)
-      return response.recommendations.slice(0, 3);
+      return parsed.recommendations.slice(0, 3);
     } catch (error) {
       console.error("Error generating role suggestions:", error);
       throw new Error("Failed to generate role recommendations");
@@ -95,20 +101,14 @@ export class GenkitRoleRecommender implements IRoleRecommender {
     validRoleNames: string[],
   ): string {
     // Build context section with optional resume.
-    // User-provided content is wrapped in XML tags so the model treats it
-    // as data, not as instructions (prompt injection defense).
-    let contextSection = `<user_context>
-User Interests: ${interests}`;
+    // User-provided content is wrapped with wrapUserContent for prompt injection defense.
+    let userContent = `User Interests: ${interests}`;
 
     if (resumeText) {
-      contextSection += `
-
-Resume/CV Context:
-${resumeText.substring(0, 3000)}`;
+      userContent += `\n\nResume/CV Context:\n${resumeText.substring(0, 3000)}`;
     }
 
-    contextSection += `
-</user_context>`;
+    const contextSection = wrapUserContent("user_profile", userContent);
 
     return `You are a career advisor for tech professionals. Based on the user's interests${resumeText ? " and resume" : ""}, recommend the top 3 matches from the provided "Valid Job Roles" list.
 

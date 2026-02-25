@@ -1,4 +1,5 @@
 import { QuestionOptionId } from "@domain/assessment/value-objects/QuestionOptionId";
+import { DomainError } from "@domain/shared/errors/DomainError";
 
 export class QuestionOption {
   private readonly _id: QuestionOptionId;
@@ -17,7 +18,7 @@ export class QuestionOption {
     isCorrect: boolean,
   ): QuestionOption {
     if (text.trim().length === 0) {
-      throw new Error("QuestionOption text cannot be empty");
+      throw new DomainError("QuestionOption text cannot be empty");
     }
     return new QuestionOption(id, text, isCorrect);
   }

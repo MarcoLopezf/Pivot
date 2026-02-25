@@ -1,5 +1,6 @@
 import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
 import { UserId } from "@domain/profile/value-objects/UserId";
+import { DomainError } from "@domain/shared/errors/DomainError";
 
 /**
  * CareerGoal Entity
@@ -47,10 +48,10 @@ export class CareerGoal {
     currentRole: string,
   ): CareerGoal {
     if (targetRole.trim().length === 0) {
-      throw new Error("Target role cannot be empty");
+      throw new DomainError("Target role cannot be empty");
     }
     if (currentRole.trim().length === 0) {
-      throw new Error("Current role cannot be empty");
+      throw new DomainError("Current role cannot be empty");
     }
     const now = new Date();
     return new CareerGoal(id, userId, targetRole, currentRole, now);
@@ -106,7 +107,7 @@ export class CareerGoal {
    */
   public updateTargetRole(targetRole: string): void {
     if (targetRole.trim().length === 0) {
-      throw new Error("Target role cannot be empty");
+      throw new DomainError("Target role cannot be empty");
     }
     this._targetRole = targetRole;
     this._updatedAt = new Date();
@@ -120,7 +121,7 @@ export class CareerGoal {
    */
   public updateCurrentRole(currentRole: string): void {
     if (currentRole.trim().length === 0) {
-      throw new Error("Current role cannot be empty");
+      throw new DomainError("Current role cannot be empty");
     }
     this._currentRole = currentRole;
     this._updatedAt = new Date();

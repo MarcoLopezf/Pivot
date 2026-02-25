@@ -10,6 +10,8 @@ interface ResourceListProps {
   resources: LearningResource[];
 }
 
+const MAX_RESOURCES = 5;
+
 function getResourceIcon(type: LearningResource["type"]): React.ReactElement {
   const iconClasses = "h-5 w-5 text-white";
   switch (type) {
@@ -53,7 +55,7 @@ export function ResourceList({
 
   return (
     <div className="space-y-3">
-      {resources.map((resource, index) => (
+      {resources.slice(0, MAX_RESOURCES).map((resource, index) => (
         <a
           key={resource.id || `resource-${index}`}
           href={resource.url}

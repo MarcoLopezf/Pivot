@@ -58,15 +58,20 @@ function QuizLoadingState(): React.ReactElement {
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
     const interval = setInterval(() => {
       setIsFading(true);
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         setPhraseIndex((prev) => (prev + 1) % LOADING_PHRASES.length);
         setIsFading(false);
       }, 300);
     }, LOADING_PHRASE_INTERVAL);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const current = LOADING_PHRASES[phraseIndex];

@@ -62,13 +62,15 @@ export class GenkitProjectAnalysisFlow implements IAnalyzeProjectFlow {
         parsed = AnalyzeProjectOutputSchema.parse(JSON.parse(cleaned));
       } catch {
         throw new Error(
-          `AI_RESPONSE_FORMAT_ERROR: Failed to parse AI response as JSON. Raw output: ${text}`,
+          `AI_RESPONSE_FORMAT_ERROR: Failed to parse AI response as JSON (response length: ${text.length})`,
         );
       }
 
       return parsed;
     } catch (error) {
-      console.error("Error analyzing project:", error);
+      const safeMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("Error analyzing project:", safeMessage);
       throw error;
     }
   }

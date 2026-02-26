@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader } from "@interfaces/web/components/layout/SiteHeader";
 import { FooterWrapper } from "@interfaces/web/components/layout/FooterWrapper";
@@ -34,6 +35,7 @@ export default function RootLayout({
         <main className="flex-1 bg-gray-100 text-slate-900">{children}</main>
         <FooterWrapper />
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );

@@ -10,10 +10,7 @@ import { Roadmap } from "@domain/learning/entities/Roadmap";
 import { RoadmapItem } from "@domain/learning/entities/RoadmapItem";
 import { CareerGoalId } from "@domain/learning/value-objects/CareerGoalId";
 import { UserId } from "@domain/profile/value-objects/UserId";
-import type {
-  AnalyzeProjectInput,
-  AnalyzeProjectOutput,
-} from "@infrastructure/ai/flows/analyzeProjectFlow";
+import type { IAnalyzeProjectFlow } from "@domain/assessment/services/IAnalyzeProjectFlow";
 
 /**
  * Unit tests for SubmitProject Use Case
@@ -27,9 +24,7 @@ describe("SubmitProject Use Case", () => {
   let mockProjectSubmissionRepo: IProjectSubmissionRepository;
   let mockRoadmapRepo: IRoadmapRepository;
   let mockGitHubService: GitHubService;
-  let mockAnalyzeProjectFlow: (
-    input: AnalyzeProjectInput,
-  ) => Promise<AnalyzeProjectOutput>;
+  let mockAnalyzeProjectFlow: IAnalyzeProjectFlow;
 
   beforeEach(() => {
     // Mock repositories
@@ -43,6 +38,7 @@ describe("SubmitProject Use Case", () => {
       save: vi.fn(),
       findById: vi.fn(),
       findByGoalId: vi.fn(),
+      countByUserId: vi.fn(),
       findOwnerUserId: vi.fn(),
       findLatestByUserId: vi.fn(),
       findAllByUserId: vi.fn(),
@@ -55,9 +51,9 @@ describe("SubmitProject Use Case", () => {
     } as unknown as GitHubService;
 
     // Mock AI flow
-    mockAnalyzeProjectFlow = vi.fn() as unknown as (
-      input: AnalyzeProjectInput,
-    ) => Promise<AnalyzeProjectOutput>;
+    mockAnalyzeProjectFlow = {
+      analyze: vi.fn(),
+    };
 
     submitProject = new SubmitProject(
       mockProjectSubmissionRepo,
@@ -132,7 +128,7 @@ describe("SubmitProject Use Case", () => {
         files: [{ path: "README.md", content: "# Project" }],
         metadata: { repoUrl: "https://github.com/user/repo", fileCount: 1 },
       });
-      vi.mocked(mockAnalyzeProjectFlow).mockResolvedValue({
+      vi.mocked(mockAnalyzeProjectFlow.analyze).mockResolvedValue({
         score: 85,
         feedback: "Great project!",
         strengths: ["Clean code"],
@@ -241,7 +237,7 @@ describe("SubmitProject Use Case", () => {
         files: [{ path: "README.md", content: "# Project" }],
         metadata: { repoUrl: "https://github.com/user/repo", fileCount: 1 },
       });
-      vi.mocked(mockAnalyzeProjectFlow).mockResolvedValue({
+      vi.mocked(mockAnalyzeProjectFlow.analyze).mockResolvedValue({
         score: 85,
         feedback: "Great!",
         strengths: [],
@@ -314,7 +310,7 @@ describe("SubmitProject Use Case", () => {
         improvements: ["Add integration tests", "Implement rate limiting"],
       };
 
-      vi.mocked(mockAnalyzeProjectFlow).mockResolvedValue(mockAIResult);
+      vi.mocked(mockAnalyzeProjectFlow.analyze).mockResolvedValue(mockAIResult);
 
       const result = await submitProject.execute({
         userId: "user-123",
@@ -329,7 +325,7 @@ describe("SubmitProject Use Case", () => {
       expect(mockGitHubService.analyzeRepository).toHaveBeenCalledWith(
         "https://github.com/user/ecommerce-api",
       );
-      expect(mockAnalyzeProjectFlow).toHaveBeenCalledWith(
+      expect(mockAnalyzeProjectFlow.analyze).toHaveBeenCalledWith(
         expect.objectContaining({
           repoUrl: "https://github.com/user/ecommerce-api",
           files: mockRepoData.files,
@@ -376,7 +372,7 @@ describe("SubmitProject Use Case", () => {
         files: [{ path: "README.md", content: "# Project" }],
         metadata: { repoUrl: "https://github.com/user/repo", fileCount: 1 },
       });
-      vi.mocked(mockAnalyzeProjectFlow).mockResolvedValue({
+      vi.mocked(mockAnalyzeProjectFlow.analyze).mockResolvedValue({
         score: 85,
         feedback: "Great!",
         strengths: [],
@@ -429,7 +425,7 @@ describe("SubmitProject Use Case", () => {
         files: [{ path: "README.md", content: "# Project" }],
         metadata: { repoUrl: "https://github.com/user/repo", fileCount: 1 },
       });
-      vi.mocked(mockAnalyzeProjectFlow).mockResolvedValue({
+      vi.mocked(mockAnalyzeProjectFlow.analyze).mockResolvedValue({
         score: 55,
         feedback: "Needs improvement",
         strengths: [],
@@ -562,7 +558,7 @@ describe("SubmitProject Use Case", () => {
         files: [{ path: "README.md", content: "# Project" }],
         metadata: { repoUrl: "https://github.com/user/repo", fileCount: 1 },
       });
-      vi.mocked(mockAnalyzeProjectFlow).mockRejectedValue(
+      vi.mocked(mockAnalyzeProjectFlow.analyze).mockRejectedValue(
         new Error("AI service unavailable"),
       );
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Loader2,
@@ -10,6 +10,12 @@ import {
   XCircle,
   RotateCcw,
   CheckCircle2,
+  BrainCircuit,
+  FileQuestion,
+  Shuffle,
+  Sparkles,
+  ClipboardCheck,
+  type LucideIcon,
 } from "lucide-react";
 import type {
   QuizDTO,
@@ -31,6 +37,70 @@ type QuizState =
   | "error";
 
 const OPTION_LABELS = ["A", "B", "C", "D"];
+
+/** Rotating phrases shown while quiz loads */
+const LOADING_PHRASES: { text: string; icon: LucideIcon }[] = [
+  { text: "Analyzing the module content...", icon: BrainCircuit },
+  { text: "Generating personalized questions...", icon: FileQuestion },
+  { text: "Shuffling answer options...", icon: Shuffle },
+  { text: "Calibrating difficulty level...", icon: Sparkles },
+  { text: "Finalizing your quiz...", icon: ClipboardCheck },
+];
+
+const LOADING_PHRASE_INTERVAL = 4500;
+
+/**
+ * QuizLoadingState — Rotating phrases with icons while quiz loads.
+ * Same UX pattern as Step7Generating.
+ */
+function QuizLoadingState(): React.ReactElement {
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isFading, setIsFading] = useState(false);
+
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const interval = setInterval(() => {
+      setIsFading(true);
+      timeoutId = setTimeout(() => {
+        setPhraseIndex((prev) => (prev + 1) % LOADING_PHRASES.length);
+        setIsFading(false);
+      }, 300);
+    }, LOADING_PHRASE_INTERVAL);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+  const current = LOADING_PHRASES[phraseIndex];
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-8">
+      <div className="flex items-center gap-3 mb-6">
+        <Diamond className="h-5 w-5 text-[#FCDAB7]" />
+        <h2 className="text-xl font-bold text-[#1D2D50]">Knowledge Check</h2>
+      </div>
+      <div className="flex flex-col items-center justify-center py-12 gap-5">
+        {/* Spinner */}
+        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-slate-300 border-t-[#1E5F74]" />
+
+        {/* Rotating phrase */}
+        <div
+          className={`flex items-center gap-2 transition-opacity duration-300 ${
+            isFading ? "opacity-0" : "opacity-100"
+          }`}
+        >
+          <current.icon className="h-5 w-5 text-[#1E5F74]" />
+          <span className="text-sm font-medium text-slate-600">
+            {current.text}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * KnowledgeCheck Component
@@ -180,20 +250,9 @@ export function KnowledgeCheck({
     );
   }
 
-  // Loading state
+  // Loading state — rotating phrases with icons
   if (quizState === "loading") {
-    return (
-      <div className="rounded-xl border border-slate-200 bg-white p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <Diamond className="h-5 w-5 text-[#FCDAB7]" />
-          <h2 className="text-xl font-bold text-[#1D2D50]">Knowledge Check</h2>
-        </div>
-        <div className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-[#1E5F74] mb-3" />
-          <p className="text-sm text-slate-500">Preparing your questions...</p>
-        </div>
-      </div>
-    );
+    return <QuizLoadingState />;
   }
 
   // Error state
@@ -328,7 +387,7 @@ export function KnowledgeCheck({
                     key={option.id}
                     onClick={() => handleOptionSelect(option.id)}
                     disabled={quizState === "submitting"}
-                    className={`flex items-start gap-3 p-4 rounded-lg border-2 text-left transition-all ${
+                    className={`flex items-start gap-3 p-4 rounded-lg border-2 text-left transition-all min-w-0 ${
                       isSelected
                         ? "border-[#1E5F74] bg-[#1E5F74]/5 shadow-sm"
                         : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
@@ -343,7 +402,7 @@ export function KnowledgeCheck({
                     >
                       {OPTION_LABELS[index]}
                     </span>
-                    <span className="text-sm text-slate-700 pt-0.5">
+                    <span className="text-sm text-slate-700 pt-0.5 break-all">
                       {option.text}
                     </span>
                   </button>

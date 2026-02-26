@@ -5,6 +5,7 @@ import {
   RoadmapItem,
   RoadmapItemStatus,
 } from "@domain/learning/entities/RoadmapItem";
+import { DomainError } from "@domain/shared/errors/DomainError";
 
 export class Roadmap {
   private readonly _id: RoadmapId;
@@ -35,7 +36,7 @@ export class Roadmap {
     title: string,
   ): Roadmap {
     if (title.trim().length === 0) {
-      throw new Error("Roadmap title cannot be empty");
+      throw new DomainError("Roadmap title cannot be empty");
     }
     return new Roadmap(id, goalId, title, [], new Date());
   }
@@ -98,7 +99,7 @@ export class Roadmap {
   ): void {
     const item = this._items.find((i) => i.id.equals(itemId));
     if (!item) {
-      throw new Error("RoadmapItem not found");
+      throw new DomainError("RoadmapItem not found");
     }
     switch (status) {
       case "completed":

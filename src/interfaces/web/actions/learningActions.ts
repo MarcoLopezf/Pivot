@@ -12,6 +12,9 @@ import { RoadmapItemDetailDTO } from "@application/use-cases/learning/GetRoadmap
 import { LearningResource } from "@domain/learning/repositories/IResourceRepository";
 import type { ProjectDetailsData } from "@domain/learning/repositories/IProjectDetailsRepository";
 import { PdfService } from "@infrastructure/services/PdfService";
+import { RoadmapLimitExceededError } from "@domain/learning/errors/RoadmapLimitExceededError";
+import { MAX_ROADMAPS_PER_USER } from "@domain/learning/constants";
+import { UserId } from "@domain/profile/value-objects/UserId";
 import type { RoadmapListItemDTO } from "@application/use-cases/learning/GetUserRoadmaps";
 import { saveStepAction } from "./onboarding";
 
@@ -62,6 +65,54 @@ export async function getUserRoadmapsListAction(): Promise<{
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to load roadmaps list",
+    };
+  }
+}
+
+/**
+ * Server Action: Check Roadmap Limit
+ *
+ * Returns whether the authenticated user has reached the maximum roadmap limit.
+ *
+ * @returns Whether the user can create more roadmaps
+ *
+ * @layer Interface (Web)
+ */
+export async function checkRoadmapLimitAction(): Promise<{
+  success: boolean;
+  data?: { canCreate: boolean; current: number; max: number };
+  error?: string;
+}> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const roadmapRepo = learningContainer.getRoadmapRepository();
+    const current = await roadmapRepo.countByUserId(UserId.create(user.id));
+
+    return {
+      success: true,
+      data: {
+        canCreate: current < MAX_ROADMAPS_PER_USER,
+        current,
+        max: MAX_ROADMAPS_PER_USER,
+      },
+    };
+  } catch (error) {
+    console.error("Error in checkRoadmapLimitAction:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to check roadmap limit",
     };
   }
 }
@@ -155,7 +206,19 @@ export async function createCareerGoalAction(formData: FormData): Promise<{
       };
     }
 
-    // 2. Extract and validate required fields
+    // 2. Check roadmap limit
+    const roadmapRepo = learningContainer.getRoadmapRepository();
+    const roadmapCount = await roadmapRepo.countByUserId(
+      UserId.create(user.id),
+    );
+    if (roadmapCount >= MAX_ROADMAPS_PER_USER) {
+      return {
+        success: false,
+        error: new RoadmapLimitExceededError(MAX_ROADMAPS_PER_USER).message,
+      };
+    }
+
+    // 3. Extract and validate required fields
     const targetRole = formData.get("targetRole");
     const currentRole = formData.get("currentRole");
 

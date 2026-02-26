@@ -1,6 +1,7 @@
 import { QuizAttemptId } from "@domain/assessment/value-objects/QuizAttemptId";
 import { UserId } from "@domain/profile/value-objects/UserId";
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
+import { DomainError } from "@domain/shared/errors/DomainError";
 
 const PASSING_THRESHOLD = 70;
 
@@ -35,7 +36,7 @@ export class QuizAttempt {
     score: number,
   ): QuizAttempt {
     if (score < 0 || score > 100) {
-      throw new Error("QuizAttempt score must be between 0 and 100");
+      throw new DomainError("QuizAttempt score must be between 0 and 100");
     }
     const passed = score >= PASSING_THRESHOLD;
     return new QuizAttempt(

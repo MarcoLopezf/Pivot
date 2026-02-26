@@ -1,3 +1,5 @@
+import { DomainError } from "@domain/shared/errors/DomainError";
+
 export class UserId {
   private readonly _value: string;
 
@@ -7,7 +9,7 @@ export class UserId {
 
   public static create(value: string): UserId {
     if (value.trim().length === 0) {
-      throw new Error("UserId cannot be empty or whitespace");
+      throw new DomainError("UserId cannot be empty or whitespace");
     }
     return new UserId(value);
   }

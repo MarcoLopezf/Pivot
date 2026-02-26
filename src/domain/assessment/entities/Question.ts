@@ -1,6 +1,7 @@
 import { QuestionId } from "@domain/assessment/value-objects/QuestionId";
 import { QuestionOption } from "@domain/assessment/entities/QuestionOption";
 import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
+import { DomainError } from "@domain/shared/errors/DomainError";
 
 export class Question {
   private readonly _id: QuestionId;
@@ -39,13 +40,15 @@ export class Question {
     options: QuestionOption[],
   ): Question {
     if (text.trim().length === 0) {
-      throw new Error("Question text cannot be empty");
+      throw new DomainError("Question text cannot be empty");
     }
     if (tags.length === 0) {
-      throw new Error("Question must have at least one tag");
+      throw new DomainError("Question must have at least one tag");
     }
     if (!Object.values(DifficultyLevel).includes(difficulty)) {
-      throw new Error("Question difficulty must be a valid DifficultyLevel");
+      throw new DomainError(
+        "Question difficulty must be a valid DifficultyLevel",
+      );
     }
     return new Question(id, text, tags, difficulty, 0, options, new Date());
   }

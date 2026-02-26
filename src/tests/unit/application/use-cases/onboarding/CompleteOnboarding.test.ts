@@ -8,7 +8,10 @@ import { CompleteOnboarding } from "@application/use-cases/onboarding/CompleteOn
 import { IUserRepository } from "@domain/profile/repositories/IUserRepository";
 import { IOnboardingRepository } from "@domain/onboarding/repositories/IOnboardingRepository";
 import { ICareerGoalRepository } from "@domain/learning/repositories/ICareerGoalRepository";
+import { IRoadmapRepository } from "@domain/learning/repositories/IRoadmapRepository";
 import { GenerateUserRoadmap } from "@application/use-cases/learning/GenerateUserRoadmap";
+import { RoadmapLimitExceededError } from "@domain/learning/errors/RoadmapLimitExceededError";
+import { MAX_ROADMAPS_PER_USER } from "@domain/learning/constants";
 import { User } from "@domain/profile/entities/User";
 import { UserId } from "@domain/profile/value-objects/UserId";
 import { Email } from "@domain/profile/value-objects/Email";
@@ -30,6 +33,7 @@ describe("CompleteOnboarding Use Case", () => {
   let mockUserRepo: IUserRepository;
   let mockOnboardingRepo: IOnboardingRepository;
   let mockGoalRepo: ICareerGoalRepository;
+  let mockRoadmapRepo: IRoadmapRepository;
   let mockGenerateRoadmap: GenerateUserRoadmap;
   let useCase: CompleteOnboarding;
 
@@ -42,6 +46,15 @@ describe("CompleteOnboarding Use Case", () => {
       delete: vi.fn(),
     };
     mockGoalRepo = { save: vi.fn(), findById: vi.fn(), findByUserId: vi.fn() };
+    mockRoadmapRepo = {
+      save: vi.fn(),
+      findById: vi.fn(),
+      findByGoalId: vi.fn(),
+      findLatestByUserId: vi.fn(),
+      findAllByUserId: vi.fn(),
+      countByUserId: vi.fn().mockResolvedValue(0),
+      findOwnerUserId: vi.fn(),
+    };
     mockGenerateRoadmap = {
       execute: vi.fn(),
     } as unknown as GenerateUserRoadmap;
@@ -50,6 +63,7 @@ describe("CompleteOnboarding Use Case", () => {
       mockOnboardingRepo,
       mockGoalRepo,
       mockGenerateRoadmap,
+      mockRoadmapRepo,
     );
   });
 
@@ -57,6 +71,24 @@ describe("CompleteOnboarding Use Case", () => {
     vi.mocked(mockUserRepo.findById).mockResolvedValue(null);
 
     await expect(useCase.execute("user-1")).rejects.toThrow("User not found");
+  });
+
+  it("should throw RoadmapLimitExceededError when limit is reached", async () => {
+    const user = User.create(
+      UserId.create("user-1"),
+      Email.create("u@e.com"),
+      "John",
+    );
+    vi.mocked(mockUserRepo.findById).mockResolvedValue(user);
+    vi.mocked(mockRoadmapRepo.countByUserId).mockResolvedValue(
+      MAX_ROADMAPS_PER_USER,
+    );
+
+    await expect(useCase.execute("user-1")).rejects.toThrow(
+      RoadmapLimitExceededError,
+    );
+    expect(mockGenerateRoadmap.execute).not.toHaveBeenCalled();
+    expect(mockGoalRepo.save).not.toHaveBeenCalled();
   });
 
   it("should create a new roadmap for returning users who already completed onboarding", async () => {

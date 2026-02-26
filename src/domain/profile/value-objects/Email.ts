@@ -1,3 +1,5 @@
+import { DomainError } from "@domain/shared/errors/DomainError";
+
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 
 export class Email {
@@ -9,7 +11,7 @@ export class Email {
 
   public static create(value: string): Email {
     if (!EMAIL_REGEX.test(value)) {
-      throw new Error(`Invalid email format: "${value}"`);
+      throw new DomainError(`Invalid email format: "${value}"`);
     }
     return new Email(value);
   }

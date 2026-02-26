@@ -1,3 +1,5 @@
+import { DomainError } from "@domain/shared/errors/DomainError";
+
 export class QuestionId {
   private readonly _value: string;
 
@@ -7,7 +9,7 @@ export class QuestionId {
 
   public static create(value: string): QuestionId {
     if (!value || value.trim().length === 0) {
-      throw new Error("QuestionId cannot be empty");
+      throw new DomainError("QuestionId cannot be empty");
     }
     return new QuestionId(value);
   }

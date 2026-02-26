@@ -5,15 +5,14 @@ import {
   GeneratedProjectDetails,
 } from "@domain/learning/services/IProjectEnrichmentFlow";
 import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
+import { stripMarkdownCodeBlock, wrapUserContent } from "../utils";
+import { z } from "zod";
 
-/**
- * Interface for AI response structure
- */
-interface ProjectEnrichmentResponse {
-  acceptanceCriteria: string[];
-  technicalStack: string[];
-  keyConcepts: string[];
-}
+const ProjectEnrichmentResponseSchema = z.object({
+  acceptanceCriteria: z.array(z.string().min(1)).min(3).max(6),
+  technicalStack: z.array(z.string().min(1)).min(2).max(8),
+  keyConcepts: z.array(z.string().min(1)).min(2).max(5),
+});
 
 /**
  * GenkitProjectEnrichmentFlow
@@ -40,64 +39,26 @@ export class GenkitProjectEnrichmentFlow implements IProjectEnrichmentFlow {
         },
       });
 
-      const cleaned = this.stripMarkdownCodeBlock(text);
+      const cleaned = stripMarkdownCodeBlock(text);
 
-      let response: ProjectEnrichmentResponse;
+      let parsed: z.infer<typeof ProjectEnrichmentResponseSchema>;
       try {
-        response = JSON.parse(cleaned);
+        parsed = ProjectEnrichmentResponseSchema.parse(JSON.parse(cleaned));
       } catch {
         throw new Error(
           `AI_RESPONSE_FORMAT_ERROR: Failed to parse project enrichment response as JSON. Raw output: ${text}`,
         );
       }
 
-      // Validate structure
-      if (
-        !Array.isArray(response.acceptanceCriteria) ||
-        response.acceptanceCriteria.length < 3
-      ) {
-        throw new Error(
-          `AI_RESPONSE_FORMAT_ERROR: acceptanceCriteria must be an array with at least 3 items. Got: ${response.acceptanceCriteria?.length ?? 0}`,
-        );
-      }
-
-      if (
-        !Array.isArray(response.technicalStack) ||
-        response.technicalStack.length < 2
-      ) {
-        throw new Error(
-          `AI_RESPONSE_FORMAT_ERROR: technicalStack must be an array with at least 2 items. Got: ${response.technicalStack?.length ?? 0}`,
-        );
-      }
-
-      if (
-        !Array.isArray(response.keyConcepts) ||
-        response.keyConcepts.length < 2
-      ) {
-        throw new Error(
-          `AI_RESPONSE_FORMAT_ERROR: keyConcepts must be an array with at least 2 items. Got: ${response.keyConcepts?.length ?? 0}`,
-        );
-      }
-
       return {
-        acceptanceCriteria: response.acceptanceCriteria.slice(0, 6),
-        technicalStack: response.technicalStack.slice(0, 8),
-        keyConcepts: response.keyConcepts.slice(0, 5),
+        acceptanceCriteria: parsed.acceptanceCriteria,
+        technicalStack: parsed.technicalStack,
+        keyConcepts: parsed.keyConcepts,
       };
     } catch (error) {
       console.error("Error enriching project details:", error);
       throw error;
     }
-  }
-
-  private stripMarkdownCodeBlock(raw: string): string {
-    const trimmed = raw.trim();
-    const codeBlockRegex = /^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/;
-    const match = codeBlockRegex.exec(trimmed);
-    if (match) {
-      return match[1].trim();
-    }
-    return trimmed;
   }
 
   private buildPrompt(
@@ -109,9 +70,9 @@ export class GenkitProjectEnrichmentFlow implements IProjectEnrichmentFlow {
     return `You are an expert software engineering educator creating detailed project specifications for students.
 
 PROJECT CONTEXT:
-- Title: "${title}"
-- Description: "${description}"
-- Tags/Technologies: ${tags.join(", ")}
+- Title: ${wrapUserContent("project_title", title)}
+- Description: ${wrapUserContent("project_description", description)}
+- Tags/Technologies: ${wrapUserContent("project_tags", tags.join(", "))}
 - Difficulty Level: ${difficulty}
 
 TASK: Generate comprehensive project details with three sections:
@@ -127,7 +88,7 @@ TASK: Generate comprehensive project details with three sections:
    - DO NOT use vague language like "should work well" or "must be good"
 
 2. TECHNICAL STACK (3-8 specific technologies):
-   - Base it on the tags provided: ${tags.join(", ")}
+   - Base it on the tags provided above
    - Include specific tools: programming language, framework, database, testing tools
    - Be specific with versions or variants when helpful (e.g., "Flask 2.x" not just "Python")
    - Only include technologies directly relevant to the project

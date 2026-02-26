@@ -140,6 +140,16 @@ export class PrismaRoadmapRepository implements IRoadmapRepository {
     return prismaRoadmaps.map((r) => RoadmapMapper.toDomain(r));
   }
 
+  async countByUserId(userId: UserId): Promise<number> {
+    return this.db.roadmap.count({
+      where: {
+        goal: {
+          userId: userId.value,
+        },
+      },
+    });
+  }
+
   /**
    * Find the owner user ID for a roadmap
    * Navigates: Roadmap -> CareerGoal -> User

@@ -1,6 +1,7 @@
 import { Email } from "@domain/profile/value-objects/Email";
 import { UserId } from "@domain/profile/value-objects/UserId";
 import { UserRole } from "@domain/profile/entities/UserRole";
+import { DomainError } from "@domain/shared/errors/DomainError";
 
 export class User {
   private readonly _id: UserId;
@@ -50,7 +51,7 @@ export class User {
 
   public static create(id: UserId, email: Email, name: string): User {
     if (name.trim().length === 0) {
-      throw new Error("User name cannot be empty");
+      throw new DomainError("User name cannot be empty");
     }
     const now = new Date();
     return new User(id, email, name, UserRole.USER, now);
@@ -143,7 +144,7 @@ export class User {
 
   public updateName(name: string): void {
     if (name.trim().length === 0) {
-      throw new Error("User name cannot be empty");
+      throw new DomainError("User name cannot be empty");
     }
     this._name = name;
     this._updatedAt = new Date();

@@ -1,5 +1,6 @@
 import { RoadmapItemId } from "@domain/learning/value-objects/RoadmapItemId";
 import { DifficultyLevel } from "@domain/shared/enums/DifficultyLevel";
+import { DomainError } from "@domain/shared/errors/DomainError";
 
 export type RoadmapItemStatus = "pending" | "in_progress" | "completed";
 export type RoadmapItemType = "theory" | "project";
@@ -50,10 +51,10 @@ export class RoadmapItem {
     },
   ): RoadmapItem {
     if (title.trim().length === 0) {
-      throw new Error("RoadmapItem title cannot be empty");
+      throw new DomainError("RoadmapItem title cannot be empty");
     }
     if (order < 1) {
-      throw new Error("RoadmapItem order must be at least 1");
+      throw new DomainError("RoadmapItem order must be at least 1");
     }
     return new RoadmapItem(
       id,
